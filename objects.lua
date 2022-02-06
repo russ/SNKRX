@@ -168,11 +168,24 @@ function WallArrow:draw()
   graphics.pop()
 end
 
-
+function stun(target, duration)
+  if target and target.t then
+    if target.t:delayResetQ('stun', duration) then
+      target:slow(duration, 'sl_st')
+      target.stunned = true
+      target.t:after(duration, function() target.stunned = false end, 'stun')
+    end
+  end
+end
 
 
 Unit = Object:extend()
 function Unit:init_unit()
+  self.slow_t_m = {}
+  for k, _ in pairs(slows) do
+    self.slow_t_m[k] = 1
+  end
+  self.stunned = false
   self.level = self.level or 1
   self.hfx:add('hit', 1)
   self.hfx:add('shoot', 1)
@@ -180,6 +193,36 @@ function Unit:init_unit()
   self.effect_bar = EffectBar{group = main.current.effects, parent = self}
 end
 
+function Unit:hitMomentum(other)
+  vx0, vy0 = self:get_velocity_safe()
+  vx1, vy1 = other:get_velocity_safe()
+  vx0 = vx0 - vx1
+  vy0 = vy0 - vy1
+  return math.length(vx0, vy0)
+end
+
+function Unit:crashDamage(other)
+  local initDamage = self:hitMomentum(other)*momentum_dmg_m
+  if self.stunned then
+    initDamage = initDamage * (get_synp('forcer', main.current.player.forcer_level) + 1)
+  end
+  local all_dmg_amplifier = 1
+  if self.bane_cursed then
+    all_dmg_amplifier = all_dmg_amplifier * 1.1
+  end
+  if self.spellbroken then
+    all_dmg_amplifier = all_dmg_amplifier * math.random_range({1.01, 1.31})
+  end
+  if self.psybroken then
+    all_dmg_amplifier = all_dmg_amplifier * math.random_range({1.01, 1.16})
+  end
+  if self.warped then
+    all_dmg_amplifier = all_dmg_amplifier * math.random_range({1, 1.2})
+  end
+  
+  initDamage = initDamage * all_dmg_amplifier
+  return initDamage > 1 and math.pow(initDamage, 1.22) or initDamage
+end
 
 function Unit:bounce(nx, ny)
   local vx, vy = self:get_velocity()
@@ -191,6 +234,20 @@ function Unit:bounce(nx, ny)
     self:set_velocity(-vx, vy)
     self.r = math.pi - self.r
   end
+  return self.r
+end
+
+function Unit:crash(nx, ny)
+  local vx, vy = self:get_velocity()
+  if nx == 0 then
+    self:set_velocity(0,0)
+    self.r = 2*math.pi - self.r
+  end
+  if ny == 0 then
+    self:set_velocity(0,0)
+    self.r = math.pi - self.r
+  end
+  stun(self, 0.5)
   return self.r
 end
 
@@ -215,10 +272,18 @@ function Unit:show_infused(n)
   self.t:after(n or 4, function() self.effect_bar.hidden = true end, 'effect_bar')
 end
 
+function Unit:slow(duration, tag, lvl)
+  local slowPow = slows[tag]
+  if lvl then
+    slowPow = slowPow * lvl
+  end
+  self.slow_t_m[tag] = 1 - slowPow
+  self.t:after(duration, function() self.slow_t_m[tag] = 1 end, tag)
+end
 
 function Unit:calculate_damage(dmg)
-  if self.def >= 0 then dmg = dmg*(100/(100+self.def))
-  else dmg = dmg*(2 - 100/(100+self.def)) end
+  if self.def >= 0 then dmg = dmg*(100/(100+2*self.def))
+  else dmg = dmg*(2 - 100/(100-self.def) - self.def/200) end
   return dmg
 end
 
@@ -381,6 +446,13 @@ function Unit:calculate_stats(first_run)
 
   for _, class in ipairs(self.classes) do self.class_def_m = self.class_def_m*class_stat_multipliers[class].def end
   self.def = (self.base_def + self.class_def_a + self.buff_def_a)*self.class_def_m*self.buff_def_m
+  if self.debuff_def_m then
+    if self.def < 0 then
+      self.def = self.def/(1-self.debuff_def_m)
+    else
+      self.def = self.def*(1-self.debuff_def_m)
+    end
+  end
 
   for _, class in ipairs(self.classes) do self.class_mvspd_m = self.class_mvspd_m*class_stat_multipliers[class].mvspd end
   self.max_v = (self.base_mvspd + self.class_mvspd_a + self.buff_mvspd_a)*self.class_mvspd_m*self.buff_mvspd_m

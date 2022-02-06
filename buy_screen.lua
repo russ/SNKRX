@@ -78,11 +78,11 @@ function BuyScreen:on_enter(from, level, loop, units, passives, shop_level, shop
   self.level_text = Text({{text = '[fg]Lv.' .. tostring(self.level) .. get_elite_str(self.level), font = pixul_font, alignment = 'center'}}, global_text_tags)
 
   RerollButton{group = self.main, x = 150, y = 18, parent = self}
-  GoButton{group = self.main, x = gw - 90, y = gh - 20, parent = self}
+  GoButton{group = self.main, x = gw - 120, y = gh - 20, parent = self}
   LevelButton{group = self.main, x = gw/2, y = 18, parent = self}
   self.tutorial_button = Button{group = self.main, x = gw/2 + 129, y = 18, button_text = '?', fg_color = 'bg10', bg_color = 'bg', action = function()
     self.in_tutorial = true
-    self.title_text = Text2{group = self.tutorial, x = gw/2, y = 35, lines = {{text = '[fg]WELCOME TO SNKRX!', font = fat_font, alignment = 'center'}}}
+    self.title_text = Text2{group = self.tutorial, x = gw/2, y = 35, lines = {{text = '[fg]WELCOME TO [wavy_crazyyy, red]SNKRX!', font = fat_font, alignment = 'center'}}}
     self.tutorial_text = Text2{group = self.tutorial, x = 228, y = 160, lines = {
       {text = '[fg]You control a snake of multiple heroes that auto-attack nearby enemies.', font = pixul_font, height_multiplier = 1.2},
       {text = '[fg]You can steer the snake left or right by pressing [yellow]A/D[fg] or [yellow]left/right arrows[fg].', font = pixul_font, height_multiplier = 2.2},
@@ -150,6 +150,7 @@ function BuyScreen:on_enter(from, level, loop, units, passives, shop_level, shop
         'intimidation', 'vulnerability', 'temporal_chains', 'ceremonial_dagger', 'homing_barrage', 'critical_strike', 'noxious_strike', 'infesting_strike', 'burning_strike', 'lucky_strike', 'healing_strike', 'stunning_strike',
         'silencing_strike', 'culling_strike', 'lightning_strike', 'psycholeak', 'divine_blessing', 'hardening', 'kinetic_strike',
       }
+      reset_syn_pow()
       max_units = math.clamp(7 + current_new_game_plus, 7, 12)
       main:add(BuyScreen'buy_screen')
       system.save_run()
@@ -171,7 +172,7 @@ function BuyScreen:on_enter(from, level, loop, units, passives, shop_level, shop
   trigger:tween(1, main_song_instance, {volume = 0.2, pitch = 1}, math.linear)
 
   locked_state = {locked = self.locked, cards = {self.cards[1] and self.cards[1].unit, self.cards[2] and self.cards[2].unit, self.cards[3] and self.cards[3].unit}} 
-  system.save_run(self.level, self.loop, gold, self.units, self.passives, self.shop_level, self.shop_xp, run_passive_pool, locked_state)
+  system.save_run(self.level, self.loop, gold, self.units, self.passives, self.shop_level, self.shop_xp, run_passive_pool, locked_state, syn_pow)
 end
 
 
@@ -252,7 +253,7 @@ function BuyScreen:draw()
   end
 
   if self.shop_text then self.shop_text:draw(64, 20) end
-  if self.sets_text then self.sets_text:draw(328, 20) end
+  if self.sets_text then self.sets_text:draw(310, 20) end
   if self.party_text then self.party_text:draw(440, 20) end
   if current_new_game_plus > 0 then self.ng_text:draw(265, gh - 40) end
 
@@ -335,7 +336,7 @@ end
 
 
 function BuyScreen:gain_gold(amount)
-  gold = gold + amount or 0
+  gold = gold + (amount or 0)
   self.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
 end
 
@@ -356,9 +357,12 @@ function BuyScreen:set_cards(shop_level, dont_spawn_effect, first_call)
     all_units = {unit_1, unit_2, unit_3}
   until not table.all(all_units, function(v) return table.any(non_attacking_characters, function(u) return v == u end) end)
   if first_call and locked_state then
-    if locked_state.cards[1] then self.cards[1] = ShopCard{group = self.main, x = 60, y = 75, w = 80, h = 90, unit = locked_state.cards[1], parent = self, i = 1} end
-    if locked_state.cards[2] then self.cards[2] = ShopCard{group = self.main, x = 140, y = 75, w = 80, h = 90, unit = locked_state.cards[2], parent = self, i = 2} end
-    if locked_state.cards[3] then self.cards[3] = ShopCard{group = self.main, x = 220, y = 75, w = 80, h = 90, unit = locked_state.cards[3], parent = self, i = 3} end
+    if locked_state.cards[1] then self.cards[1] = ShopCard{group = self.main, x = 60, y = 75, w = 80, h = 90, unit = locked_state.cards[1], parent = self, i = 1} else
+      self.cards[1] = ShopCard{group = self.main, x = 60, y = 75, w = 80, h = 90, unit = unit_1, parent = self, i = 1} end
+    if locked_state.cards[2] then self.cards[2] = ShopCard{group = self.main, x = 140, y = 75, w = 80, h = 90, unit = locked_state.cards[2], parent = self, i = 2} else
+      self.cards[2] = ShopCard{group = self.main, x = 140, y = 75, w = 80, h = 90, unit = unit_2, parent = self, i = 2} end
+    if locked_state.cards[3] then self.cards[3] = ShopCard{group = self.main, x = 220, y = 75, w = 80, h = 90, unit = locked_state.cards[3], parent = self, i = 3} else
+      self.cards[3] = ShopCard{group = self.main, x = 220, y = 75, w = 80, h = 90, unit = unit_3, parent = self, i = 3} end
   else
     self.cards[1] = ShopCard{group = self.main, x = 60, y = 75, w = 80, h = 90, unit = unit_1, parent = self, i = 1}
     self.cards[2] = ShopCard{group = self.main, x = 140, y = 75, w = 80, h = 90, unit = unit_2, parent = self, i = 2}
@@ -372,7 +376,7 @@ function BuyScreen:set_party_and_sets()
   self.characters = {}
   local y = 40
   for i, unit in ipairs(self.units) do
-    table.insert(self.characters, CharacterPart{group = self.main, x = gw - 30, y = y + (i-1)*19, character = unit.character, level = unit.level, reserve = unit.reserve, i = i, spawn_effect = unit.spawn_effect, parent = self})
+    table.insert(self.characters, CharacterPart{group = self.main, x = gw - 30, y = y + (i-1)*19, character = unit.character, level = unit.level, reserve = unit.reserve, i = i, spawn_effect = unit.spawn_effect, parent = self, lead = (i == 1)})
     unit.spawn_effect = false
   end
 
@@ -382,8 +386,10 @@ function BuyScreen:set_party_and_sets()
   for i, class in ipairs(classes) do
     local x, y
     if #classes <= 6 then x, y = math.index_to_coordinates(i, 2)
-    else x, y = math.index_to_coordinates(i, 3) end
-    table.insert(self.sets, ClassIcon{group = self.main, x = (#classes <= 6 and 319 or 308) + (x-1)*20, y = 45 + (y-1)*56, class = class, units = self.units, parent = self})
+    elseif #classes <= 12 then x, y = math.index_to_coordinates(i, 3) else
+      x, y = math.index_to_coordinates(i, 4)
+    end
+    table.insert(self.sets, ClassIcon{group = self.main, x = 296 + (x-1)*18, y = 45 + (y-1)*48, class = class, units = self.units, parent = self})
   end
 end
 
@@ -550,6 +556,7 @@ function RestartButton:update(dt)
         'intimidation', 'vulnerability', 'temporal_chains', 'ceremonial_dagger', 'homing_barrage', 'critical_strike', 'noxious_strike', 'infesting_strike', 'burning_strike', 'lucky_strike', 'healing_strike', 'stunning_strike',
         'silencing_strike', 'culling_strike', 'lightning_strike', 'psycholeak', 'divine_blessing', 'hardening', 'kinetic_strike',
       }
+      reset_syn_pow()
       max_units = math.clamp(7 + current_new_game_plus, 7, 12)
       system.save_state()
       main:add(BuyScreen'buy_screen')
@@ -677,6 +684,7 @@ end
 GoButton = Object:extend()
 GoButton:implement(GameObject)
 function GoButton:init(args)
+  self.growth = 1
   self:init_game_object(args)
   self.shape = Rectangle(self.x, self.y, 28, 18)
   self.interact_with_mouse = true
@@ -686,7 +694,20 @@ end
 
 function GoButton:update(dt)
   self:update_game_object(dt)
-
+  if self.selected then
+    self.growth = self.growth + dt*0.1
+  else
+    local shrink_speed = dt*50.0
+    local dist = (1 - self.growth) * shrink_speed
+    if math.abs(dist) > 1 then
+      dist = math.sign(dist) * shrink_speed
+    end
+    if dist * shrink_speed + self.growth < 1 then
+      self.growth = 1
+    else
+      self.growth = self.growth + dist * shrink_speed
+    end
+  end
   if ((self.selected and input.m1.pressed) or input.enter.pressed) and not self.transitioning then
     if #self.parent.units == 0 then
       if not self.info_text then
@@ -707,7 +728,7 @@ function GoButton:update(dt)
       ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       ui_transition1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       self.transitioning = true
-      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state)
+      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
       TransitionEffect{group = main.transitions, x = self.x, y = self.y, color = state.dark_transitions and bg[-2] or character_colors[random:table(self.parent.units).character], transition_action = function()
         main:add(Arena'arena')
         main:go_to('arena', self.parent.level, self.parent.loop, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, self.parent.locked)
@@ -720,9 +741,15 @@ end
 
 
 function GoButton:draw()
-  graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
-    graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 4, 4, self.selected and fg[0] or green[0])
-    self.text:draw(self.x, self.y + 1, 0, 1, 1)
+  local truex = self.x
+  local truey = self.y
+  if self.selected then
+    truex = truex + (math.random() - 0.5)*self.growth*2
+    truey = truey + (math.random() - 0.5)*self.growth*2
+  end
+  graphics.push(truex, truey, 0, self.spring.x, self.spring.y)
+    graphics.rectangle(truex, truey, self.shape.w*self.growth, self.shape.h*self.growth, 4, 4, self.selected and red[-5] or green[0])
+    self.text:draw(truex, truey + 1, 0, 1, 1)
   graphics.pop()
 end
 
@@ -731,7 +758,7 @@ function GoButton:on_mouse_enter()
   ui_hover1:play{pitch = random:float(1.3, 1.5), volume = 0.5}
   pop2:play{pitch = random:float(0.95, 1.05), volume = 0.5}
   self.selected = true
-  self.text:set_text{{text = '[fgm5]GO!', font = pixul_font, alignment = 'center'}}
+  self.text:set_text{{text = '[red]GO!', font = pixul_font, alignment = 'center'}}
   self.spring:pull(0.2, 200, 10)
 end
 
@@ -763,7 +790,7 @@ function LockButton:update(dt)
     if not self.parent.locked then locked_state = nil end
     if self.parent.locked then
       locked_state = {locked = true, cards = {self.parent.cards[1] and self.parent.cards[1].unit, self.parent.cards[2] and self.parent.cards[2].unit, self.parent.cards[3] and self.parent.cards[3].unit}}
-      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state)
+      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
     end
     ui_switch2:play{pitch = random:float(0.95, 1.05), volume = 0.5}
     self.selected = true
@@ -844,7 +871,7 @@ function LevelButton:update(dt)
       gold = gold - 5
       self.parent.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
       self.text = Text({{text = '[bg10]' .. tostring(self.parent.shop_level), font = pixul_font, alignment = 'center'}}, global_text_tags)
-      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state)
+      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
     end
   end
 
@@ -874,7 +901,7 @@ function LevelButton:update(dt)
       gold = gold - 10
       self.parent.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
       self.text = Text({{text = '[bg10]' .. tostring(self.parent.shop_level), font = pixul_font, alignment = 'center'}}, global_text_tags)
-      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state)
+      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
     end
   end
 end
@@ -966,7 +993,11 @@ function RerollButton:init(args)
   self.interact_with_mouse = true
   if self.parent:is(BuyScreen) then
     self.shape = Rectangle(self.x, self.y, 54, 16)
-    self.text = Text({{text = '[bg10]reroll: [yellow]2', font = pixul_font, alignment = 'center'}}, global_text_tags)
+    if self.parent.level > 1 then
+      self.text = Text({{text = '[bg10]reroll: [yellow]2', font = pixul_font, alignment = 'center'}}, global_text_tags)
+    else
+      self.text = Text({{text = '[bg10]reroll: [white]0', font = pixul_font, alignment = 'center'}}, global_text_tags)
+    end
   elseif self.parent:is(Arena) then
     self.shape = Rectangle(self.x, self.y, 60, 16)
     local merchant
@@ -991,7 +1022,7 @@ function RerollButton:update(dt)
 
   if (self.selected and input.m1.pressed) or input.r.pressed then
     if self.parent:is(BuyScreen) then
-      if gold < 2 then
+      if gold < 2 and self.parent.level > 1 then
         self.spring:pull(0.2, 200, 10)
         self.selected = true
         error1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
@@ -1008,9 +1039,11 @@ function RerollButton:update(dt)
         self.parent:set_cards(self.parent.shop_level, true)
         self.selected = true
         self.spring:pull(0.2, 200, 10)
-        gold = gold - 2
+        if self.parent.level > 1 then
+          gold = gold - 2
+        end
         self.parent.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
-        system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state)
+        system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
       end
     elseif self.parent:is(Arena) then
       if gold < 5 and not self.free_reroll then
@@ -1059,7 +1092,11 @@ function RerollButton:on_mouse_enter()
   pop2:play{pitch = random:float(0.95, 1.05), volume = 0.5}
   self.selected = true
   if self.parent:is(BuyScreen) then
-    self.text:set_text{{text = '[fgm5]reroll: 2', font = pixul_font, alignment = 'center'}}
+    if self.parent.level > 1 then
+      self.text:set_text{{text = '[fgm5]reroll: 2', font = pixul_font, alignment = 'center'}}
+    else
+      self.text:set_text{{text = '[fgm5]reroll: 0', font = pixul_font, alignment = 'center'}}
+    end
   elseif self.parent:is(Arena) then
     if self.free_reroll then
       self.text:set_text{{text = '[fgm5]reroll: 0', font = pixul_font, alignment = 'center'}}
@@ -1073,7 +1110,11 @@ end
 
 function RerollButton:on_mouse_exit()
   if self.parent:is(BuyScreen) then
-    self.text:set_text{{text = '[bg10]reroll: [yellow]2', font = pixul_font, alignment = 'center'}}
+    if self.parent.level > 1 then
+      self.text:set_text{{text = '[bg10]reroll: [yellow]2', font = pixul_font, alignment = 'center'}}
+    else
+      self.text:set_text{{text = '[bg10]reroll: [white]0', font = pixul_font, alignment = 'center'}}
+    end
   elseif self.parent:is(Arena) then
     if self.free_reroll then
       self.text:set_text{{text = '[fgm5]reroll: [yellow]0', font = pixul_font, alignment = 'center'}}
@@ -1217,14 +1258,14 @@ function CharacterPart:update(dt)
       self.parent:set_party_and_sets()
       self.parent:refresh_cards()
       self.parent.party_text:set_text({{text = '[wavy_mid, fg]party ' .. tostring(#self.parent.units) .. '/' .. tostring(max_units), font = pixul_font, alignment = 'center'}})
-      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state)
+      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
     else
       self.parent.parent:gain_gold(self:get_sale_price())
       self.parent.parent.units[self.i].reserve[self.level] = self.parent.parent.units[self.i].reserve[self.level] - 1
       self:die()
       self.parent.parent:set_party_and_sets()
       self.parent.parent:refresh_cards()
-      system.save_run(self.parent.parent.level, self.parent.parent.loop, gold, self.parent.parent.units, self.parent.parent.passives, self.parent.parent.shop_level, self.parent.parent.shop_xp, run_passive_pool, locked_state)
+      system.save_run(self.parent.parent.level, self.parent.parent.loop, gold, self.parent.parent.units, self.parent.parent.passives, self.parent.parent.shop_level, self.parent.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
     end
   end
 
@@ -1267,6 +1308,10 @@ function CharacterPart:on_mouse_enter()
     {text = '[' .. (self.level == 3 and 'yellow' or 'light_bg') .. ']Lv.3 [' .. (self.level == 3 and 'fg' or 'light_bg') .. ']Effect - ' .. 
       (self.level == 3 and character_effect_names[self.character] or character_effect_names_gray[self.character]), font = pixul_font, alignment = 'center', height_multiplier = 1.25},
     {text = (self.level == 3 and character_effect_descriptions[self.character]() or character_effect_descriptions_gray[self.character]()), font = pixul_font, alignment = 'center'},
+    {text = 'Dmg last round: [red]' .. (math.floor(damage_counters[self.character]) or '???'), font = pixul_font, alignment = 'center'},
+    (self.lead) and {text = 'Body dmg -//-: [yellow]' .. (math.floor(damage_counters['body']) or '???'), font = pixul_font, alignment = 'center'} or nil,
+    (self.lead) and {text = 'Kinetic dmg -//-: [yellowforc]' .. (math.floor(damage_counters['kinetic']) or '???'), font = pixul_font, alignment = 'center'} or nil,
+    (self.lead) and {text = 'Other dmg -//-: [red]' .. (math.floor(damage_counters['other']) or '???'), font = pixul_font, alignment = 'center'} or nil,
   }, nil, nil, nil, nil, 16, 4, nil, 2)
   self.info_text.x, self.info_text.y = gw/2, gh/2 + 10
 
@@ -1418,6 +1463,78 @@ function PassiveCard:die()
 end
 
 
+--type 1 is BODY; type 2 is MOUTHS
+LateUpgradeButton = Object:extend()
+LateUpgradeButton:implement(GameObject)
+function LateUpgradeButton:init(args)
+  self:init_game_object(args)
+  self.shape = Rectangle(self.x, self.y, self.w, self.h)
+  self.interact_with_mouse = true
+  self.lateup_txt =  Text({{text = lateup_desc[self.type], font = pixul_font, alignment = 'center'}}, global_text_tags)
+  self.spring:pull(0.2, 200, 10)
+end
+
+
+function LateUpgradeButton:update(dt)
+  self:update_game_object(dt)
+  self.lateup_txt:update(dt)
+  if self.selected and input.m1.pressed then
+    if gold >= 0 and (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) then
+      ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+      _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+      lateup_lvls[self.type] = lateup_lvls[self.type] + 1
+      gold = gold + 1000
+      self.parent.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
+      lateup_calcs[self.type]()
+      self:on_mouse_exit()
+      self:on_mouse_enter()
+      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives,
+       self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow, lateup_lvls)
+    else
+      error1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+      self.spring:pull(0.2, 200, 10)
+    end
+  end
+end
+
+
+function LateUpgradeButton:draw()
+  graphics.push(self.x, self.y, 0, self.sx*self.spring.x, self.sy*self.spring.x)
+  self.lateup_txt:draw(self.x, self.y - 20)
+  graphics.rectangle(self.x, self.y, 16, 24, 4, 4, self.highlighted and fg[0] or lateup_bgcol[self.type]
+  lateup_imgs[self.type]:draw(self.x, self.y, 0, 0.3, 0.3, 0, 0, self.highlighted and fg[-5] or lateup_fgcol[self.type])
+  graphics.pop()
+end
+
+
+function LateUpgradeButton:on_mouse_enter()
+  self.selected = true
+  ui_hover1:play{pitch = random:float(1.3, 1.5), volume = 0.5}
+  self.spring:pull(0.2, 200, 10)
+  self.info_text = InfoText{group = main.current.ui, force_update = true}
+  self.info_text:activate({
+    {text = self.lateup_txt, font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+  }, nil, nil, nil, nil, 16, 4, nil, 2)
+  self.info_text.x, self.info_text.y = gw/2, gh/2 + gh/4 - 6
+end
+
+
+function LateUpgradeButton:on_mouse_exit()
+  self.selected = false
+  self.info_text:deactivate()
+  self.info_text.dead = true
+  self.info_text = nil
+end
+
+
+function LateUpgradeButton:die()
+  self.dead = true
+  if self.lateup_txt then
+    self.info_text:deactivate()
+    self.info_text.dead = true
+    self.info_text = nil
+  end
+end
 
 
 ItemCard = Object:extend()
@@ -1475,7 +1592,7 @@ function ItemCard:update(dt)
       end
       self.parent.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
       self.text = Text({{text = '[bg10]' .. tostring(self.parent.shop_level), font = pixul_font, alignment = 'center'}}, global_text_tags)
-      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state)
+      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
     end
   end
 
@@ -1486,7 +1603,7 @@ function ItemCard:update(dt)
     table.remove(self.parent.passives, self.i)
     input.m2.pressed = false
     self.parent:set_items()
-    system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state)
+    system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
   end
 end
 
@@ -1585,7 +1702,8 @@ function ShopCard:init(args)
   for i, class in ipairs(character_classes[self.unit]) do
     local x = self.x
     if #character_classes[self.unit] == 2 then x = self.x - 10
-    elseif #character_classes[self.unit] == 3 then x = self.x - 20 end
+    elseif #character_classes[self.unit] == 3 then x = self.x - 20
+    elseif #character_classes[self.unit] == 4 then x = self.x - 30 end
     table.insert(self.class_icons, ClassIcon{group = main.current.effects, x = x + (i-1)*20, y = self.y + 6, class = class, character = self.unit, units = self.parent.units, parent = self})
   end
   self.cost = character_tiers[self.unit]
@@ -1623,7 +1741,7 @@ function ShopCard:update(dt)
       self.parent:refresh_cards()
       self.parent.party_text:set_text({{text = '[wavy_mid, fg]party ' .. tostring(#self.parent.units) .. '/' .. tostring(max_units), font = pixul_font, alignment = 'center'}})
       locked_state = {locked = self.parent.locked, cards = {self.parent.cards[1] and self.parent.cards[1].unit, self.parent.cards[2] and self.parent.cards[2].unit, self.parent.cards[3] and self.parent.cards[3].unit}} 
-      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state)
+      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
     else
       error1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       self.spring:pull(0.2, 200, 10)
@@ -1808,7 +1926,7 @@ end
 
 function TutorialClassIcon:draw()
   graphics.push(self.x, self.y, 0, self.sx*self.spring.x, self.sy*self.spring.x)
-    local i, j, k, n = class_set_numbers[self.class](self.units)
+    local i, j, k, l, n = class_set_numbers[self.class](self.units)
 
     graphics.rectangle(self.x, self.y, 16, 24, 4, 4, self.highlighted and fg[0] or ((n >= i) and class_colors[self.class] or bg[3]))
     _G[self.class]:draw(self.x, self.y, 0, 0.3, 0.3, 0, 0, self.highlighted and fg[-5] or ((n >= i) and _G[class_color_strings[self.class]][-5] or bg[10]))
@@ -1849,7 +1967,7 @@ end
 function TutorialClassIcon:on_mouse_enter()
   ui_hover1:play{pitch = random:float(1.3, 1.5), volume = 0.5}
   self.spring:pull(0.2, 200, 10)
-  local i, j, k, owned = class_set_numbers[self.class](self.units)
+  local i, j, k, l, owned = class_set_numbers[self.class](self.units)
   self.info_text = InfoText{group = main.current.tutorial}
   self.info_text:activate({
     {text = '[' .. class_color_strings[self.class] .. ']' .. self.class:capitalize() .. '[fg] - owned: [yellow]' .. owned, font = pixul_font, alignment = 'center', height_multiplier = 1.25},
@@ -1883,16 +2001,37 @@ end
 
 function ClassIcon:update(dt)
   self:update_game_object(dt)
+  local synboost = true if self.parent.cost then synboost = false end
+  if synboost then
+    if self.selected and input.m1.pressed then
+      if gold >= 0 and (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) then
+        ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+        _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+        syn_pow[self.class] = syn_pow[self.class] + 1
+        gold = gold + 1000
+        self.parent.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
+        syn_calcs[self.class]()
+        self:on_mouse_exit()
+        self:on_mouse_enter()
+        system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
+      else
+        error1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+        self.spring:pull(0.2, 200, 10)
+      end
+    end
+  end
 end
 
 
 function ClassIcon:draw()
   graphics.push(self.x, self.y, 0, self.sx*self.spring.x, self.sy*self.spring.x)
-    local i, j, k, n = class_set_numbers[self.class](self.units)
+    local i, j, k, l, n = class_set_numbers[self.class](self.units)
     local next_n
     if self.parent:is(ShopCard) then
       next_n = n+1
-      if k then
+      if l then
+        if next_n > l then next_n = nil end
+      elseif k then
         if next_n > k then next_n = nil end
       else
         if next_n > j then next_n = nil end
@@ -1902,6 +2041,7 @@ function ClassIcon:draw()
 
     graphics.rectangle(self.x, self.y, 16, 24, 4, 4, self.highlighted and fg[0] or ((n >= i) and class_colors[self.class] or bg[3]))
     _G[self.class]:draw(self.x, self.y, 0, 0.3, 0.3, 0, 0, self.highlighted and fg[-5] or ((n >= i) and _G[class_color_strings[self.class]][-5] or bg[10]))
+    self.y = self.y - 4
     graphics.rectangle(self.x, self.y + 26, 16, 16, 3, 3, self.highlighted and fg[0] or bg[3])
     if i == 1 then
       if self.highlighted then
@@ -1938,7 +2078,7 @@ function ClassIcon:draw()
           graphics.line(self.x + 4, self.y + 27, self.x + 4, self.y + 32, self.flash and class_colors[self.class] or bg[10], 3)
         end
       end
-    elseif i == 2 and k == 6 then
+    elseif i == 2 and k == 6 and not l then
       if self.highlighted then
         graphics.line(self.x - 5, self.y + 21, self.x - 5, self.y + 24, (n >= 1) and fg[-5] or fg[-10], 3)
         graphics.line(self.x - 5, self.y + 28, self.x - 5, self.y + 31, (n >= 2) and fg[-5] or fg[-10], 3)
@@ -1970,7 +2110,48 @@ function ClassIcon:draw()
         end
       end
 
-    elseif i == 3 then
+      
+    elseif i == 2 and l == 8 then
+      if self.highlighted then
+        graphics.line(self.x - 6, self.y + 21, self.x - 6, self.y + 24, (n >= 1) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x - 6, self.y + 28, self.x - 6, self.y + 31, (n >= 2) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x - 2, self.y + 21, self.x - 2, self.y + 24, (n >= 3) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x - 2, self.y + 28, self.x - 2, self.y + 31, (n >= 4) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x + 2, self.y + 21, self.x + 2, self.y + 24, (n >= 5) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x + 2, self.y + 28, self.x + 2, self.y + 31, (n >= 6) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x + 6, self.y + 21, self.x + 6, self.y + 24, (n >= 7) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x + 6, self.y + 28, self.x + 6, self.y + 31, (n >= 8) and fg[-5] or fg[-10], 3)
+      else
+        graphics.line(self.x - 6, self.y + 21, self.x - 6, self.y + 24, (n >= 1) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x - 6, self.y + 28, self.x - 6, self.y + 31, (n >= 2) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x - 2, self.y + 21, self.x - 2, self.y + 24, (n >= 3) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x - 2, self.y + 28, self.x - 2, self.y + 31, (n >= 4) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x + 2, self.y + 21, self.x + 2, self.y + 24, (n >= 5) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x + 2, self.y + 28, self.x + 2, self.y + 31, (n >= 6) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x + 6, self.y + 21, self.x + 6, self.y + 24, (n >= 7) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x + 6, self.y + 28, self.x + 6, self.y + 31, (n >= 8) and class_colors[self.class] or bg[10], 3)
+      end
+      if next_n then
+        if next_n == 1 then
+          graphics.line(self.x - 6, self.y + 21, self.x - 6, self.y + 24, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 2 then
+          graphics.line(self.x - 6, self.y + 28, self.x - 6, self.y + 31, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 3 then
+          graphics.line(self.x - 2, self.y + 21, self.x - 2, self.y + 24, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 4 then
+          graphics.line(self.x - 2, self.y + 28, self.x - 2, self.y + 31, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 5 then
+          graphics.line(self.x + 2, self.y + 21, self.x + 2, self.y + 24, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 6 then
+          graphics.line(self.x + 2, self.y + 28, self.x + 2, self.y + 31, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 7 then
+          graphics.line(self.x + 6, self.y + 21, self.x + 6, self.y + 24, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 8 then
+          graphics.line(self.x + 6, self.y + 28, self.x + 6, self.y + 31, self.flash and class_colors[self.class] or bg[10], 3)
+        end
+      end
+
+    elseif i == 3 and not k then
       if self.highlighted then
         graphics.line(self.x - 3, self.y + 19, self.x - 3, self.y + 22, (n >= 1) and fg[-5] or fg[-10], 3)
         graphics.line(self.x - 3, self.y + 24, self.x - 3, self.y + 27, (n >= 2) and fg[-5] or fg[-10], 3)
@@ -2001,19 +2182,79 @@ function ClassIcon:draw()
           graphics.line(self.x + 4, self.y + 29, self.x + 4, self.y + 32, self.flash and class_colors[self.class] or bg[10], 3)
         end
       end
+    elseif i == 3 and k == 9 then
+      if self.highlighted then
+        graphics.line(self.x - 5, self.y + 19, self.x - 5, self.y + 22, (n >= 1) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x - 5, self.y + 24, self.x - 5, self.y + 27, (n >= 2) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x - 5, self.y + 29, self.x - 5, self.y + 32, (n >= 3) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x + 0, self.y + 19, self.x + 0, self.y + 22, (n >= 4) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x + 0, self.y + 24, self.x + 0, self.y + 27, (n >= 5) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x + 0, self.y + 29, self.x + 0, self.y + 32, (n >= 6) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x + 5, self.y + 19, self.x + 5, self.y + 22, (n >= 7) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x + 5, self.y + 24, self.x + 5, self.y + 27, (n >= 8) and fg[-5] or fg[-10], 3)
+        graphics.line(self.x + 5, self.y + 29, self.x + 5, self.y + 32, (n >= 9) and fg[-5] or fg[-10], 3)
+      else
+        graphics.line(self.x - 5, self.y + 19, self.x - 5, self.y + 22, (n >= 1) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x - 5, self.y + 24, self.x - 5, self.y + 27, (n >= 2) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x - 5, self.y + 29, self.x - 5, self.y + 32, (n >= 3) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x + 0, self.y + 19, self.x + 0, self.y + 22, (n >= 4) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x + 0, self.y + 24, self.x + 0, self.y + 27, (n >= 5) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x + 0, self.y + 29, self.x + 0, self.y + 32, (n >= 6) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x + 5, self.y + 19, self.x + 5, self.y + 22, (n >= 7) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x + 5, self.y + 24, self.x + 5, self.y + 27, (n >= 8) and class_colors[self.class] or bg[10], 3)
+        graphics.line(self.x + 5, self.y + 29, self.x + 5, self.y + 32, (n >= 9) and class_colors[self.class] or bg[10], 3)
+      end
+      if next_n then
+        if next_n == 1 then
+          graphics.line(self.x - 5, self.y + 19, self.x - 5, self.y + 22, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 2 then
+          graphics.line(self.x - 5, self.y + 24, self.x - 5, self.y + 27, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 3 then
+          graphics.line(self.x - 5, self.y + 29, self.x - 5, self.y + 32, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 4 then
+          graphics.line(self.x + 0, self.y + 19, self.x + 0, self.y + 22, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 5 then
+          graphics.line(self.x + 0, self.y + 24, self.x + 0, self.y + 27, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 6 then
+          graphics.line(self.x + 0, self.y + 29, self.x + 0, self.y + 32, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 7 then
+          graphics.line(self.x + 5, self.y + 19, self.x + 5, self.y + 22, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 8 then
+          graphics.line(self.x + 5, self.y + 24, self.x + 5, self.y + 27, self.flash and class_colors[self.class] or bg[10], 3)
+        elseif next_n == 9 then
+          graphics.line(self.x + 5, self.y + 29, self.x + 5, self.y + 32, self.flash and class_colors[self.class] or bg[10], 3)
+        end
+      end
     end
+    self.y = self.y + 4
   graphics.pop()
 end
 
 
 function ClassIcon:on_mouse_enter()
+  self.selected = true
   ui_hover1:play{pitch = random:float(1.3, 1.5), volume = 0.5}
   self.spring:pull(0.2, 200, 10)
-  local i, j, k, owned = class_set_numbers[self.class](self.units)
+  local synboost = true if self.parent.cost then synboost = false end
+  local i, j, k, l, owned = class_set_numbers[self.class](self.units)
   self.info_text = InfoText{group = main.current.ui}
   self.info_text:activate({
-    {text = '[' .. class_color_strings[self.class] .. ']' .. (self.class == 'conjurer' and 'Builder' or self.class:capitalize()) .. '[fg] - owned: [yellow]' .. owned, font = pixul_font, alignment = 'center', height_multiplier = 1.25},
-    {text = class_descriptions[self.class]((k and (owned >= k and 3)) or (owned >= j and 2) or (owned >= i and 1) or 0), font = pixul_font, alignment = 'center'},
+    {text = '[' .. class_color_strings[self.class] .. ']' .. 
+    (self.class == 'conjurer' and 'Builder' or self.class:capitalize()) .. 
+    '[fg] - owned: [yellow]' .. owned, font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+    {text = class_descriptions[self.class](
+      (l and (owned >= l and 4)) or 
+      (k and (owned >= k and 3)) or 
+      (k and (owned >= j and 2)) or 
+      (owned >= i and 1) or 0),
+       font = pixul_font, alignment = 'center'}, synboost and
+     {text = (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) and 
+     '[yellow]Click to boost the synergy for 1K Gold, [fg]current level: [red]'..tostring(syn_pow[self.class])
+     or '[red] Max synergy boost level for this set reached: '.. tostring(syn_pow[self.class]),
+        font = pixul_font, alignment = 'center'} or 
+        {text =  
+     '[fg]Synergy boost level: [red]'..tostring(syn_pow[self.class]),
+        font = pixul_font, alignment = 'center'},
   }, nil, nil, nil, nil, 16, 4, nil, 2)
   self.info_text.x, self.info_text.y = gw/2, gh/2 + 10
 
@@ -2031,6 +2272,7 @@ end
 
 
 function ClassIcon:on_mouse_exit()
+  self.selected = false
   if self.info_text then
     self.info_text:deactivate()
     self.info_text.dead = true
@@ -2052,7 +2294,7 @@ end
 
 function ClassIcon:die(dont_spawn_effect)
   self.dead = true
-  local i, j, k, n = class_set_numbers[self.class](self.units)
+  local i, j, k, l, n = class_set_numbers[self.class](self.units)
   if not dont_spawn_effect then SpawnEffect{group = main.current.effects, x = self.x, y = self.y + 4, color = (n >= i) and class_colors[self.class] or bg[3]} end
   if self.info_text then
     self.info_text:deactivate()

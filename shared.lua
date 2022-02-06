@@ -3,17 +3,25 @@ function shared_init()
   local colors = {
     white = ColorRamp(Color(1, 1, 1, 1), 0.025),
     black = ColorRamp(Color(0, 0, 0, 1), 0.025),
-    bg = ColorRamp(Color'#303030', 0.025),
-    fg = ColorRamp(Color'#dadada', 0.025),
-    fg_alt = ColorRamp(Color'#b0a89f', 0.025),
+    bg = ColorRamp(Color'#282828', 0.025),
+    fg = ColorRamp(Color'#ffffff', 0.025),
+    fgpsyk = ColorRamp(Color'#CFF1D4', 0.025),
     yellow = ColorRamp(Color'#facf00', 0.025),
+    yellowforc = ColorRamp(Color'#FFD571', 0.025),
     orange = ColorRamp(Color'#f07021', 0.025),
+    orangebuil = ColorRamp(Color'#F94D20', 0.025),
     blue = ColorRamp(Color'#019bd6', 0.025),
+    blueench = ColorRamp(Color'#00D8C1', 0.025),
     green = ColorRamp(Color'#8bbf40', 0.025),
-    red = ColorRamp(Color'#e91d39', 0.025),
-    purple = ColorRamp(Color'#8e559e', 0.025),
-    blue2 = ColorRamp(Color'#4778ba', 0.025),
-    yellow2 = ColorRamp(Color'#f59f10', 0.025),
+    greenheal = ColorRamp(Color'#CDD386', 0.025),
+    carmine_acalamity_queen = ColorRamp(Color'#FF0066', 0.025),
+    red = ColorRamp(Color'#EC003C', 0.025),
+    reddark = ColorRamp(Color'#C11000', 0.025),
+    purple = ColorRamp(Color'#8900A4', 0.025),
+    purplecurs = ColorRamp(Color'#A20063', 0.025),
+    carmine = ColorRamp(Color'#D20052', 0.025),
+    blue2 = ColorRamp(Color'#603AE0', 0.025),
+    yellow2 = ColorRamp(Color'#F89C18', 0.025),
   }
   for name, color in pairs(colors) do
     _G[name] = color
@@ -23,8 +31,8 @@ function shared_init()
   modal_transparent = Color(0.1, 0.1, 0.1, 0.6)
   modal_transparent_2 = Color(0.1, 0.1, 0.1, 0.9)
 
-  bg_off = Color(46, 46, 46)
-  bg_gradient = GradientImage('vertical', Color(128, 128, 128, 0), Color(0, 0, 0, 0.3))
+  bg_off = Color(0, 0, 0)
+  bg_gradient = GradientImage('vertical', Color(0.05,0.05,0.05, 0.75), Color(0, 0, 0, 0.9))
 
   graphics.set_background_color(bg[0])
   graphics.set_color(fg[0])
@@ -60,15 +68,15 @@ function shared_draw(draw_action)
 
   background_canvas:draw_to(function()
     camera:attach()
-    for i = 1, 32 do
+    for i = 1, 16 do
       for j = 1, 18 do
         if j % 2 == 0 then
           if i % 2 == 1 then
-            graphics.rectangle2(0 + (i-1)*22, 0 + (j-1)*22, 22, 22, nil, nil, bg_off)
+            graphics.rectangle2(0 + (i-1)*44, 0 + (j-1)*44, 44, 44, nil, nil, bg_off)
           end
         else
           if i % 2 == 0 then
-            graphics.rectangle2(0 + (i-1)*22, 0 + (j-1)*22, 22, 22, nil, nil, bg_off)
+            graphics.rectangle2(0 + (i-1)*44, 0 + (j-1)*44, 44, 44, nil, nil, bg_off)
           end
         end
       end
@@ -103,7 +111,8 @@ Star:implement(GameObject)
 Star:implement(Physics)
 function Star:init(args)
   self:init_game_object(args)
-  self.sx, self.sy = 0.35, 0.35
+  local scale = math.random()* 0.5 + 0.2
+  self.sx, self.sy = scale, scale
   self.vr = 0
   self.dvr = random:float(0, math.pi/4)
   self.v = random:float(30, 42)
@@ -112,15 +121,16 @@ end
 
 function Star:update(dt)
   self:update_game_object(dt)
-  self.x = self.x + self.v*math.cos(-math.pi/4)*dt
-  self.y = self.y + self.v*math.sin(-math.pi/4)*dt
+  self.x = self.x + self.v*math.cos(-math.pi/4)*dt*0.5
+  self.y = self.y + self.v*math.sin(-math.pi/4)*dt*0.5
   self.vr = self.vr + self.dvr*dt
   if self.x > gw + 64 then self.dead = true end
 end
 
 
 function Star:draw()
-  star:draw(self.x, self.y, self.vr, self.sx, self.sy, 0, 0, bg[1])
+  --star:draw(self.x, self.y, self.vr, self.sx, self.sy, 0, 0, bg[-10])
+  hardening:draw(self.x, self.y, self.vr, self.sx*1, self.sy*1, 0, 0, bg[-3])
 end
 
 
@@ -495,12 +505,19 @@ end
 local invisible = Color(1, 1, 1, 0)
 global_text_tags = {
   red = TextTag{draw = function(c, i, text) graphics.set_color(red[0]) end},
+  reddark = TextTag{draw = function(c, i, text) graphics.set_color(reddark[0]) end},
   orange = TextTag{draw = function(c, i, text) graphics.set_color(orange[0]) end},
+  orangebuil = TextTag{draw = function(c, i, text) graphics.set_color(orangebuil[0]) end},
   yellow = TextTag{draw = function(c, i, text) graphics.set_color(yellow[0]) end},
+  yellowforc = TextTag{draw = function(c, i, text) graphics.set_color(yellowforc[0]) end},
   yellow2 = TextTag{draw = function(c, i, text) graphics.set_color(yellow2[0]) end},
   green = TextTag{draw = function(c, i, text) graphics.set_color(green[0]) end},
+  greenheal = TextTag{draw = function(c, i, text) graphics.set_color(greenheal[0]) end},
   purple = TextTag{draw = function(c, i, text) graphics.set_color(purple[0]) end},
+  purplecurs = TextTag{draw = function(c, i, text) graphics.set_color(purplecurs[0]) end},
+  carmine = TextTag{draw = function(c, i, text) graphics.set_color(carmine[0]) end},
   blue = TextTag{draw = function(c, i, text) graphics.set_color(blue[0]) end},
+  blueench = TextTag{draw = function(c, i, text) graphics.set_color(blueench[0]) end},
   blue2 = TextTag{draw = function(c, i, text) graphics.set_color(blue2[0]) end},
   bg = TextTag{draw = function(c, i, text) graphics.set_color(bg[0]) end},
   bg3 = TextTag{draw = function(c, i, text) graphics.set_color(bg[3]) end},
@@ -508,17 +525,20 @@ global_text_tags = {
   bgm2 = TextTag{draw = function(c, i, text) graphics.set_color(bg[-2]) end},
   light_bg = TextTag{draw = function(c, i, text) graphics.set_color(bg[5]) end},
   fg = TextTag{draw = function(c, i, text) graphics.set_color(fg[0]) end},
+  fgpsyk = TextTag{draw = function(c, i, text) graphics.set_color(fgpsyk[0]) end},
   fgm1 = TextTag{draw = function(c, i, text) graphics.set_color(fg[-1]) end},
   fgm2 = TextTag{draw = function(c, i, text) graphics.set_color(fg[-2]) end},
   fgm3 = TextTag{draw = function(c, i, text) graphics.set_color(fg[-3]) end},
   fgm4 = TextTag{draw = function(c, i, text) graphics.set_color(fg[-4]) end},
   fgm5 = TextTag{draw = function(c, i, text) graphics.set_color(fg[-5]) end},
+  fgpsykm5 = TextTag{draw = function(c, i, text) graphics.set_color(fgpsyk[-5]) end},
   fgm6 = TextTag{draw = function(c, i, text) graphics.set_color(fg[-6]) end},
   fgm7 = TextTag{draw = function(c, i, text) graphics.set_color(fg[-7]) end},
   fgm8 = TextTag{draw = function(c, i, text) graphics.set_color(fg[-8]) end},
   fgm9 = TextTag{draw = function(c, i, text) graphics.set_color(fg[-9]) end},
   fgm10 = TextTag{draw = function(c, i, text) graphics.set_color(fg[-10]) end},
   greenm5 = TextTag{draw = function(c, i, text) graphics.set_color(green[-5]) end},
+  greenhealm5 = TextTag{draw = function(c, i, text) graphics.set_color(greenheal[-5]) end},
   green5 = TextTag{draw = function(c, i, text) graphics.set_color(green[5]) end},
   blue5 = TextTag{draw = function(c, i, text) graphics.set_color(blue[5]) end},
   bluem5 = TextTag{draw = function(c, i, text) graphics.set_color(blue[-5]) end},
@@ -527,11 +547,19 @@ global_text_tags = {
   yellow25 = TextTag{draw = function(c, i, text) graphics.set_color(yellow2[5]) end},
   yellow2m5 = TextTag{draw = function(c, i, text) graphics.set_color(yellow2[-5]) end},
   redm5 = TextTag{draw = function(c, i, text) graphics.set_color(red[-5]) end},
+  reddarkm5 = TextTag{draw = function(c, i, text) graphics.set_color(red[-5]) end},
   orangem5 = TextTag{draw = function(c, i, text) graphics.set_color(orange[-5]) end},
+  orangebuilm5 = TextTag{draw = function(c, i, text) graphics.set_color(orangebuil[-5]) end},
   purplem5 = TextTag{draw = function(c, i, text) graphics.set_color(purple[-5]) end},
+  purplecursm5 = TextTag{draw = function(c, i, text) graphics.set_color(purplecurs[-5]) end},
+  carminem5 = TextTag{draw = function(c, i, text) graphics.set_color(carmine[-5]) end},
   yellowm5 = TextTag{draw = function(c, i, text) graphics.set_color(yellow[-5]) end},
+  yellowforcm5 = TextTag{draw = function(c, i, text) graphics.set_color(yellowforc[-5]) end},
+  carmine_acalamity_queen = TextTag{draw = function(c, i, text) graphics.set_color(carmine_acalamity_queen[0]) end},
   wavy = TextTag{update = function(c, dt, i, text) c.oy = 2*math.sin(4*time + i) end},
   wavy_mid = TextTag{update = function(c, dt, i, text) c.oy = 0.75*math.sin(3*time + i) end},
+  wavy_crazyyy = TextTag{update = function(c, dt, i, text) c.oy =
+    0.5*math.sin(66*time + i) c.ox = 0.6*math.cos(68.13*time + i) end},
   wavy_mid2 = TextTag{update = function(c, dt, i, text) c.oy = 0.5*math.sin(3*time + i) end},
   wavy_lower = TextTag{update = function(c, dt, i, text) c.oy = 0.25*math.sin(2*time + i) end},
 
@@ -864,7 +892,7 @@ WallCover:implement(GameObject)
 function WallCover:init(args)
   self:init_game_object(args)
   self.shape = Polygon(self.vertices)
-  self.color = self.color or fg[0]
+  self.color = self.color or bg[-10]
 end
 
 

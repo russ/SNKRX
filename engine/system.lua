@@ -137,9 +137,11 @@ function system.load_state()
 end
 
 
-function system.save_run(level, loop, gold, units, passives, shop_level, shop_xp, run_passive_pool, locked_state)
-  local run = {level = level, loop = loop, gold = gold, units = units, passives = passives, shop_level = shop_level, shop_xp = shop_xp, run_passive_pool = run_passive_pool, locked_state = locked_state,
-    current_new_game_plus = current_new_game_plus, run_time = run_time}
+function system.save_run(level, loop, gold, units, passives, shop_level, shop_xp, run_passive_pool, locked_state, syn_pow)
+  local run = {level = level, loop = loop, gold = gold, units = units,
+   passives = passives, shop_level = shop_level, shop_xp = shop_xp,
+    run_passive_pool = run_passive_pool, locked_state = locked_state,
+    current_new_game_plus = current_new_game_plus, run_time = run_time, syn_pow = syn_pow}
   local str = "return " .. table.tostring(run)
   love.filesystem.write("run_v4.txt", str)
 end

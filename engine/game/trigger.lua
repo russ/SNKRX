@@ -171,6 +171,16 @@ function Trigger:get_timer_and_delay(tag)
   return self.triggers[tag].timer, self.triggers[tag].delay
 end
 
+--Questions if an "after" delay should be reset and returns false if the new delay ends before old delay ends
+function Trigger:delayResetQ(tag, duration)
+  local t, d = self:get_timer_and_delay(tag)
+  if t and d then
+    if d - t > duration then
+      return false
+    end
+  end
+  return true
+end
 
 function Trigger:get_time()
   self.time = love.timer.getTime()
@@ -194,7 +204,6 @@ end
 
 function Trigger:update(dt)
   self.time = self.time + dt
-
   for tag, trigger in pairs(self.triggers) do
     if trigger.timer then
       trigger.timer = trigger.timer + dt

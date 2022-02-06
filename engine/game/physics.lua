@@ -367,6 +367,10 @@ function Physics:get_velocity()
   if self.body then return self.body:getLinearVelocity() end
 end
 
+function Physics:get_velocity_safe()
+  if self.body then return self.body:getLinearVelocity() end
+  return 0, 0
+end
 
 -- Sets the object's damping
 -- The higher this value, the more the object will resist movement and the faster it will stop moving after forces are applied to it

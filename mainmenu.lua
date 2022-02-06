@@ -63,13 +63,22 @@ function MainMenu:on_enter(from)
   end)
 
   self.units = {
-    {character = 'psykino', level = 1},
-    {character = 'magician', level = 1},
+    {character = 'carmine_queen', level = 1},
+    {character = 'sage', level = 1},
+    {character = 'sage', level = 1},
+    {character = 'sage', level = 1},
+    {character = 'sage', level = 1},
+    {character = 'sage', level = 1},
     {character = 'bane', level = 1},
-    {character = 'scout', level = 1},
-    {character = 'cannoneer', level = 1},
-    {character = 'swordsman', level = 1},
-    {character = 'archer', level = 1},
+    {character = 'bane', level = 1},
+    {character = 'bane', level = 1},
+    {character = 'bane', level = 1},
+    {character = 'sage', level = 1},
+    {character = 'sage', level = 1},
+    {character = 'sage', level = 1},
+    {character = 'bane', level = 1},
+    {character = 'bane', level = 1},
+    {character = 'sage', level = 1},
   }
 
   for i, unit in ipairs(self.units) do
@@ -80,7 +89,12 @@ function MainMenu:on_enter(from)
     end
   end
 
-  self.title_text = Text({{text = '[wavy_mid, fg]SNKRX', font = fat_font, alignment = 'center'}}, global_text_tags)
+  self.title_text = Text({{text = 
+  '[wavy_crazyyy, red]SNKRX!'
+  , font = fat_font, alignment = 'center'}}, global_text_tags)
+  self.acalamity_text = Text({{text = 
+  '[wavy_crazyyy, carmine_acalamity_queen]Acalamity mod'
+  , font = pixul_font, alignment = 'center'}}, global_text_tags)
 
   self.arena_run_button = Button{group = self.main_ui, x = 55, y = gh/2 - 10, force_update = true, button_text = 'arena run', fg_color = 'bg10', bg_color = 'bg', action = function(b)
     ui_transition2:play{pitch = random:float(0.95, 1.05), volume = 0.5}
@@ -99,6 +113,15 @@ function MainMenu:on_enter(from)
         'intimidation', 'vulnerability', 'temporal_chains', 'ceremonial_dagger', 'homing_barrage', 'critical_strike', 'noxious_strike', 'infesting_strike', 'burning_strike', 'lucky_strike', 'healing_strike', 'stunning_strike',
         'silencing_strike', 'culling_strike', 'lightning_strike', 'psycholeak', 'divine_blessing', 'hardening', 'kinetic_strike',
       }
+      if run.syn_pow then
+        reset_syn_pow()
+        for i, v in pairs(run.syn_pow) do
+          syn_pow[i] = v
+        end
+      else
+        reset_syn_pow()
+      end
+      calc_syn_power(false)
       run_time = run.time or 0
       gold = run.gold or 3
       passives = run.passives or {}
@@ -166,7 +189,6 @@ function MainMenu:update(dt)
   if main_song_instance:isStopped() then
     main_song_instance = _G[random:table{'song1', 'song2', 'song3', 'song4', 'song5'}]:play{volume = 0.5}
   end
-
   if input.escape.pressed then
     if not self.paused then
       open_options(self)
@@ -185,6 +207,7 @@ function MainMenu:update(dt)
     self.effects:update(dt*slow_amount)
     self.main_ui:update(dt*slow_amount)
     if self.title_text then self.title_text:update(dt) end
+    if self.acalamity_text then self.acalamity_text:update(dt) end
     self.ui:update(dt*slow_amount)
   else
     self.ui:update(dt*slow_amount)
@@ -208,6 +231,7 @@ function MainMenu:draw()
 
   self.main_ui:draw()
   self.title_text:draw(60, gh/2 - 40)
+  self.acalamity_text:draw(66-8, gh/2 - 30)
   if self.paused then graphics.rectangle(gw/2, gh/2, 2*gw, 2*gh, nil, nil, modal_transparent) end
   self.ui:draw()
 end

@@ -17,6 +17,8 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
   self.shop_level = shop_level or 1
   self.shop_xp = shop_xp or 0
   self.lock = lock
+  reset_counters()
+  critter_pool = {}
 
   self.starting_units = table.copy(units)
 
@@ -103,7 +105,7 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
   end
 
   if self.level == 1000 then
-    self.level_1000_text = Text2{group = self.ui, x = gw/2, y = gh/2, lines = {{text = '[fg, wavy_mid]SNKRX', font = fat_font, alignment = 'center'}}}
+    self.level_1000_text = Text2{group = self.ui, x = gw/2, y = gh/2, lines = {{text = '[wavy_crazyyy, red]SNKRX', font = fat_font, alignment = 'center'}}}
   
   elseif (self.level - (25*self.loop)) % 6 == 0 or self.level % 25 == 0 then
     self.boss_level = true
@@ -242,7 +244,7 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
     end)
 
     if self.level == 20 and self.trailer then
-      Text2{group = self.ui, x = gw/2, y = gh/2 - 24, lines = {{text = '[fg, wavy]SNKRX', font = fat_font, alignment = 'center'}}}
+      Text2{group = self.ui, x = gw/2, y = gh/2 - 24, lines = {{text = '[wavy_crazyyy, red]SNKRX', font = fat_font, alignment = 'center'}}}
       Text2{group = self.ui, x = gw/2, y = gh/2, sx = 0.5, sy = 0.5, lines = {{text = '[fg, wavy_mid]play now!', font = fat_font, alignment = 'center'}}}
       Text2{group = self.ui, x = gw/2, y = gh/2 + 24, sx = 0.5, sy = 0.5, lines = {{text = '[light_bg, wavy_mid]music: kubbi - ember', font = fat_font, alignment = 'center'}}}
     end
@@ -262,22 +264,19 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
   table.insert(units, self.player)
   for _, f in ipairs(self.player.followers) do table.insert(units, f) end
 
+  chaolyzable_sets = {}
   local class_levels = get_class_levels(units)
-  self.ranger_level = class_levels.ranger
-  self.warrior_level = class_levels.warrior
-  self.mage_level = class_levels.mage
-  self.rogue_level = class_levels.rogue
-  self.nuker_level = class_levels.nuker
-  self.curser_level = class_levels.curser
-  self.forcer_level = class_levels.forcer
-  self.swarmer_level = class_levels.swarmer
-  self.voider_level = class_levels.voider
-  self.enchanter_level = class_levels.enchanter
-  self.healer_level = class_levels.healer
-  self.psyker_level = class_levels.psyker
-  self.conjurer_level = class_levels.conjurer
-  self.sorcerer_level = class_levels.sorcerer
-  self.mercenary_level = class_levels.mercenary
+  for i, v in pairs(sp_max) do
+    self[i..'_level'] = class_levels[i]
+    self.active_sets = 0
+    if class_levels[i] >= 1 then
+      self.active_sets = self.active_sets + 1
+      if i ~= 'chaolyst' then
+        table.insert(chaolyzable_sets, i)
+      end
+    end
+  end
+  gl_chaolyst_level = class_levels['chaolyst']
 
   self.t:every(0.375, function()
     local p = random:table(star_positions)
@@ -351,8 +350,13 @@ function Arena:update(dt)
   if main_song_instance:isStopped() then
     main_song_instance = _G[random:table{'song1', 'song2', 'song3', 'song4', 'song5'}]:play{volume = 0.5}
   end
+  
 
   if not self.paused and not self.died and not self.won then
+    if not self.transitioning and not self.in_credits and not self.quitting then
+      all_units_global = self.player:get_all_units()
+      random_unit = table.random(all_units_global)
+    end
     run_time = run_time + dt
   end
 
@@ -365,6 +369,8 @@ function Arena:update(dt)
       close_options(self)
     end
   end
+
+
 
   if self.paused or self.died or self.won and not self.transitioning then
     if input.r.pressed then
@@ -391,6 +397,7 @@ function Arena:update(dt)
         max_units = math.clamp(7 + current_new_game_plus + self.loop, 7, 12)
         main:add(BuyScreen'buy_screen')
         locked_state = nil
+        reset_syn_pow()
         system.save_run()
         main:go_to('buy_screen', 1, 0, {}, passives, 1, 0)
       end, text = Text({{text = '[wavy, ' .. tostring(state.dark_transitions and 'fg' or 'bg') .. ']restarting...', font = pixul_font, alignment = 'center'}}, global_text_tags)}
@@ -406,16 +413,18 @@ function Arena:update(dt)
     end
   end
 
-  self:update_game_object(dt*slow_amount)
   main_song_instance.pitch = math.clamp(slow_amount*music_slow_amount, 0.05, 1)
-
-  star_group:update(dt*slow_amount)
-  self.floor:update(dt*slow_amount)
-  self.main:update(dt*slow_amount*self.main_slow_amount)
-  self.post_main:update(dt*slow_amount)
-  self.effects:update(dt*slow_amount)
   self.ui:update(dt*slow_amount)
-  self.credits:update(dt)
+  if not self.paused then
+    self:update_game_object(dt*slow_amount)
+
+    star_group:update(dt*slow_amount)
+    self.floor:update(dt*slow_amount)
+    self.main:update(dt*slow_amount*self.main_slow_amount)
+    self.post_main:update(dt*slow_amount)
+    self.effects:update(dt*slow_amount)
+    self.credits:update(dt)
+  end
 end
 
 
@@ -454,7 +463,7 @@ function Arena:quit()
 
         self.build_text = Text2{group = self.ui, x = 40, y = 20, force_update = true, lines = {{text = "[wavy_mid, fg]your build", font = pixul_font, alignment = 'center'}}}
         for i, unit in ipairs(self.units) do
-          CharacterPart{group = self.ui, x = 20, y = 40 + (i-1)*19, character = unit.character, level = unit.level, force_update = true, cant_click = true, parent = self}
+          CharacterPart{group = self.ui, x = 20, y = 40 + (i-1)*19, character = unit.character, level = unit.level, force_update = true, cant_click = true, parent = self, lead = (i == 1)}
           Text2{group = self.ui, x = 20 + 14 + pixul_font:get_text_width(unit.character)/2, y = 40 + (i-1)*19, force_update = true, lines = {
             {text = '[' .. character_color_strings[unit.character] .. ']' .. unit.character, font = pixul_font, alignment = 'left'}
           }}
@@ -688,7 +697,7 @@ function Arena:quit()
 
         self.build_text = Text2{group = self.ui, x = 40, y = 20, force_update = true, lines = {{text = "[wavy_mid, fg]your build", font = pixul_font, alignment = 'center'}}}
         for i, unit in ipairs(self.units) do
-          CharacterPart{group = self.ui, x = 20, y = 40 + (i-1)*19, character = unit.character, level = unit.level, force_update = true, cant_click = true, parent = self}
+          CharacterPart{group = self.ui, x = 20, y = 40 + (i-1)*19, character = unit.character, level = unit.level, force_update = true, cant_click = true, parent = self, lead = (i == 1)}
           Text2{group = self.ui, x = 20 + 14 + pixul_font:get_text_width(unit.character)/2, y = 40 + (i-1)*19, force_update = true, lines = {
             {text = '[' .. character_color_strings[unit.character] .. ']' .. unit.character, font = pixul_font, alignment = 'left'}
           }}
@@ -829,7 +838,8 @@ function Arena:die()
     self.t:after(2, function()
       self.build_text = Text2{group = self.ui, x = 40, y = 20, force_update = true, lines = {{text = "[wavy_mid, fg]your build", font = pixul_font, alignment = 'center'}}}
       for i, unit in ipairs(self.units) do
-        CharacterPart{group = self.ui, x = 20, y = 40 + (i-1)*19, character = unit.character, level = unit.level, force_update = true, cant_click = true, parent = self}
+        print(i)
+        CharacterPart{group = self.ui, x = 20, y = 40 + (i-1)*19, character = unit.character, level = unit.level, force_update = true, cant_click = true, parent = self, lead = (i == 1)}
         Text2{group = self.ui, x = 20 + 14 + pixul_font:get_text_width(unit.character)/2, y = 40 + (i-1)*19, force_update = true, lines = {
           {text = '[' .. character_color_strings[unit.character] .. ']' .. unit.character, font = pixul_font, alignment = 'left'}
         }}
@@ -861,6 +871,7 @@ function Arena:die()
             'intimidation', 'vulnerability', 'temporal_chains', 'ceremonial_dagger', 'homing_barrage', 'critical_strike', 'noxious_strike', 'infesting_strike', 'burning_strike', 'lucky_strike', 'healing_strike', 'stunning_strike',
             'silencing_strike', 'culling_strike', 'lightning_strike', 'psycholeak', 'divine_blessing', 'hardening', 'kinetic_strike',
           }
+          reset_syn_pow()
           max_units = math.clamp(7 + current_new_game_plus, 7, 12)
           main:add(BuyScreen'buy_screen')
           system.save_run()
@@ -993,7 +1004,7 @@ function Arena:transition()
     slow_amount = 1
     music_slow_amount = 1
     main:add(BuyScreen'buy_screen')
-    system.save_run(self.level+1, self.loop, gold, self.units, self.passives, self.shop_level, self.shop_xp, run_passive_pool, locked_state)
+    system.save_run(self.level+1, self.loop, gold, self.units, self.passives, self.shop_level, self.shop_xp, run_passive_pool, locked_state, syn_pow)
     main:go_to('buy_screen', self.level+1, self.loop, self.units, self.passives, self.shop_level, self.shop_xp)
     t.t:after(0.1, function()
       t.text:set_text({

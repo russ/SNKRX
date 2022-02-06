@@ -22,6 +22,10 @@ function Circle:move_to(x, y)
   self.x, self.y = x, y
 end
 
+function Circle:setRadius(r)
+  self.w, self.h = 2*r, 2*r
+end
+
 
 -- Returns true if this polygon is colliding with the given shape.
 -- colliding = polygon:is_colliding_with_shape(shape)
