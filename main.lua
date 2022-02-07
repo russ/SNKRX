@@ -1430,7 +1430,7 @@ function init()
       return sup_syns[name].behav
     end
 
-    def_oversyn('Delegate', 1, {'conjurer', 'sorcerer'}, 3, blue2[0], 
+    def_oversyn('Delegate', 1, {'conjurer', 'sorcerer'}, 3, orangebuild[0], 
     {'Spawning non-boss enemies: ' ,'% chance to turn into a random unit building'},
     function() for _, v in all_units_global do v.manaflow = true 
       v.t:after(1, function() manaflow = false end, 'nomanaflow') end end)
@@ -1455,7 +1455,7 @@ function init()
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('All-for-one', 1, {'mercenary', 'explorer', 'chaolyst'}, 20, yellow[0], 
+    def_oversyn('Focus', 1, {'mercenary', 'explorer', 'chaolyst'}, 20, yellow[0], 
     {'All non-explorer units 20% weaker, explorers gain ','% more dps and aspd'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
