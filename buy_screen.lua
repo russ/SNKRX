@@ -1300,19 +1300,37 @@ function CharacterPart:on_mouse_enter()
   self.selected = true
   self.spring:pull(0.2, 200, 10)
   self.info_text = InfoText{group = main.current.ui, force_update = self.force_update}
-  self.info_text:activate({
-    {text = '[' .. character_color_strings[self.character] .. ']' .. self.character:capitalize() .. '[fg] - [yellow]Lv.' .. self.level .. '[fg], tier [yellow]' .. character_tiers[self.character] .. '[fg] - sells for [yellow]' ..
-      self:get_sale_price(), font = pixul_font, alignment = 'center', height_multiplier = 1.25},
-    {text = '[fg]Classes: ' .. character_class_strings[self.character], font = pixul_font, alignment = 'center', height_multiplier = 1.25},
-    {text = character_descriptions[self.character](self.level), font = pixul_font, alignment = 'center', height_multiplier = 2},
-    {text = '[' .. (self.level == 3 and 'yellow' or 'light_bg') .. ']Lv.3 [' .. (self.level == 3 and 'fg' or 'light_bg') .. ']Effect - ' .. 
-      (self.level == 3 and character_effect_names[self.character] or character_effect_names_gray[self.character]), font = pixul_font, alignment = 'center', height_multiplier = 1.25},
-    {text = (self.level == 3 and character_effect_descriptions[self.character]() or character_effect_descriptions_gray[self.character]()), font = pixul_font, alignment = 'center'},
-    {text = 'Dmg last round: [red]' .. (math.floor(damage_counters[self.character]) or '???'), font = pixul_font, alignment = 'center'},
-    (self.lead) and {text = 'Body dmg -//-: [yellow]' .. (math.floor(damage_counters['body']) or '???'), font = pixul_font, alignment = 'center'} or nil,
-    (self.lead) and {text = 'Kinetic dmg -//-: [yellowforc]' .. (math.floor(damage_counters['kinetic']) or '???'), font = pixul_font, alignment = 'center'} or nil,
-    (self.lead) and {text = 'Other dmg -//-: [red]' .. (math.floor(damage_counters['other']) or '???'), font = pixul_font, alignment = 'center'} or nil,
-  }, nil, nil, nil, nil, 16, 4, nil, 2)
+  self.oversyns = {}
+  for _, v in ipairs(sup_syns) do
+    table.insert(self.oversyns, { text = 
+    '['..oversyn_cols[v]..']'..v, font = pixul_font, alignment = 'center', height_multiplier = 1}
+  )
+    table.insert(self.oversyns, { text = 
+    '['..oversyn_cols[v]..']'..oversyn_desc[v](), font = pixul_font, alignment = 'center', height_multiplier = 1}
+  )
+  end
+  for _, v in ipairs(hyp_syns) do
+    table.insert(self.oversyns, { text = 
+    '['..oversyn_cols[v]..']'..v, font = pixul_font, alignment = 'center', height_multiplier = 1}
+  )
+    table.insert(self.oversyns,{  text = 
+    '['..oversyn_cols[v]..']'..oversyn_desc[v](), font = pixul_font, alignment = 'center', height_multiplier = 1}
+  )
+  end
+  self.info_text:activate(self.oversyns, nil, nil, nil, nil, 16, 2, nil, -256)
+  --self.info_text:activate({
+  --  {text = '[' .. character_color_strings[self.character] .. ']' .. self.character:capitalize() .. '[fg] - [yellow]Lv.' .. self.level .. '[fg], tier [yellow]' .. character_tiers[self.character] .. '[fg] - sells for [yellow]' ..
+  --    self:get_sale_price(), font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+  --  {text = '[fg]Classes: ' .. character_class_strings[self.character], font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+  --  {text = character_descriptions[self.character](self.level), font = pixul_font, alignment = 'center', height_multiplier = 2},
+  --  {text = '[' .. (self.level == 3 and 'yellow' or 'light_bg') .. ']Lv.3 [' .. (self.level == 3 and 'fg' or 'light_bg') .. ']Effect - ' .. 
+  --    (self.level == 3 and character_effect_names[self.character] or character_effect_names_gray[self.character]), font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+  --  {text = (self.level == 3 and character_effect_descriptions[self.character]() or character_effect_descriptions_gray[self.character]()), font = pixul_font, alignment = 'center'},
+  --  {text = 'Dmg last round: [red]' .. (math.floor(damage_counters[self.character]) or '???'), font = pixul_font, alignment = 'center'},
+  --  (self.lead) and {text = 'Body dmg -//-: [yellow]' .. (math.floor(damage_counters['body']) or '???'), font = pixul_font, alignment = 'center'} or nil,
+  --  (self.lead) and {text = 'Kinetic dmg -//-: [yellowforc]' .. (math.floor(damage_counters['kinetic']) or '???'), font = pixul_font, alignment = 'center'} or nil,
+  --  (self.lead) and {text = 'Other dmg -//-: [red]' .. (math.floor(damage_counters['other']) or '???'), font = pixul_font, alignment = 'center'} or nil,
+  --}, nil, nil, nil, nil, 16, 4, nil, 2)
   self.info_text.x, self.info_text.y = gw/2, gh/2 + 10
 
   --[[

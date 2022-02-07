@@ -1391,20 +1391,29 @@ function init()
     sup_syns = {}
     hyp_syns = {}
     oversyn_desc = {}
+    oversyn_cols = {}
     oversyn_vals = {}
     oversyn_needs = {}
     oversyn_behav = {}
+    oversyn_level = {}
 
   
-    local def_oversyn = function(name, type, classes, base_val, color, desc, behaviour, level) --type 1 is supersynergy, 2 is hypersynergy
+    local def_oversyn = function(name, type, needs, base_val, color, desc, behaviour, level) --type 1 is supersynergy, 2 is hypersynergy
       if type == 1 then
         table.insert(sup_syns, name)
-      elseif type == 2 then-+-----
+      elseif type == 2 then
         table.insert(hyp_syns, name)
       end
+      oversyn_cols[name] = color
+      oversyn_needs[name] = needs
   
       oversyn_vals[name] = base_val
-
+      oversyn_level[name] = 1
+      oversyn_desc[name] = function() return
+        desc[1] ..
+        tostring(oversyn_vals[name] * oversyn_level[name]) ..
+        desc[2]
+      end
     end
   
     function ssyn_v(name, ind)
@@ -1423,106 +1432,130 @@ function init()
       return sup_syns[name].behav
     end
 
-    def_oversyn('Delegate', 1, {'conjurer', 'sorcerer'}, 3, orangebuil[0], 
+    def_oversyn('Delegate', 1, {'conjurer', 'sorcerer'}, 3, 'orangebuil', 
     {'Spawning non-boss enemies: ' ,'% chance to turn into a random unit building'},
     function() for _, v in all_units_global do v.manaflow = true 
       v.t:after(1, function() manaflow = false end, 'nomanaflow') end end)
   
-    def_oversyn('Chronology', 1, {'sorcerer', 'enchanter', 'mage'}, 1, blue2[0], 
+    def_oversyn('Chronology', 1, {'sorcerer', 'enchanter', 'mage'}, 1, 'blue2', 
     {'Mage and Sorcerer casts: ' ,'% chance to increase global aspd by 100% for 1 sec'},
     function() for _, v in all_units_global do v.manaflow = true 
       v.t:after(1, function() manaflow = false end, 'nomanaflow') end end)
   
-    def_oversyn('Armorforge', 1, {'mage', 'warrior'}, 0.2, yellow[0], 
+    def_oversyn('Armorforge', 1, {'mage', 'warrior'}, 0.2, 'yellow', 
     {'Mage and Warrior attack hits grant ',' armor, round resets'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
   
-    def_oversyn('Cultivation', 1, {'warrior', 'healer'}, 5, greenheal[0], 
+    def_oversyn('Cultivation', 1, {'warrior', 'healer'}, 5, 'greenheal', 
     {'Passively regenerate/generate ','% health/armor every second, round resets'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Collector', 1, {'healer', 'mercenary'}, 10, yellow2[0], 
+    def_oversyn('Collector', 1, {'healer', 'mercenary'}, 10, 'yellow2', 
     {'Picking up health/gold has ','% chance to give double'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Focus', 1, {'mercenary', 'explorer', 'chaolyst'}, 20, fg[0], 
-    {'On explorer hit: ','% of damage given away to other units'},
+    def_oversyn('Focus', 1, {'mercenary', 'explorer', 'chaolyst'}, 20, 'fg', 
+    {'??? ','% ???'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Catalyst', 1, {'chaolyst', 'forcer'}, 5, yellow[0], 
+    def_oversyn('Catalyst', 1, {'chaolyst', 'forcer'}, 5, 'yellow', 
     {'Damage against living enemies grows by ','% every second they live'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Suppression', 1, {'forcer', 'curser'}, 0.2, yellowforc[0], 
+    def_oversyn('Suppression', 1, {'forcer', 'curser'}, 0.2, 'yellowforc', 
     {'Curses stun for ',' seconds'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Corruptor', 1, {'curser', 'voider'}, 10, purplecurs[0], 
+    def_oversyn('Corruptor', 1, {'curser', 'voider'}, 10, 'purplecurs', 
     {'All damage over time has ','% chance to apply a random equipped unit curse'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Overwhelm', 1, {'voider', 'nuker'}, 1, red[0], 
+    def_oversyn('Overwhelm', 1, {'voider', 'nuker'}, 1, 'red', 
     {'Damage over time has ','% chance to cause 10x damage in an AoE explosion'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Faraway', 1, {'nuker', 'ranger'}, 20, green[0], 
+    def_oversyn('Faraway', 1, {'nuker', 'ranger'}, 20, 'green', 
     {'All damage is ','% higher with high distance'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Bulletzone', 1, {'ranger', 'rogue', 'psyker'}, 10, reddark[0], 
-    {'Psyker orbs have ','% chance to release a random present unit projectile every second'},
+    def_oversyn('Bulletzone', 1, {'ranger', 'rogue', 'psyker'}, 10, 'reddark', 
+    {'A random psyker orb has ','% chance to duplicate a projectile on its cast'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Mindswarm', 1, {'psyker', 'swarmer'}, 10, fgpsyk[0], 
+    def_oversyn('Mindswarm', 1, {'psyker', 'swarmer'}, 10, 'fgpsyk', 
     {'Critters have ','% chance to borrow a supercharged psyker orb on spawn'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Incubation', 1, {'swarmer', 'conjurer'}, 10, orange[0], 
+    def_oversyn('Incubation', 1, {'swarmer', 'conjurer'}, 10, 'orange', 
     {'Buildings have ','% chance to spawn a critter every second'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Centralization', 2, {'Focus', 'Mindswarm'}, 20, fg[0], 
+    def_oversyn('Centralization', 2, {'Focus', 'Mindswarm'}, 20, 'fg', 
     {'Critters have ','% chance to encircle the snake like psyker orbs on spawn'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Vampirism', 2, {'Cultivation', 'Suppression'}, 10, reddark[0], 
+    def_oversyn('Vampirism', 2, {'Cultivation', 'Suppression'}, 10, 'reddark', 
     {'Heal ','% of damage dealt to cursed enemies'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Defiance', 2, {'Armorforge', 'Catalyst'}, 2, yellow[0], 
+    def_oversyn('Defiance', 2, {'Armorforge', 'Catalyst'}, 2, 'yellow', 
     {'Gain ',' armor for each enemy alive'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Devourer', 2, {'Collector', 'Corruptor'}, 10, carmine[0], 
+    def_oversyn('Devourer', 2, {'Collector', 'Corruptor'}, 10, 'carmine', 
     {'Enemies have ','% chance to spawn dps boost orbs on death'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Pestilence', 2, {'Overwhelm', 'Incubation'}, 10, purple[0], 
+    def_oversyn('Pestilence', 2, {'Overwhelm', 'Incubation'}, 10, 'purple', 
     {'Critters have ','% chance to spawn with a DoTArea around them'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
    
-    def_oversyn('Devourer', 2, {'Faraway', 'Delegate'}, 10, fg[0], 
-    {'Buildings have ','% chance to spawn a critter every second'},
+    def_oversyn('Sabotage', 2, {'Faraway', 'Delegate'}, 10, 'blue2', 
+    {'Enemies have ','% chance per second to suddenly combust into 12 projectiles'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
+    def_oversyn('Obsidian', 2, {'Armorforge', 'Corruptor'}, 1, 'purple', 
+    {'Snake hits have ','% chance to ignore damage and instead transfer that to all DoTs'},
+    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
+       main.current.player.adamantine + o_val or o_val end)
+   
+    def_oversyn('Titan', 2, {'Cultivation', 'Overwhelm'}, 20, 'yellow', 
+    {'Deal ','% more damage at maxhp if no units were lost'},
+    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
+       main.current.player.adamantine + o_val or o_val end)
+   
+    def_oversyn('Telekinesis', 2, {'Collector', 'Faraway'}, 20, 'yellow2', 
+    {'Drops have ','% chance/sec to rush towards you, 50% maxhp microstun dmg to enemies'},
+    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
+       main.current.player.adamantine + o_val or o_val end)
+   
+    def_oversyn('Frenzy', 2, {'Catalyst', 'Incubation'}, 0.1, 'carmine', 
+    {'Every Chaolyst/Forcer cast: ','% aspd and movement to critters/buildings, round reset'},
+    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
+       main.current.player.adamantine + o_val or o_val end)
+    
+    def_oversyn('Horror', 2, {'Suppression', 'Delegate'}, 20, 'purplecurs', 
+    {'Enemies have ','% chance per second to become feared: silenced and running away'},
+    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
+       main.current.player.adamantine + o_val or o_val end)
 
 
   tier_to_characters = {
