@@ -1501,7 +1501,7 @@ end
 function LateUpgradeButton:draw()
   graphics.push(self.x, self.y, 0, self.sx*self.spring.x, self.sy*self.spring.x)
   self.lateup_txt:draw(self.x, self.y - 20)
-  graphics.rectangle(self.x, self.y, 16, 24, 4, 4, self.highlighted and fg[0] or lateup_bgcol[self.type]
+  graphics.rectangle(self.x, self.y, 16, 24, 4, 4, self.highlighted and fg[0] or lateup_bgcol[self.type])
   lateup_imgs[self.type]:draw(self.x, self.y, 0, 0.3, 0.3, 0, 0, self.highlighted and fg[-5] or lateup_fgcol[self.type])
   graphics.pop()
 end

@@ -1396,21 +1396,14 @@ function init()
     oversyn_behav = {}
 
   
-    local def_oversyn = function(name, type, classes, constants, color, desc, behaviour, level) --type 1 is supersynergy, 2 is hypersynergy
+    local def_oversyn = function(name, type, classes, base_val, color, desc, behaviour, level) --type 1 is supersynergy, 2 is hypersynergy
       if type == 1 then
         table.insert(sup_syns, name)
-      elseif type == 2 then
+      elseif type == 2 then-+-----
         table.insert(hyp_syns, name)
       end
   
-      oversyn_vals[name] = {}
-      for i, v in ipairs(constants) do
-        oversyn_vals[name][i] = v 
-      end
-      oversyn_vals[name] = {}
-      for _, v in ipairs(desc) do
-
-      end
+      oversyn_vals[name] = base_val
 
     end
   
@@ -1430,7 +1423,7 @@ function init()
       return sup_syns[name].behav
     end
 
-    def_oversyn('Delegate', 1, {'conjurer', 'sorcerer'}, 3, orangebuild[0], 
+    def_oversyn('Delegate', 1, {'conjurer', 'sorcerer'}, 3, orangebuil[0], 
     {'Spawning non-boss enemies: ' ,'% chance to turn into a random unit building'},
     function() for _, v in all_units_global do v.manaflow = true 
       v.t:after(1, function() manaflow = false end, 'nomanaflow') end end)
@@ -1445,18 +1438,18 @@ function init()
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
   
-    def_oversyn('Cultivation', 1, {'warrior', 'healer'}, 5, yellow[0], 
+    def_oversyn('Cultivation', 1, {'warrior', 'healer'}, 5, greenheal[0], 
     {'Passively regenerate/generate ','% health/armor every second, round resets'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Collector', 1, {'healer', 'mercenary'}, 10, yellow[0], 
+    def_oversyn('Collector', 1, {'healer', 'mercenary'}, 10, yellow2[0], 
     {'Picking up health/gold has ','% chance to give double'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
-    def_oversyn('Focus', 1, {'mercenary', 'explorer', 'chaolyst'}, 20, yellow[0], 
-    {'All non-explorer units 20% weaker, explorers gain ','% more dps and aspd'},
+    def_oversyn('Focus', 1, {'mercenary', 'explorer', 'chaolyst'}, 20, fg[0], 
+    {'On explorer hit: ','% of damage given away to other units'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 
@@ -1499,6 +1492,37 @@ function init()
     {'Buildings have ','% chance to spawn a critter every second'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
+
+    def_oversyn('Centralization', 2, {'Focus', 'Mindswarm'}, 20, fg[0], 
+    {'Critters have ','% chance to encircle the snake like psyker orbs on spawn'},
+    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
+       main.current.player.adamantine + o_val or o_val end)
+
+    def_oversyn('Vampirism', 2, {'Cultivation', 'Suppression'}, 10, reddark[0], 
+    {'Heal ','% of damage dealt to cursed enemies'},
+    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
+       main.current.player.adamantine + o_val or o_val end)
+
+    def_oversyn('Defiance', 2, {'Armorforge', 'Catalyst'}, 2, yellow[0], 
+    {'Gain ',' armor for each enemy alive'},
+    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
+       main.current.player.adamantine + o_val or o_val end)
+
+    def_oversyn('Devourer', 2, {'Collector', 'Corruptor'}, 10, carmine[0], 
+    {'Enemies have ','% chance to spawn dps boost orbs on death'},
+    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
+       main.current.player.adamantine + o_val or o_val end)
+
+    def_oversyn('Pestilence', 2, {'Overwhelm', 'Incubation'}, 10, purple[0], 
+    {'Critters have ','% chance to spawn with a DoTArea around them'},
+    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
+       main.current.player.adamantine + o_val or o_val end)
+   
+    def_oversyn('Devourer', 2, {'Faraway', 'Delegate'}, 10, fg[0], 
+    {'Buildings have ','% chance to spawn a critter every second'},
+    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
+       main.current.player.adamantine + o_val or o_val end)
+
 
 
   tier_to_characters = {
