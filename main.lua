@@ -1154,7 +1154,7 @@ function init()
     local res = ''
     local i = 1
     while i <= maxcount do
-      res = res .. '[' .. ylbn(lvl, i) .. ']'.. tostring(offset * i)
+      res = strc({res , '[' , ylbn(lvl, i) , ']', tostring(offset * i)})
       if i < maxcount then
         res = res .. '[light_bg]/'
       end
@@ -1165,13 +1165,13 @@ function init()
     local postfix = is_perc and '%' or ''
     res = res .. ' [fg]- '
     while i <= maxcount do
-      res = res .. '[' .. ylbn(lvl, i) .. ']'.. prefix .. tostring(syn_vals[class][i]*perc_m) .. postfix
+      res = strc({res , '[' , ylbn(lvl, i) , ']', prefix , tostring(syn_vals[class][i]*perc_m) , postfix})
       if i < maxcount then
         res = res .. '[light_bg]/'
       end
       i = i + 1
     end
-    res = res .. ' [fg]' .. postdescr
+    res = strc({res .. ' [fg]' .. postdescr})
     return res
   end
   
