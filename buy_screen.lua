@@ -391,6 +391,7 @@ function BuyScreen:set_party_and_sets()
     end
     table.insert(self.sets, ClassIcon{group = self.main, x = 296 + (x-1)*18, y = 45 + (y-1)*48, class = class, units = self.units, parent = self})
   end
+  see_oversyns(self.units)
 end
 
 
@@ -1228,6 +1229,7 @@ function CharacterPart:update(dt)
         print(character.y, character.character, character.shape.y)
       end
       ]]--
+      see_oversyns(self.parent.units)
     end
 
     for _, part in ipairs(self.parts) do

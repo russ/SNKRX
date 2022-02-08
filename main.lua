@@ -1389,175 +1389,360 @@ function init()
    function() end,
     mouths_img, red[0], red[-5])
 
-
-    sup_syns = {}
-    hyp_syns = {}
-    oversyn_desc = {}
-    oversyn_cols = {}
-    oversyn_vals = {}
-    oversyn_needs = {}
-    oversyn_behav = {}
-    oversyn_level = {}
-
-  
-    local def_oversyn = function(name, type, needs, base_val, color, desc, behaviour, level) --type 1 is supersynergy, 2 is hypersynergy
-      if type == 1 then
-        table.insert(sup_syns, name)
-      elseif type == 2 then
-        table.insert(hyp_syns, name)
-      end
-      oversyn_cols[name] = color
-      oversyn_needs[name] = needs
-  
-      oversyn_vals[name] = base_val
-      oversyn_level[name] = 1
-      oversyn_desc[name] = function() return strc({
-        desc[1] ,
-        tostring(oversyn_vals[name] * oversyn_level[name]) ,
-        desc[2]})
+  function see_oversyns(in_units)
+    osyn_needs_temp = {}
+    for i, _ in pairs(oversyn_level) do
+      oversyn_level[i] = 0
+    end
+    for _, v in ipairs(in_units) do
+      for _, class in ipairs(character_classes[v.character]) do
+        table.insert(osyn_needs_temp, class)
       end
     end
-  
-    function ssyn_v(name, ind)
-      return sup_syns[name].valtable[ind]
-    end
-  
-    function hsyn_v(name, ind)
-      return hyp_syns[name].valtable[ind]
-    end
-  
-    function ssyn_check(name)
-      return sup_syns[name].behav
-    end
-  
-    function hsyn_check(name)
-      return sup_syns[name].behav
+    for _, v in ipairs(osyn_needs_temp) do
+      print(v)
     end
 
-    def_oversyn('Delegate', 1, {'conjurer', 'sorcerer'}, 3, 'orangebuil', 
-    {'Spawning non-boss enemies: ' ,'% chance to turn into a random unit building'},
-    function() for _, v in all_units_global do v.manaflow = true 
-      v.t:after(1, function() manaflow = false end, 'nomanaflow') end end)
+  end
+
+  sup_syns = {}
+  hyp_syns = {}
+  oversyn_desc = {}
+  oversyn_cols = {}
+  oversyn_vals = {}
+  oversyn_needs = {}
+  oversyn_behav = {}
+  oversyn_level = {}
+
+  local def_oversyn = function(name, type, needs, base_val, color, desc, behaviour, level) --type 1 is supersynergy, 2 is hypersynergy
+    if type == 1 then
+      table.insert(sup_syns, name)
+    elseif type == 2 then
+      table.insert(hyp_syns, name)
+    end
+    oversyn_cols[name] = color
+    oversyn_needs[name] = needs
+
+    oversyn_vals[name] = base_val
+    oversyn_level[name] = 1
+    oversyn_desc[name] = function() return strc({
+      desc[1] ,
+      tostring(oversyn_vals[name] * oversyn_level[name]) ,
+      desc[2]})
+    end
+  end
+
+  function ssyn_v(name, ind)
+    return sup_syns[name].valtable[ind]
+  end
+
+  function hsyn_v(name, ind)
+    return hyp_syns[name].valtable[ind]
+  end
+
+  function ssyn_check(name)
+    return sup_syns[name].behav
+  end
+
+  function hsyn_check(name)
+    return sup_syns[name].behav
+  end
+
   
-    def_oversyn('Chronology', 1, {'sorcerer', 'enchanter', 'mage'}, 1, 'blue2', 
-    {'Mage and Sorcerer casts: ' ,'% chance to increase global aspd by 100% for 1 sec'},
-    function() for _, v in all_units_global do v.manaflow = true 
-      v.t:after(1, function() manaflow = false end, 'nomanaflow') end end)
+  def_oversyn('Delegate', 1, {'conjurer', 'sorcerer'}, 3, 'orangebuil', 
+  {'Spawning non-boss enemies: ' ,'% chance to turn into a random unit building'},
+  function(unit)
+    if random:bool(osyn_v('Delegate')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      spawnRandomBuilding(unit.x, unit.y)
+    end
+  end
+  )
+
+  def_oversyn('Chronology', 1, {'sorcerer', 'enchanter', 'mage'}, 1, 'blue2', 
+  {'Mage and Sorcerer casts: ' ,'% chance to increase global aspd by 100% for 1 sec'},
+  function()
+    if random:bool(osyn_v('Chronology')) then
+      for _, v in all_units_global do
+        main.current.player.chronology = true 
+        main.current.player:after(1, function() main.current.player.chronology = false end, 'nochronology') end 
+    end
+  end
+  )
+
+  def_oversyn('Armorforge', 1, {'mage', 'warrior'}, 0.2, 'yellow', 
+  {'Mage and Warrior attack hits grant ',' armor, round resets'},
+  function()
+     main.current.player.armorforge = main.current.player.armorforge or 0
+     main.current.player.armorforge = main.current.player.armorforge + osyn_v('Armorforge')
+  end
+  )
+
+  def_oversyn('Cultivation', 1, {'warrior', 'healer'}, 5, 'greenheal', 
+  {'Passively regenerate/generate ','% health/armor value every second, round resets'},
+  function()
+    if random:bool(osyn_v('Cultivation')) then
+      local cultivation_val = osyn_v('Cultivation')
+      healLowest(random_unit, random_unit.max_hp*cultivation_val)
+      main.current.player.cultivation = main.current.player.cultivation or 0
+     main.current.player.cultivation = main.current.player.cultivation + cultivation_val
+    end
+  end
+  )
+
+  def_oversyn('Collector', 1, {'healer', 'mercenary'}, 10, 'yellow2', 
+  {'Picking up health/gold has ','% chance to give double'},
+  function(unit)
+    if random:bool(osyn_v('Collector')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Focus', 1, {'mercenary', 'explorer', 'chaolyst'}, 20, 'fg', 
+  {'??? ','% ???'},
+  function(unit)
+    if random:bool(osyn_v('Focus')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Catalyst', 1, {'chaolyst', 'forcer'}, 5, 'yellow', 
+  {'Damage against living enemies grows by ','% every second they live'},
+  function(unit)
+    if random:bool(osyn_v('Catalyst')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Suppression', 1, {'forcer', 'curser'}, 0.2, 'yellowforc', 
+  {'Curses stun for ',' seconds'},
+  function(unit)
+    if random:bool(osyn_v('Suppression')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Corruptor', 1, {'curser', 'voider'}, 10, 'purplecurs', 
+  {'All damage over time has ','% chance to apply a random equipped unit curse'},
+  function(unit)
+    if random:bool(osyn_v('Corruptor')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Overwhelm', 1, {'voider', 'nuker'}, 1, 'red', 
+  {'Damage over time has ','% chance to cause 10x damage in an AoE explosion'},
+  function(unit)
+    if random:bool(osyn_v('Overwhelm')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Faraway', 1, {'nuker', 'ranger'}, 20, 'green', 
+  {'All damage is ','% higher with high distance'},
+  function(unit)
+    if random:bool(osyn_v('Faraway')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Bulletzone', 1, {'ranger', 'rogue', 'psyker'}, 10, 'reddark', 
+  {'A random psyker orb has ','% chance to duplicate a projectile on its cast'},
+  function(unit)
+    if random:bool(osyn_v('Bulletzone')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Mindswarm', 1, {'psyker', 'swarmer'}, 10, 'fgpsyk', 
+  {'Critters have ','% chance to borrow a supercharged psyker orb on spawn'},
+  function(unit)
+    if random:bool(osyn_v('Mindswarm')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Incubation', 1, {'swarmer', 'conjurer'}, 10, 'orange', 
+  {'Buildings have ','% chance to spawn a critter every second'},
+  function(unit)
+    if random:bool(osyn_v('Incubation')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Centralization', 2, {'Focus', 'Mindswarm'}, 20, 'fg', 
+  {'Critters have ','% chance to encircle the snake like psyker orbs on spawn'},
+  function(unit)
+    if random:bool(osyn_v('Centralization')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Vampirism', 2, {'Cultivation', 'Suppression'}, 10, 'reddark', 
+  {'Heal ','% of damage dealt to cursed enemies'},
+  function(unit)
+    if random:bool(osyn_v('Vampirism')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Defiance', 2, {'Armorforge', 'Catalyst'}, 2, 'yellow', 
+  {'Gain ',' armor for each enemy alive'},
+  function(unit)
+    if random:bool(osyn_v('Defiance')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Devourer', 2, {'Collector', 'Corruptor'}, 10, 'carmine', 
+  {'Enemies have ','% chance to spawn dps boost orbs on death'},
+  function(unit)
+    if random:bool(osyn_v('Devourer')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Pestilence', 2, {'Overwhelm', 'Incubation'}, 10, 'purple', 
+  {'Critters have ','% chance to spawn with a DoTArea around them'},
+  function(unit)
+    if random:bool(osyn_v('Pestilence')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
   
-    def_oversyn('Armorforge', 1, {'mage', 'warrior'}, 0.2, 'yellow', 
-    {'Mage and Warrior attack hits grant ',' armor, round resets'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
+  def_oversyn('Sabotage', 2, {'Faraway', 'Delegate'}, 10, 'blue2', 
+  {'Enemies have ','% chance per second to suddenly combust into 12 projectiles'},
+  function(unit)
+    if random:bool(osyn_v('Sabotage')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+
+  def_oversyn('Obsidian', 2, {'Armorforge', 'Corruptor'}, 1, 'purple', 
+  {'Snake hit: ','% chance to ignore damage and instead transfer that to all DoTs'},
+  function(unit)
+    if random:bool(osyn_v('Obsidian')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
   
-    def_oversyn('Cultivation', 1, {'warrior', 'healer'}, 5, 'greenheal', 
-    {'Passively regenerate/generate ','% health/armor every second, round resets'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Collector', 1, {'healer', 'mercenary'}, 10, 'yellow2', 
-    {'Picking up health/gold has ','% chance to give double'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Focus', 1, {'mercenary', 'explorer', 'chaolyst'}, 20, 'fg', 
-    {'??? ','% ???'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Catalyst', 1, {'chaolyst', 'forcer'}, 5, 'yellow', 
-    {'Damage against living enemies grows by ','% every second they live'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Suppression', 1, {'forcer', 'curser'}, 0.2, 'yellowforc', 
-    {'Curses stun for ',' seconds'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Corruptor', 1, {'curser', 'voider'}, 10, 'purplecurs', 
-    {'All damage over time has ','% chance to apply a random equipped unit curse'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Overwhelm', 1, {'voider', 'nuker'}, 1, 'red', 
-    {'Damage over time has ','% chance to cause 10x damage in an AoE explosion'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Faraway', 1, {'nuker', 'ranger'}, 20, 'green', 
-    {'All damage is ','% higher with high distance'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Bulletzone', 1, {'ranger', 'rogue', 'psyker'}, 10, 'reddark', 
-    {'A random psyker orb has ','% chance to duplicate a projectile on its cast'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Mindswarm', 1, {'psyker', 'swarmer'}, 10, 'fgpsyk', 
-    {'Critters have ','% chance to borrow a supercharged psyker orb on spawn'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Incubation', 1, {'swarmer', 'conjurer'}, 10, 'orange', 
-    {'Buildings have ','% chance to spawn a critter every second'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Centralization', 2, {'Focus', 'Mindswarm'}, 20, 'fg', 
-    {'Critters have ','% chance to encircle the snake like psyker orbs on spawn'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Vampirism', 2, {'Cultivation', 'Suppression'}, 10, 'reddark', 
-    {'Heal ','% of damage dealt to cursed enemies'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Defiance', 2, {'Armorforge', 'Catalyst'}, 2, 'yellow', 
-    {'Gain ',' armor for each enemy alive'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Devourer', 2, {'Collector', 'Corruptor'}, 10, 'carmine', 
-    {'Enemies have ','% chance to spawn dps boost orbs on death'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Pestilence', 2, {'Overwhelm', 'Incubation'}, 10, 'purple', 
-    {'Critters have ','% chance to spawn with a DoTArea around them'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-   
-    def_oversyn('Sabotage', 2, {'Faraway', 'Delegate'}, 10, 'blue2', 
-    {'Enemies have ','% chance per second to suddenly combust into 12 projectiles'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-
-    def_oversyn('Obsidian', 2, {'Armorforge', 'Corruptor'}, 1, 'purple', 
-    {'Snake hit: ','% chance to ignore damage and instead transfer that to all DoTs'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-   
-    def_oversyn('Titan', 2, {'Cultivation', 'Overwhelm'}, 20, 'yellow', 
-    {'Deal ','% more damage at maxhp if no units were lost'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-   
-    def_oversyn('Telekinesis', 2, {'Collector', 'Faraway'}, 20, 'yellow2', 
-    {'Drops: ','% chance/sec to rush towards you, 50% maxhp microstun dmg to enemies'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-   
-    def_oversyn('Frenzy', 2, {'Catalyst', 'Incubation'}, 0.1, 'carmine', 
-    {'Chaolyst/Forcer cast: ','% aspd and movement to critters/buildings, round reset'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
-    
-    def_oversyn('Horror', 2, {'Suppression', 'Delegate'}, 20, 'purplecurs', 
-    {'Enemies: ','% chance per second to become feared: silenced and running away'},
-    function(o_val) main.current.player.adamantine = main.current.player.adamantine and
-       main.current.player.adamantine + o_val or o_val end)
+  def_oversyn('Titan', 2, {'Cultivation', 'Overwhelm'}, 20, 'yellow', 
+  {'Deal ','% more damage at maxhp if no units were lost'},
+  function(unit)
+    if random:bool(osyn_v('Titan')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+  
+  def_oversyn('Telekinesis', 2, {'Collector', 'Faraway'}, 20, 'yellow2', 
+  {'Drops: ','% chance/sec to rush towards you, 50% maxhp microstun dmg to enemies'},
+  function(unit)
+    if random:bool(osyn_v('Telekinesis')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+  
+  def_oversyn('Frenzy', 2, {'Catalyst', 'Incubation'}, 0.1, 'carmine', 
+  {'Chaolyst/Forcer cast: ','% aspd and movement to critters/buildings, round reset'},
+  function(unit)
+    if random:bool(osyn_v('Frenzy')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
+  
+  def_oversyn('Horror', 2, {'Suppression', 'Delegate'}, 20, 'purplecurs', 
+  {'Enemies: ','% chance per second to become feared: silenced and running away'},
+  function(unit)
+    if random:bool(osyn_v('Horror')) then
+      local borrowX = unit.x
+      local borrowY = unit.y
+      unit:die();
+      --work
+    end
+  end
+  )
 
 
   tier_to_characters = {
