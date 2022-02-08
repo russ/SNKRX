@@ -12,6 +12,8 @@ require 'media'
 function init()
   shared_init()
 
+  strc = table.concat
+
   input:bind('move_left', {'a', 'left', 'dpleft', 'm1'})
   input:bind('move_right', {'d', 'e', 's', 'right', 'dpright', 'm2'})
   input:bind('enter', {'space', 'return', 'fleft', 'fdown', 'fright'})
@@ -1234,16 +1236,16 @@ function init()
       syn_vals['chaolyst'][i][2] = math.floor(syn_bas['chaolyst'][i][2] * (1 + syn_pow['chaolyst'] * 0.5) * 100) * 0.01
     end
   end
-  , function(lvl) return
-    '[' .. ylbn(lvl, 1) .. ']2[light_bg]/' ..
-    '[' .. ylbn(lvl, 2) .. ']4[light_bg]/' ..
-    '[' .. ylbn(lvl, 3) .. ']6[light_bg]/' ..
-    '[' .. ylbn(lvl, 4) .. ']8 [fg]-' ..
-    '[' .. ylbn(lvl, 1) .. ']'..tostring(syn_vals['chaolyst'][1][1])..'-'..tostring(syn_vals['chaolyst'][1][2])..'[light_bg]/'..
-    '[' .. ylbn(lvl, 2) .. ']'..tostring(syn_vals['chaolyst'][2][1])..'-'..tostring(syn_vals['chaolyst'][2][2])..'[light_bg]/'..
-    '[' .. ylbn(lvl, 3) .. ']'..tostring(syn_vals['chaolyst'][3][1])..'-'..tostring(syn_vals['chaolyst'][3][2])..'[light_bg]/'..
-    '[' .. ylbn(lvl, 4) .. ']'..tostring(syn_vals['chaolyst'][4][1])..'-'..tostring(syn_vals['chaolyst'][4][2])..
-    'x [fg]rng power to other sets' end)
+  , function(lvl) return strc({
+    '[' , ylbn(lvl, 1) , ']2[light_bg]/' ,
+    '[' , ylbn(lvl, 2) , ']4[light_bg]/' ,
+    '[' , ylbn(lvl, 3) , ']6[light_bg]/' ,
+    '[' , ylbn(lvl, 4) , ']8 [fg]-' ,
+    '[' , ylbn(lvl, 1) , ']',tostring(syn_vals['chaolyst'][1][1]),'-',tostring(syn_vals['chaolyst'][1][2]),'[light_bg]/',
+    '[' , ylbn(lvl, 2) , ']',tostring(syn_vals['chaolyst'][2][1]),'-',tostring(syn_vals['chaolyst'][2][2]),'[light_bg]/',
+    '[' , ylbn(lvl, 3) , ']',tostring(syn_vals['chaolyst'][3][1]),'-',tostring(syn_vals['chaolyst'][3][2]),'[light_bg]/',
+    '[' , ylbn(lvl, 4) , ']',tostring(syn_vals['chaolyst'][4][1]),'-',tostring(syn_vals['chaolyst'][4][2]),
+    'x [fg]rng power to other sets'}) end)
     syn_calcs['chaolyst']()
   def_syn('ranger', 11, {0.08, 0.16}, 1, 3, 2, nil, {'', true, 'ranger barrage on attack chance and arrow dmg growth'})
   def_syn('warrior', 0, {25, 50}, 0, 3, 2, nil, {'+', false, 'defense to warriors and 25% of that to other units'})
@@ -1272,16 +1274,16 @@ function init()
       syn_vals['sorcerer'].a[i] = math.floor((1/res_unlim - 1/res_lim) * 100) * 0.01
     end
   end
-  , function(lvl) return
-    '[' .. ylbn(lvl, 1) .. ']2[light_bg]/' ..
-    '[' .. ylbn(lvl, 2) .. ']4[light_bg]/' ..
-    '[' .. ylbn(lvl, 3) .. ']6 [fg]- sorcs repeat casts after ' ..
-    '[' .. ylbn(lvl, 1) .. ']'..tostring(syn_vals['sorcerer'].n[1])..'[light_bg]/'..
-    '[' .. ylbn(lvl, 2) .. ']'..tostring(syn_vals['sorcerer'].n[2])..'[light_bg]/'..
-    '[' .. ylbn(lvl, 3) .. ']'..tostring(syn_vals['sorcerer'].n[3])..' [fg]casts, aspd:'..
-    '[' .. ylbn(lvl, 1) .. ']'..'+'..tostring(syn_vals['sorcerer'].a[1]*100)..'%[light_bg]/'..
-    '[' .. ylbn(lvl, 2) .. ']'..'+'..tostring(syn_vals['sorcerer'].a[2]*100)..'%[light_bg]/'..
-    '[' .. ylbn(lvl, 3) .. ']'..'+'..tostring(syn_vals['sorcerer'].a[3]*100)..'%'end)
+  , function(lvl) return strc({
+    '[' , ylbn(lvl, 1) , ']2[light_bg]/' ,
+    '[' , ylbn(lvl, 2) , ']4[light_bg]/' ,
+    '[' , ylbn(lvl, 3) , ']6 [fg]- sorcs repeat casts after ' ,
+    '[' , ylbn(lvl, 1) , ']',tostring(syn_vals['sorcerer'].n[1]),'[light_bg]/',
+    '[' , ylbn(lvl, 2) , ']',tostring(syn_vals['sorcerer'].n[2]),'[light_bg]/',
+    '[' , ylbn(lvl, 3) , ']',tostring(syn_vals['sorcerer'].n[3]),' [fg]casts, aspd:',
+    '[' , ylbn(lvl, 1) , ']','+',tostring(syn_vals['sorcerer'].a[1]*100),'%[light_bg]/',
+    '[' , ylbn(lvl, 2) , ']','+',tostring(syn_vals['sorcerer'].a[2]*100),'%[light_bg]/',
+    '[' , ylbn(lvl, 3) , ']','+',tostring(syn_vals['sorcerer'].a[3]*100),'%'}) end)
 
   function calc_syn_power(recalculate_only_active)
     if recalculate_only_active then
@@ -1409,10 +1411,10 @@ function init()
   
       oversyn_vals[name] = base_val
       oversyn_level[name] = 1
-      oversyn_desc[name] = function() return
-        desc[1] ..
-        tostring(oversyn_vals[name] * oversyn_level[name]) ..
-        desc[2]
+      oversyn_desc[name] = function() return strc({
+        desc[1] ,
+        tostring(oversyn_vals[name] * oversyn_level[name]) ,
+        desc[2]})
       end
     end
   
@@ -1533,7 +1535,7 @@ function init()
        main.current.player.adamantine + o_val or o_val end)
 
     def_oversyn('Obsidian', 2, {'Armorforge', 'Corruptor'}, 1, 'purple', 
-    {'Snake hits have ','% chance to ignore damage and instead transfer that to all DoTs'},
+    {'Snake hit: ','% chance to ignore damage and instead transfer that to all DoTs'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
    
@@ -1543,17 +1545,17 @@ function init()
        main.current.player.adamantine + o_val or o_val end)
    
     def_oversyn('Telekinesis', 2, {'Collector', 'Faraway'}, 20, 'yellow2', 
-    {'Drops have ','% chance/sec to rush towards you, 50% maxhp microstun dmg to enemies'},
+    {'Drops: ','% chance/sec to rush towards you, 50% maxhp microstun dmg to enemies'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
    
     def_oversyn('Frenzy', 2, {'Catalyst', 'Incubation'}, 0.1, 'carmine', 
-    {'Every Chaolyst/Forcer cast: ','% aspd and movement to critters/buildings, round reset'},
+    {'Chaolyst/Forcer cast: ','% aspd and movement to critters/buildings, round reset'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
     
     def_oversyn('Horror', 2, {'Suppression', 'Delegate'}, 20, 'purplecurs', 
-    {'Enemies have ','% chance per second to become feared: silenced and running away'},
+    {'Enemies: ','% chance per second to become feared: silenced and running away'},
     function(o_val) main.current.player.adamantine = main.current.player.adamantine and
        main.current.player.adamantine + o_val or o_val end)
 

@@ -1303,21 +1303,21 @@ function CharacterPart:on_mouse_enter()
   self.oversyns = {}
   for _, v in ipairs(sup_syns) do
     table.insert(self.oversyns, { text = 
-    '['..oversyn_cols[v]..']'..v, font = pixul_font, alignment = 'center', height_multiplier = 1}
+    strc({'[',oversyn_cols[v],']',v}), font = pixul_font, alignment = 'center', height_multiplier = 1}
   )
     table.insert(self.oversyns, { text = 
-    '['..oversyn_cols[v]..']'..oversyn_desc[v](), font = pixul_font, alignment = 'center', height_multiplier = 1}
+    strc({'[',oversyn_cols[v],']',oversyn_desc[v]()}), font = pixul_font, alignment = 'center', height_multiplier = 1}
   )
   end
   for _, v in ipairs(hyp_syns) do
     table.insert(self.oversyns, { text = 
-    '['..oversyn_cols[v]..']'..v, font = pixul_font, alignment = 'center', height_multiplier = 1}
+    strc({'[',oversyn_cols[v],']',v}), font = pixul_font, alignment = 'center', height_multiplier = 1}
   )
     table.insert(self.oversyns,{  text = 
-    '['..oversyn_cols[v]..']'..oversyn_desc[v](), font = pixul_font, alignment = 'center', height_multiplier = 1}
+    strc({'[',oversyn_cols[v],']',oversyn_desc[v]()}), font = pixul_font, alignment = 'center', height_multiplier = 1}
   )
   end
-  self.info_text:activate(self.oversyns, nil, nil, nil, nil, 16, 2, nil, -256)
+  self.info_text:activate(self.oversyns, nil, nil, nil, nil, 16, 2, nil, 256)
   --self.info_text:activate({
   --  {text = '[' .. character_color_strings[self.character] .. ']' .. self.character:capitalize() .. '[fg] - [yellow]Lv.' .. self.level .. '[fg], tier [yellow]' .. character_tiers[self.character] .. '[fg] - sells for [yellow]' ..
   --    self:get_sale_price(), font = pixul_font, alignment = 'center', height_multiplier = 1.25},
