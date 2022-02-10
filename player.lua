@@ -2798,6 +2798,7 @@ end
 
 function Area:draw()
   if self.hidden then return end
+  if state.hide_aoes then return end
   graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
   local w = self.w/2
   local w10 = self.w/10
@@ -3000,6 +3001,7 @@ end
 
 function DotArea:draw()
   if self.hidden then return end
+  if state.hide_aoes then return end
 
   graphics.push(self.x, self.y, self.r + self.vr, self.spring.x, self.spring.x)
     -- graphics.circle(self.x, self.y, self.shape.rs + random:float(-1, 1), self.color, 2)
@@ -3085,6 +3087,7 @@ end
 
 function ForceArea:draw()
   if self.hidden then return end
+  if state.hide_aoes then return end
 
   graphics.push(self.x, self.y, self.r + self.vr, self.spring.x, self.spring.x)
     graphics.circle(self.x, self.y, self.shape.rs, self.color_transparent)

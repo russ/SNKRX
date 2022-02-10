@@ -2468,6 +2468,27 @@ function draw()
   end)
 end
 
+saveLoad_tars = {}
+curr_run_save_tar = "run_v4"
+run_tars = {
+  "run_v4",
+  "run_v4_2",
+  "run_v4_3"
+}
+
+function setSaveOpts()
+  saveLoad_tars = {}
+  local against_n = state.save_num
+  local i = 1
+  while i <= 3 do
+    if i ~= against_n then
+      table.insert(saveLoad_tars, i)
+    end
+    i = i + 1
+  end
+  curr_run_save_tar = run_tars[against_n]
+end
+
 
 function open_options(self)
   input:set_mouse_visible(true)
@@ -2481,6 +2502,7 @@ function open_options(self)
     end
 
     if self:is(MainMenu) then
+      self.run_t = Text2{group = self.ui, x = gw/2 - 176, y = gh - 200, lines = {{text = '[bg10]Run: ' .. state.save_num, font = pixul_font, alignment = 'center'}}}
       self.ng_t = Text2{group = self.ui, x = gw/2 + 63, y = gh - 50, lines = {{text = '[bg10]current: ' .. current_new_game_plus, font = pixul_font, alignment = 'center'}}}
     end
 
@@ -2491,6 +2513,7 @@ function open_options(self)
         if self.paused_t1 then self.paused_t1.dead = true; self.paused_t1 = nil end
         if self.paused_t2 then self.paused_t2.dead = true; self.paused_t2 = nil end
         if self.ng_t then self.ng_t.dead = true; self.ng_t = nil end
+        if self.run_t then self.run_t.dead = true; self.run_t = nil end
         if self.resume_button then self.resume_button.dead = true; self.resume_button = nil end
         if self.restart_button then self.restart_button.dead = true; self.restart_button = nil end
         if self.mouse_button then self.mouse_button.dead = true; self.mouse_button = nil end
@@ -2509,6 +2532,11 @@ function open_options(self)
         if self.arrow_snake_button then self.arrow_snake_button.dead = true; self.arrow_snake_button = nil end
         if self.ng_plus_plus_button then self.ng_plus_plus_button.dead = true; self.ng_plus_plus_button = nil end
         if self.ng_plus_minus_button then self.ng_plus_minus_button.dead = true; self.ng_plus_minus_button = nil end
+        if self.hide_aoes_button then self.hide_aoes_button.dead = true; self.hide_aoes_button = nil end
+        if self.save_button_1 then self.save_button_1.dead = true; self.save_button_1 = nil end
+        if self.save_button_2 then self.save_button_2.dead = true; self.save_button_2 = nil end
+        if self.load_button_1 then self.load_button_1.dead = true; self.load_button_1 = nil end
+        if self.load_button_2 then self.load_button_2.dead = true; self.load_button_2 = nil end
         if self.main_menu_button then self.main_menu_button.dead = true; self.main_menu_button = nil end
         system.save_state()
         if self:is(MainMenu) or self:is(BuyScreen) then input:set_mouse_visible(true)
@@ -2546,6 +2574,46 @@ function open_options(self)
           main:go_to('buy_screen', 1, 0, {}, passives, 1, 0)
         end, text = Text({{text = '[wavy, ' .. tostring(state.dark_transitions and 'fg' or 'bg') .. ']restarting...', font = pixul_font, alignment = 'center'}}, global_text_tags)}
       end}
+    else
+
+      local function resetSaveLoadButtons()
+        self.load_button_1:set_text('Load run '..saveLoad_tars[1])
+        self.load_button_2:set_text('Load run '..saveLoad_tars[2])
+        self.save_button_1:set_text(strc({'Copy ', state.save_num, ' to ', saveLoad_tars[1]}))
+        self.save_button_2:set_text(strc({'Copy ', state.save_num, ' to ', saveLoad_tars[2]}))
+        self.run_t.text:set_text({{text = '[bg10]Run: ' .. state.save_num, font = pixul_font, alignment = 'center'}})
+      end
+
+      self.load_button_1 = Button{group = self.ui, x = gw/2 - 116, y = gh - 200, force_update = true, button_text = 'Load run '..saveLoad_tars[1], fg_color = 'bg10', bg_color = 'bg',
+      action = function(b)
+        ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+        state.save_num = saveLoad_tars[1]
+        setSaveOpts()
+        resetSaveLoadButtons()
+      end}
+
+      self.load_button_2 = Button{group = self.ui, x = gw/2 - 40, y = gh - 200, force_update = true, button_text = 'Load run '..saveLoad_tars[2], fg_color = 'bg10', bg_color = 'bg',
+      action = function(b)
+        ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+        state.save_num = saveLoad_tars[2]
+        setSaveOpts()
+        resetSaveLoadButtons()
+      end}
+
+      print(state.save_num)
+
+      self.save_button_1 = Button{group = self.ui, x = gw/2 + 40, y = gh - 200, force_update = true, button_text = strc({'Save ', state.save_num, ' to ', saveLoad_tars[1]}), fg_color = 'bg10', bg_color = 'bg',
+      action = function(b)
+        ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+        system.copy_run_to(run_tars[saveLoad_tars[1]])
+      end}
+
+      self.save_button_2 = Button{group = self.ui, x = gw/2 + 120, y = gh - 200, force_update = true, button_text = strc({'Save ', state.save_num, ' to ', saveLoad_tars[2]}), fg_color = 'bg10', bg_color = 'bg',
+      action = function(b)
+        ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+        system.copy_run_to(run_tars[saveLoad_tars[2]])
+      end}
+      
     end
 
     self.mouse_button = Button{group = self.ui, x = gw/2 - 113, y = gh - 150, force_update = true, button_text = 'mouse control: ' .. tostring(state.mouse_control and 'yes' or 'no'), fg_color = 'bg10', bg_color = 'bg',
@@ -2654,6 +2722,17 @@ function open_options(self)
       love.window.setMode(window_width, window_height)
     end}
 
+    self.hide_aoes_button = Button{group = self.ui, x = gw/2 - 160, y = gh - 100, w = 88, force_update = true, button_text = '[bg10]hide AoEs: ' .. tostring(state.hide_aoes and 'yes' or 'no'), 
+    fg_color = 'bg10', bg_color = 'bg', action = function(b)
+      ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+      if state.hide_aoes == nil then
+        state.hide_aoes = true
+      else
+        state.hide_aoes = not state.hide_aoes
+      end
+      b:set_text('hide AoEs: ' .. tostring(state.hide_aoes and 'yes' or 'no'))
+    end}
+
     self.screen_shake_button = Button{group = self.ui, x = gw/2 - 57, y = gh - 100, w = 110, force_update = true, button_text = '[bg10]screen shake: ' .. tostring(state.no_screen_shake and 'no' or 'yes'), 
     fg_color = 'bg10', bg_color = 'bg', action = function(b)
       ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
@@ -2739,6 +2818,7 @@ function close_options(self)
     if self.paused_t1 then self.paused_t1.dead = true; self.paused_t1 = nil end
     if self.paused_t2 then self.paused_t2.dead = true; self.paused_t2 = nil end
     if self.ng_t then self.ng_t.dead = true; self.ng_t = nil end
+    if self.run_t then self.run_t.dead = true; self.run_t = nil end
     if self.resume_button then self.resume_button.dead = true; self.resume_button = nil end
     if self.restart_button then self.restart_button.dead = true; self.restart_button = nil end
     if self.mouse_button then self.mouse_button.dead = true; self.mouse_button = nil end
@@ -2757,6 +2837,11 @@ function close_options(self)
     if self.quit_button then self.quit_button.dead = true; self.quit_button = nil end
     if self.ng_plus_plus_button then self.ng_plus_plus_button.dead = true; self.ng_plus_plus_button = nil end
     if self.ng_plus_minus_button then self.ng_plus_minus_button.dead = true; self.ng_plus_minus_button = nil end
+    if self.hide_aoes_button then self.hide_aoes_button.dead = true; self.hide_aoes_button = nil end
+    if self.save_button_1 then self.save_button_1.dead = true; self.save_button_1 = nil end
+    if self.save_button_2 then self.save_button_2.dead = true; self.save_button_2 = nil end
+    if self.load_button_1 then self.load_button_1.dead = true; self.load_button_1 = nil end
+    if self.load_button_2 then self.load_button_2.dead = true; self.load_button_2 = nil end
     if self.main_menu_button then self.main_menu_button.dead = true; self.main_menu_button = nil end
     system.save_state()
     if self:is(MainMenu) or self:is(BuyScreen) then input:set_mouse_visible(true)

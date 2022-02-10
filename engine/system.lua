@@ -134,6 +134,10 @@ function system.load_state()
   local chunk = love.filesystem.load("state.txt")
   if chunk then state = chunk()
   else state = {} end
+  if not state.save_num then
+    state.save_num = 1
+  end
+  setSaveOpts()
 end
 
 
@@ -143,12 +147,18 @@ function system.save_run(level, loop, gold, units, passives, shop_level, shop_xp
     run_passive_pool = run_passive_pool, locked_state = locked_state,
     current_new_game_plus = current_new_game_plus, run_time = run_time, syn_pow = syn_pow}
   local str = "return " .. table.tostring(run)
-  love.filesystem.write("run_v4.txt", str)
+  love.filesystem.write(strc({curr_run_save_tar, ".txt"}), str)
+end
+
+function system.copy_run_to(target_file)
+  local chunk = love.filesystem.load(strc({curr_run_save_tar, ".txt"}))
+  local str = strc({"return ", table.tostring(chunk())})
+  love.filesystem.write(strc({target_file, ".txt"}), str)
 end
 
 
 function system.load_run()
-  local chunk = love.filesystem.load("run_v4.txt")
+  local chunk = love.filesystem.load(strc({curr_run_save_tar, ".txt"}))
   if chunk then return chunk()
   else return {} end
 end

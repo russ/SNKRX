@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd E:/a327ex/SNKRX
+cd C:/Users/Administrator/Documents/GitHub/SNKRX
 engine/love/love.exe --console .
