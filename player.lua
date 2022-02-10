@@ -2151,10 +2151,10 @@ function Projectile:init(args)
 
   if self.parent.ranger_growth then
     self.growthmax = math.pow(self.parent.ranger_growth*0.01, 2)
-    self.initial_dps = self.dps
-    self.dps = self.dps * 0.5
+    self.initial_dmg = self.dmg
+    self.dmg = self.dmg * 0.5
     self.t:every(0.1, function()
-      self.dps = self.dps + self.initial_dps * self.growthmax * 0.2 
+      self.dmg = self.dmg + self.initial_dmg * self.growthmax * 0.2 
     end, 5, nil, nil)
   end
 
