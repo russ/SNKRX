@@ -1414,15 +1414,90 @@ function init()
   oversyn_behav = {}
   oversyn_level = {}
 
-  local def_oversyn = function(name, type, needs, base_val, color, desc, behaviour, level) --type 1 is supersynergy, 2 is hypersynergy
+  oversyn_chains = {}
+  --Data structure: 
+  --{
+  --['sorcerer'] = {[1] = {chain = {'conjurer'}, res = 'Delegate'},
+  --              [2] = {chain = {'enchanter', 'mage'}, res = 'Chronology'}},
+  --['Delegate'] = {[1] = {chain = {'Faraway'}, res = 'Sabotage'},
+  --              [2] = <second possibility>},
+  --<and so on with other classes or supersynergies>
+  --}
+
+  function see_oversyns(in_units)
+    osyn_fills_temp = {}
+    oversyn_forbidden = {}
+    sup_syn_active = {}
+    for i, _ in pairs(oversyn_level) do
+      oversyn_level[i] = 0
+    end
+    for syn_type = 1, 2 do
+      for _, v in ipairs(in_units) do
+        for _, syn_source in ipairs(character_classes[v.character]) do
+          if not oversyn_forbidden[syn_source] then
+            local shouldInsert = true
+            for acc_i, accumulation in ipairs(osyn_fills_temp) do
+              if accumulation[1] then
+                local chain_collection = oversyn_chains[accumulation[1]]
+                for _, possibility in ipairs(chain_collection) do
+                  local chain_members = possibility.chain
+                  for cm_i, chain_member in ipairs(chain_members) do
+                    if chain_member == syn_source then
+                      if #chain_members == 2 then
+                        table.insert(sup_syn_active, possibility.res)
+                      elseif #chain_members == 3 then --because it is always 2 or 3, we can specify here
+
+                      end
+                    end
+                  end
+                end
+              end
+            end
+            if shouldInsert then
+              local new_accumulation = {}
+              table.insert(new_accumulation, class)
+              table.insert(osyn_fills_temp, new_accumulation)
+            end
+          end
+        end
+      end
+    end
+    osyn_fills_temp = {}
+    hyp_syn_active = {}
+    for _, sup_syns in ipairs(sup_syn_active) do
+
+    end
+
+  end
+
+
+  --define supersynergies first, then hypersynergies
+  --because supersynergies can be of length 2 or 3, there are slight differences
+  --because all oversynergies are cyclical in some way, there is a way to simplify to algorithms
+  local def_oversyn = function(name, type, needs, base_val, color, desc, behaviour) --type 1 is supersynergy, 2 is hypersynergy
     if type == 1 then
       table.insert(sup_syns, name)
     elseif type == 2 then
       table.insert(hyp_syns, name)
     end
+    for i = 1, #needs do
+      if oversyn_chains[needs[i]] == nil then
+        oversyn_chains[needs[i]] = {}
+      end
+      local nextchain = {}
+      for j = 1, #needs do
+        if i ~= j then
+          table.insert(nextchain, needs[j])
+        end
+      end
+      local chain_props = {}
+      chain_props.chain = nextchain
+      chain_props.res = name
+      table.insert(oversyn_chains[needs[i]], chain_props)
+    end
+    oversyn_behav[name] = behaviour
     oversyn_cols[name] = color
     oversyn_needs[name] = needs
-
     oversyn_vals[name] = base_val
     oversyn_level[name] = 1
     oversyn_desc[name] = function() return strc({
@@ -1432,20 +1507,9 @@ function init()
     end
   end
 
-  function ssyn_v(name, ind)
-    return sup_syns[name].valtable[ind]
-  end
 
-  function hsyn_v(name, ind)
-    return hyp_syns[name].valtable[ind]
-  end
-
-  function ssyn_check(name)
-    return sup_syns[name].behav
-  end
-
-  function hsyn_check(name)
-    return sup_syns[name].behav
+  function osyn_v(name)
+    return oversyn_vals[name] * oversyn_level[name]
   end
 
   
@@ -1744,6 +1808,17 @@ function init()
   end
   )
 
+  --This was to test the oversynergy data structure. Works.
+  --for chain_start, chain_possibilities in pairs(oversyn_chains) do
+  --  for _, possibility in ipairs(chain_possibilities) do
+  --    local possibilitystr = chain_start
+  --    for _, chain_member in ipairs(possibility.chain) do
+  --      possibilitystr = strc({possibilitystr, ' + ', chain_member})
+  --    end
+  --    possibilitystr = strc({possibilitystr, ' -> ', possibility.res})
+  --    print(possibilitystr)
+  --  end
+  --end
 
   tier_to_characters = {
     [1] = {'vagrant', 'swordsman', 'magician', 'archer', 'scout', 'cleric', 'arcanist', 'merchant', 'host', 'bomber'},
