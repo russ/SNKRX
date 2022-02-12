@@ -1435,9 +1435,9 @@ function init()
     for syn_type = 1, 2 do
       for _, v in ipairs(in_units) do
         for _, syn_source in ipairs(character_classes[v.character]) do
+          local shouldInsert = true
           syn_source_counts[syn_source] = syn_source_counts[syn_source] and syn_source_counts[syn_source] + 1 or 1
           if not oversyn_forbidden[syn_source] then
-            local shouldInsert = true
             for acc_i, accumulation in ipairs(osyn_fills_temp) do
               if accumulation[1] and not oversyn_forbidden[accumulation[1]] then
                 local chain_collection = oversyn_chains[accumulation[1]]
@@ -1461,7 +1461,7 @@ function init()
             end
             if shouldInsert then
               local new_accumulation = {}
-              table.insert(new_accumulation, class)
+              table.insert(new_accumulation, syn_source)
               table.insert(osyn_fills_temp, new_accumulation)
             end
           end
