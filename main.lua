@@ -1427,6 +1427,7 @@ function init()
   function see_oversyns(in_units)
     osyn_fills_temp = {}
     oversyn_forbidden = {}
+    syn_source_counts = {}
     sup_syn_active = {}
     for i, _ in pairs(oversyn_level) do
       oversyn_level[i] = 0
@@ -1434,10 +1435,11 @@ function init()
     for syn_type = 1, 2 do
       for _, v in ipairs(in_units) do
         for _, syn_source in ipairs(character_classes[v.character]) do
+          syn_source_counts[syn_source] = syn_source_counts[syn_source] and syn_source_counts[syn_source] + 1 or 1
           if not oversyn_forbidden[syn_source] then
             local shouldInsert = true
             for acc_i, accumulation in ipairs(osyn_fills_temp) do
-              if accumulation[1] then
+              if accumulation[1] and not oversyn_forbidden[accumulation[1]] then
                 local chain_collection = oversyn_chains[accumulation[1]]
                 for _, possibility in ipairs(chain_collection) do
                   local chain_members = possibility.chain
@@ -1445,6 +1447,10 @@ function init()
                     if chain_member == syn_source then
                       if #chain_members == 2 then
                         table.insert(sup_syn_active, possibility.res)
+                        for _, v in ipairs(oversyn_needs[possibility.res]) do
+                          oversyn_forbidden[v] = true
+                        end
+                        end
                       elseif #chain_members == 3 then --because it is always 2 or 3, we can specify here
 
                       end
