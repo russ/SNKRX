@@ -1463,7 +1463,7 @@ function init()
     table.insert(fills, new_accumulation)
   end
 
-  function calc_osyn_level(osyn_name) do
+  function calc_osyn_level(osyn_name)
     local min_source_count = 99
     for _, need in ipairs(oversyn_needs[osyn_name]) do
       min_source_count = math.min(min_source_count, syn_source_counts[need])
@@ -1552,6 +1552,7 @@ function init()
   end
 
   function do_osyn(name, args)
+    
   end
 
   

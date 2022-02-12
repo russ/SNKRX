@@ -1230,6 +1230,7 @@ function CharacterPart:update(dt)
       end
       ]]--
       see_oversyns(self.parent.units)
+      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
     end
 
     for _, part in ipairs(self.parts) do
