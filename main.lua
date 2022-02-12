@@ -1389,22 +1389,6 @@ function init()
    function() end,
     mouths_img, red[0], red[-5])
 
-  function see_oversyns(in_units)
-    osyn_needs_temp = {}
-    for i, _ in pairs(oversyn_level) do
-      oversyn_level[i] = 0
-    end
-    for _, v in ipairs(in_units) do
-      for _, class in ipairs(character_classes[v.character]) do
-        table.insert(osyn_needs_temp, class)
-      end
-    end
-    for _, v in ipairs(osyn_needs_temp) do
-      print(v)
-    end
-
-  end
-
   sup_syns = {}
   hyp_syns = {}
   oversyn_desc = {}
@@ -1424,6 +1408,70 @@ function init()
   --<and so on with other classes or supersynergies>
   --}
 
+
+  function calc_active_osyns(source, forbidden, fills, actives)
+    local acc_i = 1
+    while acc_i <= #osyn_fills_temp do
+      local accumulation = osyn_fills_temp[acc_i]
+      for _, accu_member in ipairs(accumulation) do
+        if source == accu_member then
+          return
+        end
+      end
+      for _, accu_member in ipairs(accumulation) do
+        if forbidden[accu_member] then
+          goto skip_accumulation
+        end
+      end
+      do -- keeping all local variables outside of the while loop's scope
+        local chain_collection = oversyn_chains[accumulation[1]]
+        for _, possibility in ipairs(chain_collection) do
+          local chain_members = possibility.chain
+          for _, chain_member in ipairs(chain_members) do
+            if chain_member == source then
+              if #chain_members == 1 then
+                table.insert(actives, possibility.res)
+                for _, v in ipairs(oversyn_needs[possibility.res]) do
+                  forbidden[v] = true
+                end
+                return
+              elseif #chain_members == 2 then --because it is always 1 or 2, we can specify here
+                if accumulation[2] == nil then
+                  table.insert(accumulation, source)
+                  acc_i = acc_i + 1
+                  local new_accumulation = {} --to allow for other 2-member synergies while the 3-member one is incomplete
+                  table.insert(new_accumulation, accumulation[1])
+                  table.insert(fills, acc_i, new_accumulation)
+                else
+                  table.insert(actives, possibility.res)
+                  for _, v in ipairs(oversyn_needs[possibility.res]) do
+                    forbidden[v] = true
+                  end
+                  return
+                end
+              end
+            end
+          end
+        end
+      end
+      ::skip_accumulation::
+      acc_i = acc_i + 1
+    end
+    --this is only reached if nothing is found before or if an incomplete 3-chain is found (without the last member)
+    local new_accumulation = {}
+    table.insert(new_accumulation, source)
+    table.insert(fills, new_accumulation)
+  end
+
+  function calc_osyn_level(osyn_name) do
+    local min_source_count = 99
+    for _, need in ipairs(oversyn_needs[osyn_name]) do
+      min_source_count = math.min(min_source_count, syn_source_counts[need])
+    end
+    print(strc({osyn_name, ' ', min_source_count}))
+    oversyn_level[osyn_name] = min_source_count
+  end
+
   function see_oversyns(in_units)
     osyn_fills_temp = {}
     oversyn_forbidden = {}
@@ -1432,48 +1480,33 @@ function init()
     for i, _ in pairs(oversyn_level) do
       oversyn_level[i] = 0
     end
-    for syn_type = 1, 2 do
-      for _, v in ipairs(in_units) do
-        for _, syn_source in ipairs(character_classes[v.character]) do
-          local shouldInsert = true
-          syn_source_counts[syn_source] = syn_source_counts[syn_source] and syn_source_counts[syn_source] + 1 or 1
-          if not oversyn_forbidden[syn_source] then
-            for acc_i, accumulation in ipairs(osyn_fills_temp) do
-              if accumulation[1] and not oversyn_forbidden[accumulation[1]] then
-                local chain_collection = oversyn_chains[accumulation[1]]
-                for _, possibility in ipairs(chain_collection) do
-                  local chain_members = possibility.chain
-                  for cm_i, chain_member in ipairs(chain_members) do
-                    if chain_member == syn_source then
-                      if #chain_members == 2 then
-                        table.insert(sup_syn_active, possibility.res)
-                        for _, v in ipairs(oversyn_needs[possibility.res]) do
-                          oversyn_forbidden[v] = true
-                        end
-                        end
-                      elseif #chain_members == 3 then --because it is always 2 or 3, we can specify here
-
-                      end
-                    end
-                  end
-                end
-              end
-            end
-            if shouldInsert then
-              local new_accumulation = {}
-              table.insert(new_accumulation, syn_source)
-              table.insert(osyn_fills_temp, new_accumulation)
-            end
-          end
+    for _, v in ipairs(in_units) do
+      for _, syn_source in ipairs(character_classes[v.character]) do
+        if syn_source_counts[syn_source] then
+          syn_source_counts[syn_source] = syn_source_counts[syn_source] + 1
+        else
+          syn_source_counts[syn_source] = 1
+          calc_active_osyns(syn_source, oversyn_forbidden, osyn_fills_temp, sup_syn_active)
         end
       end
     end
     osyn_fills_temp = {}
     hyp_syn_active = {}
     for _, sup_syns in ipairs(sup_syn_active) do
-
+      if syn_source_counts[sup_syns] then
+        syn_source_counts[sup_syns] = syn_source_counts[sup_syns] + 1
+      else
+        syn_source_counts[sup_syns] = 1
+        calc_active_osyns(sup_syns, oversyn_forbidden, osyn_fills_temp, hyp_syn_active)
+      end
     end
-
+    print("--------")
+    for _, v in ipairs(sup_syn_active) do
+      calc_osyn_level(v)
+    end
+    for _, v in ipairs(hyp_syn_active) do
+      calc_osyn_level(v)
+    end
   end
 
 
@@ -1505,7 +1538,7 @@ function init()
     oversyn_cols[name] = color
     oversyn_needs[name] = needs
     oversyn_vals[name] = base_val
-    oversyn_level[name] = 1
+    oversyn_level[name] = 0
     oversyn_desc[name] = function() return strc({
       desc[1] ,
       tostring(oversyn_vals[name] * oversyn_level[name]) ,
@@ -1516,6 +1549,9 @@ function init()
 
   function osyn_v(name)
     return oversyn_vals[name] * oversyn_level[name]
+  end
+
+  function do_osyn(name, args)
   end
 
   
