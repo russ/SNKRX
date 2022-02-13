@@ -1588,6 +1588,7 @@ function init()
   def_oversyn(next_osyn, 1, {'conjurer', 'sorcerer'}, 3, 'orangebuil', 
   {'Spawning non-boss enemies: ' ,'% chance to turn into a random unit building'},
   function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if not random_conjurer then return end
     if random:bool(osyn_v(next_osyn)) then
       unit.dead = true
       buildEffects[random_conjurer.character](random_conjurer, unit.x, unit.y)
@@ -1686,6 +1687,7 @@ function init()
   def_oversyn(next_osyn, 1, {'curser', 'voider'}, 10, 'purplecurs', 
   {'Damage over time has ','% chance to apply a random equipped unit curse'},
   function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if not random_curser then return end
     if random:bool(osyn_v(next_osyn)) then
       projEffects[random_curser.character](unit, random_curser)
     end
@@ -1696,6 +1698,7 @@ function init()
   def_oversyn(next_osyn, 1, {'voider', 'nuker'}, 1, 'red', 
   {'Damage over time has ','% chance to cause 10x dmg random Nuker cast'},
   function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if not random_nuker then return end
     if random:bool(osyn_v(next_osyn)) then
       random_nuker:attack(48, {x = unit.x, y = unit.y, overwhelm = 10})
     end
@@ -1743,6 +1746,7 @@ function init()
   def_oversyn(next_osyn, 1, {'swarmer', 'conjurer'}, 10, 'orange', 
   {'Buildings have ','% chance to spawn a random critter every second'},
   function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if not random_swarmer then return end
     unit.t:every(1, function()
       if random:bool(osyn_v(next_osyn)) then
         Critter{group = main.current.main,
