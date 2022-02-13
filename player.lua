@@ -4190,8 +4190,10 @@ end
 
 function DMGOrb:draw()
   if not self.hfx.hit then return end
-  graphics.push(self.x, self.y, self.r, self.hfx.hit.x, self.hfx.hit.x)
-    graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 1, 1, self.hfx.hit.f and fg[0] or self.color)
+  local sr = random:float(-0.1, 0.1)
+  graphics.push(self.x, self.y, self.r, self.hfx.hit.x + sr, self.hfx.hit.x + sr)
+    graphics.circle(self.x, self.y, 1.2*self.shape.w, self.hfx.hit.f and fg[0] or carmine_transparent_weak)
+    graphics.circle(self.x, self.y, 0.5*self.shape.w, self.hfx.hit.f and fg[0] or carmine[0])
   graphics.pop()
 end
 
