@@ -1540,7 +1540,6 @@ function init()
     --for i, _ in pairs(oversyn_vals) do
     --  oversyn_level[i] = 10
     --end
-    --oversyn_level['Devourer'] = 10
   end
 
 
@@ -1728,7 +1727,7 @@ function init()
   )
 
   local next_osyn = 'Mindswarm'
-  def_oversyn(next_osyn, 1, {'psyker', 'swarmer'}, 10, 'fgpsyk', 
+  def_oversyn(next_osyn, 1, {'psyker', 'swarmer'}, 20, 'fgpsyk', 
   {'Critters have ','% chance to borrow a psyker orb on spawn'},
   function(unit) if oversyn_level[next_osyn] <= 0 then return end
     if random:bool(osyn_v(next_osyn)) then
@@ -2762,13 +2761,13 @@ function open_options(self)
         resetSaveLoadButtons()
       end}
 
-      self.save_button_1 = Button{group = self.ui, x = gw/2 + 40, y = gh - 200, force_update = true, button_text = strc({'Save ', state.save_num, ' to ', saveLoad_tars[1]}), fg_color = 'bg10', bg_color = 'bg',
+      self.save_button_1 = Button{group = self.ui, x = gw/2 + 40, y = gh - 200, force_update = true, button_text = strc({'Copy ', state.save_num, ' to ', saveLoad_tars[1]}), fg_color = 'bg10', bg_color = 'bg',
       action = function(b)
         ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
         system.copy_run_to(run_tars[saveLoad_tars[1]])
       end}
 
-      self.save_button_2 = Button{group = self.ui, x = gw/2 + 120, y = gh - 200, force_update = true, button_text = strc({'Save ', state.save_num, ' to ', saveLoad_tars[2]}), fg_color = 'bg10', bg_color = 'bg',
+      self.save_button_2 = Button{group = self.ui, x = gw/2 + 120, y = gh - 200, force_update = true, button_text = strc({'Copy ', state.save_num, ' to ', saveLoad_tars[2]}), fg_color = 'bg10', bg_color = 'bg',
       action = function(b)
         ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
         system.copy_run_to(run_tars[saveLoad_tars[2]])
