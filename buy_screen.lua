@@ -1571,7 +1571,7 @@ function LateUpgradeButton:update(dt)
   self:update_game_object(dt)
   self.lateup_txt:update(dt)
   if self.selected and input.m1.pressed then
-    if gold >= 0 and (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) then
+    if gold >= 500 and (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) then
       ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       lateup_lvls[self.type] = lateup_lvls[self.type] + 1
@@ -2096,7 +2096,7 @@ function ClassIcon:update(dt)
   local synboost = true if self.parent.cost then synboost = false end
   if synboost then
     if self.selected and input.m1.pressed then
-      if gold >= 0 and (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) then
+      if gold >= 500 and (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) then
         ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
         _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
         syn_pow[self.class] = syn_pow[self.class] + 1
