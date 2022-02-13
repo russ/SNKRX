@@ -1457,29 +1457,32 @@ function init()
       end
       do -- keeping all local variables outside of the while loop's scope
         local chain_collection = oversyn_chains[accumulation[1]]
-        for _, possibility in ipairs(chain_collection) do
-          local chain_members = possibility.chain
-          for _, chain_member in ipairs(chain_members) do
-            if chain_member == source then
-              if #chain_members == 1 then
-                table.insert(actives, possibility.res)
-                for _, v in ipairs(oversyn_needs[possibility.res]) do
-                  forbidden[v] = true
-                end
-                return
-              elseif #chain_members == 2 then --because it is always 1 or 2, we can specify here
-                if accumulation[2] == nil then
-                  table.insert(accumulation, source)
-                  acc_i = acc_i + 1
-                  local new_accumulation = {} --to allow for other 2-member synergies while the 3-member one is incomplete
-                  table.insert(new_accumulation, accumulation[1])
-                  table.insert(fills, acc_i, new_accumulation)
-                else
+        --if chain_collection == nil then print(accumulation[1]) end
+        if chain_collection then
+          for _, possibility in ipairs(chain_collection) do
+            local chain_members = possibility.chain
+            for _, chain_member in ipairs(chain_members) do
+              if chain_member == source then
+                if #chain_members == 1 then
                   table.insert(actives, possibility.res)
                   for _, v in ipairs(oversyn_needs[possibility.res]) do
                     forbidden[v] = true
                   end
                   return
+                elseif #chain_members == 2 then --because it is always 1 or 2, we can specify here
+                  if accumulation[2] == nil then
+                    table.insert(accumulation, source)
+                    acc_i = acc_i + 1
+                    local new_accumulation = {} --to allow for other 2-member synergies while the 3-member one is incomplete
+                    table.insert(new_accumulation, accumulation[1])
+                    table.insert(fills, acc_i, new_accumulation)
+                  else
+                    table.insert(actives, possibility.res)
+                    for _, v in ipairs(oversyn_needs[possibility.res]) do
+                      forbidden[v] = true
+                    end
+                    return
+                  end
                 end
               end
             end
