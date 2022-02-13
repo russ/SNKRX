@@ -5,7 +5,6 @@ Seeker:implement(Unit)
 function Seeker:init(args)
   self:init_game_object(args)
   self:init_unit()
-
   if self.boss then
     self:set_as_rectangle(18, 7, 'dynamic', 'enemy')
     self:set_restitution(0.5)
@@ -255,6 +254,10 @@ function Seeker:init(args)
 
   self.usurer_count = 0
   self.curses = {}
+  do_osyn['Horror'](self)
+  do_osyn['Sabotage'](self)
+  do_osyn['Catalyst'](self)
+  do_osyn['Delegate'](self)
 end
 
 
@@ -485,6 +488,10 @@ function Seeker:hit(damage, projectile, dot, from_enemy, type)
   self.hfx:use('hit', 0.25, 200, 10)
   if self.push_invulnerable then return end
   self:show_hp()
+  if dot then
+    do_osyn['Overwhelm'](self)
+    do_osyn['Entropy'](self)
+  end
 
   local crit = 1
   if main.current.player.critical_strike and not dot and not from_enemy then
@@ -525,18 +532,19 @@ function Seeker:hit(damage, projectile, dot, from_enemy, type)
     end
   end
   
+  do_osyn['Faraway'](self)
   local all_dmg_amplifier = self:calcDmgAmplifiers()
 
   local actual_damage = math.max(self:calculate_damage(damage)*all_dmg_amplifier*(self.stun_dmg_m or 1)*crit, 0)
   if self.vulnerable then actual_damage = actual_damage*self.vulnerable end
   self.hp = self.hp - actual_damage
+  do_osyn['Vampirism'](self, actual_damage)
   if self.hp > self.max_hp then self.hp = self.max_hp end
   main.current.damage_dealt = main.current.damage_dealt + actual_damage
 
   if projectile and projectile.parent and projectile.parent.character then
     damage_counters[projectile.parent.character] = damage_counters[projectile.parent.character] + actual_damage
   elseif type then
-    print(type)
     damage_counters[type] = damage_counters[type] + actual_damage
   else
     damage_counters['other'] = damage_counters['other'] + actual_damage
@@ -598,6 +606,7 @@ function Seeker:hit(damage, projectile, dot, from_enemy, type)
 
   if self.hp <= 0 then
     self.dead = true
+    do_osyn['Devourer'](self)
 
     if self.virulent then
       trigger:after(0.01, function()
@@ -813,6 +822,7 @@ end
 function Seeker:curse(curse, duration, arg1, arg2, arg3)
   buff1:play{pitch = random:float(0.65, 0.75), volume = 0.25}
   self.cursed = true
+  do_osyn['Suppression'](self)
   if self.t:delayResetQ('uncurse', duration) then
     self.t:after(duration, function() self.cursed = false end, 'uncurse')
   end
@@ -951,6 +961,10 @@ function EnemyCritter:init(args)
   self.invulnerable_to = args.projectile
   self.t:after(0.5, function() self.invulnerable_to = false end)
   self.usurer_count = 0
+  do_osyn['Horror'](self)
+  do_osyn['Sabotage'](self)
+  do_osyn['Catalyst'](self)
+  do_osyn['Delegate'](self)
 end
 
 
@@ -1008,9 +1022,11 @@ function EnemyCritter:hit(damage, projectile, type)
   if projectile == self.invulnerable_to then return end
   self.hfx:use('hit', 0.25, 200, 10)
   
+  do_osyn['Faraway'](self)
   local all_dmg_amplifier = self:calcDmgAmplifiers()
 
   self.hp = self.hp - math.max(damage * all_dmg_amplifier, 0)
+  do_osyn['Vampirism'](self, damage * all_dmg_amplifier)
   self:show_hp()
   if self.hp <= 0 then self:die() end
 end
@@ -1077,6 +1093,7 @@ end
 
 function EnemyCritter:curse(curse, duration, arg1, arg2, arg3)
   self.cursed = true
+  do_osyn['Suppression'](self)
   if self.t:delayResetQ('uncurse', duration) then
     self.t:after(duration, function() self.cursed = false end, 'uncurse')
   end

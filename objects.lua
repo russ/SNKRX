@@ -242,6 +242,7 @@ function Unit:crashDamage(other)
   if self.stunned then
     initDamage = initDamage * (get_synp('forcer', main.current.player.forcer_level) + 1)
   end
+  do_osyn['Faraway'](self)
   local all_dmg_amplifier = self:calcDmgAmplifiers()
   
   initDamage = initDamage * all_dmg_amplifier

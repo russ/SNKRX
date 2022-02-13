@@ -1575,13 +1575,13 @@ function LateUpgradeButton:update(dt)
       ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       lateup_lvls[self.type] = lateup_lvls[self.type] + 1
-      gold = gold + 1000
+      gold = gold - 500
       self.parent.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
       lateup_calcs[self.type]()
       self:on_mouse_exit()
       self:on_mouse_enter()
       system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives,
-       self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow, lateup_lvls)
+       self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
     else
       error1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       self.spring:pull(0.2, 200, 10)
@@ -2100,7 +2100,7 @@ function ClassIcon:update(dt)
         ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
         _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
         syn_pow[self.class] = syn_pow[self.class] + 1
-        gold = gold + 1000
+        gold = gold - 500
         self.parent.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
         syn_calcs[self.class]()
         self:on_mouse_exit()
@@ -2341,7 +2341,7 @@ function ClassIcon:on_mouse_enter()
       (owned >= i and 1) or 0),
        font = pixul_font, alignment = 'center'}, synboost and
      {text = (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) and 
-     '[yellow]Click to boost the synergy for 1K Gold, [fg]current level: [red]'..tostring(syn_pow[self.class])
+     '[yellow]Click to boost the synergy for 500 Gold, [fg]current level: [red]'..tostring(syn_pow[self.class])
      or '[red] Max synergy boost level for this set reached: '.. tostring(syn_pow[self.class]),
         font = pixul_font, alignment = 'center'} or 
         {text =  

@@ -23,6 +23,7 @@ function Player:init(args)
   or self.character == 'silencer' or self.character == 'bane'
   or self.character == 'warden' or self.character == 'psykeeper'
   or self.character == 'infestor' or self.character == 'jester' then
+    do_osyn['Frenzy']()
     self.attack_sensor = Circle(self.x, self.y, 48)
     self.t:cooldown(6, function() local enemies = self:get_objects_in_shape(self.attack_sensor, main.current.enemies); return enemies and #enemies > 0 end, function()
       local closest_enemy = self:get_closest_object_in_shape(self.attack_sensor, main.current.enemies)
@@ -94,6 +95,7 @@ function Player:init(args)
       if enemy then
         gambler1:play{pitch = pitch_a, volume = math.clamp(math.remap(gold, 0, 50, 0, 0.5), 0, 0.75)}
         enemy:hit(math.min(4*gold, 1000),nil,nil,nil,'gambler')
+        do_osyn['Frenzy']()
         if main.current.sorcerer_level > 0 then
           self.sorcerer_aspd_m = get_synpsorcaspd(main.current.sorcerer_level) + 1
           self.sorcerer_count = self.sorcerer_count + 1
@@ -105,6 +107,7 @@ function Player:init(args)
               if enemy then
                 gambler1:play{pitch = pitch_a + 0.05, volume = math.clamp(math.remap(gold, 0, 50, 0, 0.5), 0, 0.75)}
                 enemy:hit(math.min(4*gold, 1000),nil,nil,nil,'gambler')
+                do_osyn['Frenzy']()
               end
             end)
           end
@@ -370,6 +373,7 @@ function Player:init(args)
     self.t:cooldown(5, function() local enemies = self:get_objects_in_shape(self.attack_sensor, main.current.enemies); return enemies and #enemies > 0 end, function()
       local closest_enemy = self:get_closest_object_in_shape(self.attack_sensor, main.current.enemies)
       if closest_enemy then
+        do_osyn['Frenzy']()
         self:shoot(self:angle_to_object(closest_enemy))
       end
     end, nil, nil, 'shoot')
@@ -379,6 +383,7 @@ function Player:init(args)
     self.t:cooldown(4, function() local enemies = self:get_objects_in_shape(self.attack_sensor, main.current.enemies); return enemies and #enemies > 0 end, function()
       local closest_enemy = self:get_closest_object_in_shape(self.attack_sensor, main.current.enemies)
       if closest_enemy then
+        do_osyn['Frenzy']()
         self:shoot(self:angle_to_object(closest_enemy))
       end
     end, nil, nil, 'shoot')
@@ -451,6 +456,7 @@ function Player:init(args)
 
   elseif self.character == 'spellblade' then
     self.t:every(2, function()
+      do_osyn['Frenzy']()
       self:shoot(random:float(0, 2*math.pi), {homing = true})
     end, nil, nil, 'shoot')
 
@@ -649,6 +655,7 @@ function Player:init(args)
         for _, enemy in ipairs(enemies) do
           local random_result = math.random()
           enemy.warped = true
+          do_osyn['Frenzy']()
           if random_result < 0.33 then 
             enemy:push(math.random_range({25, 75})*(self.knockback_m or 1), self:angle_to_object(enemy))
             HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = carmine[0], duration = 0.1}
@@ -723,6 +730,7 @@ function Player:init(args)
       local enemies = table.first2(table.shuffle(self:get_objects_in_shape(self.wide_attack_sensor, main.current.enemies)),
         6 + ((self.malediction == 1 and 1) or (self.malediction == 2 and 3) or (self.malediction == 3 and 5) or 0) + (get_synp('curser', main.current.curser_level)))
       for _, enemy in ipairs(enemies) do
+        do_osyn['Frenzy']()
         enemy:curse('bane', 6*(self.hex_duration_m or 1), self.level == 3, self)
         HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = purplecurs[0], duration = 0.1}
         LightningLine{group = main.current.effects, src = self, dst = enemy, color = purplecurs[0]}
@@ -764,6 +772,7 @@ function Player:init(args)
   elseif self.character == 'highlander' then
     self.attack_sensor = Circle(self.x, self.y, 36)
     self.t:cooldown(4, function() local enemies = self:get_objects_in_shape(self.attack_sensor, main.current.enemies); return enemies and #enemies > 0 end, function()
+      do_osyn['Frenzy']()
       if self.level == 3 then
         if random:bool(50) then
           self:attack(72, {highlander_m = 10})
@@ -790,6 +799,7 @@ function Player:init(args)
   elseif self.character == 'nexus' then
     self.t:every(6, function()
       heal1:play{pitch = random:float(0.8, 0.95), volume = 0.5}
+      do_osyn['Frenzy']()
       healLowest(self, nil)
     end, nil, nil, 'attack')
   elseif self.character == 'fairy' then
@@ -998,6 +1008,10 @@ function Player:init(args)
     self.t:every(1, function()
       calc_syn_power(true) -- for the chaolyst set to apply its random effects
     end)
+    do_osyn['Titan']()
+    do_osyn['Defiance']()
+    do_osyn['Cultivation']()
+    do_osyn['Chronology']()
   end
 
   if self.ouroboros_technique_r then
@@ -1457,12 +1471,12 @@ function Player:update(dt)
   end
 
 
-  self.buff_def_a = (self.warrior_def_a or 0) + (main.current.player and main.current.player.def_boost_global_a or 0)
+  self.buff_def_a = (self.warrior_def_a or 0) + (main.current.player and main.current.player.def_boost_global_a or 0) + (main.current.player and (main.current.player.armorforge or 0) or 0)
   self.buff_aspd_m = (self.chronomancer_aspd_m or 1)*(self.vagrant_aspd_m or 1)*(self.outlaw_aspd_m or 1)*(self.fairy_aspd_m or 1)*(self.psyker_aspd_m or 1)*(self.chronomancy_aspd_m or 1)*(self.awakening_aspd_m or 1)*(self.berserking_aspd_m or 1)*(self.reinforce_aspd_m or 1)*(self.squire_aspd_m or 1)*(self.speed_3_aspd_m or 1)*(self.last_stand_aspd_m or 1)*(self.enchanted_aspd_m or 1)*(self.explorer_aspd_m or 1)*(self.magician_aspd_m or 1)*(self.sorcerer_aspd_m or 1)
-  self.buff_aspd_m = self.buff_aspd_m + (self.warp_time and math.random_range({0, 1}) or 0)
+  self.buff_aspd_m = self.buff_aspd_m*(main.current.player and (main.current.player.chronology and 2 or 1) or 1) + (self.warp_time and math.random_range({0, 1}) or 0)
   self.buff_dmg_m = (self.squire_dmg_m or 1)*(self.vagrant_dmg_m or 1)*(self.enchanter_dmg_m or 1)*(self.swordsman_dmg_m or 1)*(self.flagellant_dmg_m or 1)*(self.psyker_dmg_m or 1)*(self.ballista_dmg_m or 1)*(self.awakening_dmg_m or 1)*(self.reinforce_dmg_m or 1)*(self.payback_dmg_m or 1)*(self.immolation_dmg_m or 1)*(self.damage_4_dmg_m or 1)*(self.offensive_stance_dmg_m or 1)*(self.last_stand_dmg_m or 1)*(self.dividends_dmg_m or 1)*(self.explorer_dmg_m or 1)
   self.buff_def_m = (self.squire_def_m or 1)*(self.ouroboros_def_m or 1)*(self.unwavering_stance_def_m or 1)*(self.reinforce_def_m or 1)*(self.defensive_stance_def_m or 1)*(self.last_stand_def_m or 1)*(self.unrelenting_stance_def_m or 1)*
-  (self.hardening_def_m or 1)*(main.current.player.cultivation or 1)*(main.current.player.armorforge or 1)*(main.current.player.defiance or 1)
+  (self.hardening_def_m or 1)*(main.current.player and ((main.current.player.cultivation or 1)*(main.current.player.defiance or 1)) or 1)
   self.buff_area_size_m = (self.nuker_area_size_m or 1)*(self.magnify_area_size_m or 1)*(self.unleash_area_size_m or 1)*(self.last_stand_area_size_m or 1)
   self.buff_area_dmg_m = (self.nuker_area_dmg_m or 1)*(self.amplify_area_dmg_m or 1)*(self.unleash_area_dmg_m or 1)*(self.last_stand_area_dmg_m or 1)*(self.explorer_dmg_m or 1)
   self.buff_mvspd_m = (self.wall_rider_mvspd_m or 1)*(self.centipede_mvspd_m or 1)*(self.squire_mvspd_m or 1)*(self.last_stand_mvspd_m or 1)*(self.haste_mvspd_m or 1)
@@ -1662,6 +1676,11 @@ function Player:hit(damage, from_undead)
   self:show_hp()
 
   local actual_damage = math.max(self:calculate_damage(damage), 0)
+  do_osyn['Obsidian'](self, actual_damage)
+  if self.ignore_damage_once then
+    actual_damage = 0
+    self.ignore_damage_once = false
+  end
   self.hp = self.hp - actual_damage
   _G[random:table{'player_hit1', 'player_hit2'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
   camera:shake(4, 0.5)
@@ -1728,6 +1747,7 @@ function Player:hit(damage, from_undead)
         while ind < 4 do
           local getEnemy = table.random(enemies)
           if getEnemy then
+            do_osyn['Frenzy']()
             getEnemy:hit(getEnemy.max_hp,nil,nil,nil,'psykeeper')
           end
           ind = ind + 1
@@ -2073,6 +2093,7 @@ function Player:attack(area, mods)
       t.dmg = t.dmg * mods.highlander_m
     end
   if self.character == 'barbarian' or self.character == 'juggernaut' then
+    do_osyn['Frenzy']()
     t.stundur = stuns[self.character]
   end
   if self.character == 'miner' and not mods.kind and mods.kind ~='goldmine' then
@@ -2160,6 +2181,7 @@ function Projectile:init(args)
   end
 
   if self.character == 'vagrant' or self.character == 'barrager' then
+    do_osyn['Frenzy']()
     self.stundur = stuns[self.character]
   end
 
@@ -2278,6 +2300,9 @@ function Projectile:init(args)
 
   if self.parent.flying_daggers and table.any(self.parent.classes, function(v) return v == 'rogue' end) then
     self.chain = self.chain + ((self.parent.flying_daggers == 1 and 2) or (self.parent.flying_daggers == 2 and 3) or (self.parent.flying_daggers == 3 and 4))
+  end
+  if not args.bulletzoned then
+    do_osyn['Bulletzone'](args)
   end
 end
 
@@ -2665,6 +2690,7 @@ function Area:init(args)
   end
   local enemies = main.current.main:get_objects_in_shape(self.shape, main.current.enemies)
   for _, enemy in ipairs(enemies) do
+    do_osyn['Armorforge']()
     local resonance_dmg = 0
     local resonance_m = (self.parent.resonance == 1 and 0.03) or (self.parent.resonance == 2 and 0.05) or (self.parent.resonance == 3 and 0.07) or 0
     if self.character == 'elementor' then
@@ -3066,6 +3092,7 @@ function ForceArea:init(args)
       self.t:every_immediate(0.05, function() self.hidden = not self.hidden end, 7, function() self.dead = true end)
       if self.level == 3 then
         self.stundur = stuns[self.character]
+        do_osyn['Frenzy']()
         elementor1:play{pitch = random:float(0.9, 1.1), volume = 0.5}
         local enemies = main.current.main:get_objects_in_shape(self.shape, main.current.enemies)
         for _, enemy in ipairs(enemies) do
@@ -3261,6 +3288,7 @@ function Tree:init(args)
       end
     end)
   end)
+  do_osyn['Incubation'](self)
 end
 
 
@@ -3305,6 +3333,7 @@ function ForceField:init(args)
   self.t:tween(0.05, self, {rs = args.rs}, math.cubic_in_out, function() self.spring:pull(0.15) end)
   self.t:after(0.2, function() self.color = yellowforc[0] end)
   self.stundur = stuns.warden
+  do_osyn['Frenzy']()
 
   self.t:after(6, function()
     self.t:every_immediate(0.05, function() self.hidden = not self.hidden end, 7, function() self.dead = true end)
@@ -3389,6 +3418,7 @@ function Volcano:init(args)
   self.t:after(4 * self.conjurer_buff_m, function()
     self.t:every_immediate(0.05, function() self.hidden = not self.hidden end, 7, function() self.dead = true end)
   end)
+  do_osyn['Incubation'](self)
 end
 
 
@@ -3494,6 +3524,7 @@ function Sentry:init(args)
       end)
     end
   end, nil, nil, 'attack')
+  do_osyn['Incubation'](self)
 end
 
 
@@ -3592,6 +3623,7 @@ function Turret:init(args)
   
   self.upgrade_dmg_m = 1
   self.upgrade_aspd_m = 1
+  do_osyn['Incubation'](self)
 end
 
 
@@ -3731,6 +3763,7 @@ function Bomb:init(args)
   self.color = orange[0]
   self.dmg = 2*get_character_stat('bomber', self.level, 'dmg')
   self.t:after(8, function() self:explode() end)
+  do_osyn['Incubation'](self)
 end
 
 
@@ -3941,6 +3974,7 @@ function Automaton:init(args)
       _G[random:table{'cannoneer1', 'cannoneer2'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
     end
   end)
+  do_osyn['Incubation'](self)
 end
 
 
@@ -4001,6 +4035,7 @@ function Gold:init(args)
   gold1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
   self.weak_magnet_sensor = Circle(self.x, self.y, 16)
   self.magnet_sensor = Circle(self.x, self.y, 56)
+  do_osyn['Telekinesis'](self)
 end
 
 function Gold:telekinetic_rush()
@@ -4043,6 +4078,7 @@ function Gold:on_trigger_enter(other, contact)
   if self.cant_be_picked_up then return end
 
   if other:is(Player) then
+    do_osyn['Collector'](self)
     main.current.gold_picked_up = main.current.gold_picked_up + 1
     self.dead = true
     HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 4, color = fg[0], duration = 0.1}
@@ -4121,6 +4157,7 @@ function DMGOrb:init(args)
   gold1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
   self.weak_magnet_sensor = Circle(self.x, self.y, 16)
   self.magnet_sensor = Circle(self.x, self.y, 56)
+  do_osyn['Telekinesis'](self) --technically unreachable due to Telekinesis and Devourer being incompatible
 end
 
 function DMGOrb:telekinetic_rush()
@@ -4163,6 +4200,7 @@ function DMGOrb:on_trigger_enter(other, contact)
   if self.cant_be_picked_up then return end
 
   if other:is(Player) then
+    do_osyn['Collector'](self)
     main.current.player.dmgorb_m = main.current.player.dmgorb_m
     and main.current.player.dmgorb_m + 0.03 or 0.03 
     self.dead = true
@@ -4210,6 +4248,7 @@ function HealingOrb:init(args)
       end}
     end
   end
+  do_osyn['Telekinesis'](self)
 end
 
 function HealingOrb:telekinetic_rush()
@@ -4248,7 +4287,7 @@ function HealingOrb:draw()
   graphics.pop()
 end
 
-function healLowest(other, amount)
+function healLowest(other, amount, no_nexus)
   local units = all_units_global
   local lowest_hp = 10
   local lowest_unit
@@ -4260,7 +4299,7 @@ function healLowest(other, amount)
     end
   end
   if lowest_unit then
-    if other.character == 'nexus' then
+    if other.character == 'nexus' and not no_nexus then
       lowest_unit:heal(lowest_unit.max_hp)
       local enemy = table.random(main.current.main:get_objects_by_classes(main.current.enemies))
       if enemy then
@@ -4292,6 +4331,7 @@ function HealingOrb:on_trigger_enter(other, contact)
   if self.cant_be_picked_up then return end
 
   if other:is(Player) then
+    do_osyn['Collector'](self)
     self.dead = true
     HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 4, color = fg[0], duration = 0.1}
     for i = 1, 2 do HitParticle{group = main.current.effects, x = self.x, y = self.y, color = green[0]} end
@@ -4381,6 +4421,9 @@ function Critter:init(args)
   self.dmg = args.dmg or self.parent.dmg
   self.hp = get_synp('swarmer', main.current.swarmer_level) + 1
   self.start_v = self.v
+  do_osyn['Pestilence'](self)
+  do_osyn['Centralization'](self)
+  do_osyn['Mindswarm'](self)
   if self.centralized then
     self.centrepoint = random_unit
   end
@@ -4401,7 +4444,7 @@ end
 function Critter:update(dt)
   self:update_game_object(dt)
   
-  if self.centralized then
+  if self.centrepoint and self.centralized then
     if self.centrepoint.dead then self.dead = true; self.centrepoint = nil; return end
     self:set_position(self.centrepoint.x + 
     80*math.cos(5*main.current.t.time + self.pool_ind / 15 * math.pi),

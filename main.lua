@@ -567,7 +567,7 @@ function init()
     ['psykeeper'] = '[greenheal]Healer, [fgpsyk]Psyker, [carmine]Chaolyst, [yellow]Warrior',
     ['engineer'] = '[orangebuil]Builder',
     ['plague_doctor'] = '[red]Nuker, [purple]Voider, [orange]Swarmer',
-    ['barbarian'] = '[purplecurs]Curser, [yellow]Warrior',
+    ['barbarian'] = '[yellowforc]Forcer, [yellow]Warrior, [blue]Mage',
     ['juggernaut'] = '[yellowforc]Forcer, [yellow]Warrior',
     ['lich'] = '[blue]Mage',
     ['cryomancer'] = '[blue]Mage, [purple]Voider',
@@ -1150,24 +1150,6 @@ function init()
     ['engineer'] = function(self, x, y) 
       Turret{group = main.current.main, x = x, y = y, parent = self, character = self.character} end
   }
-  
-  swarmerEffects = 
-  {
-    ['host'] = function(self, x, y) 
-      Volcano{group = main.current.main, x = x, y = y, color = self.color, parent = self,
-       rs = 24, level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
-    ['beastmaster'] = function(self, x, y) 
-      Bomb{group = main.current.main, x = x, y = y, parent = self,
-       level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
-    ['corruptor'] = function(self, x, y) 
-      Automaton{group = main.current.main, x = x, y = y, parent = self,
-       level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
-    ['infestor'] = function(self, x, y) Tree{group = main.current.main, x = x, y = y,
-       color = self.color, parent = self, level = self.level} end,
-    ['plague_doctor'] = function(self, x, y) 
-      Sentry{group = main.current.main, x = x, y = y, color = self.color,
-       parent = self, level = self.level} end
-  }
 
   momentum_dmg_base = 0.5
   momentum_dmg_m = momentum_dmg_base
@@ -1273,7 +1255,7 @@ function init()
     end
   end
 
-  def_syn('chaolyst', 0, {{0.95, 1.1}, {0.94, 1.2}, {0.93, 1.3}, {0.94, 1.4}}, nil, 2, 4, 
+  def_syn('chaolyst', 0, {{0.95, 1.1}, {0.94, 1.2}, {0.93, 1.3}, {0.92, 1.4}}, nil, 2, 4, 
   function()
     for i = 1, #syn_bas['chaolyst'] do
       if syn_vals['chaolyst'][i] == nil then syn_vals['chaolyst'][i] = {} end
@@ -1332,9 +1314,14 @@ function init()
 
   function calc_syn_power(recalculate_only_active)
     if recalculate_only_active then
-      for _, v in pairs(chaolyzable_sets) do
-  	    syn_calcs[v]()
+      for i, _ in pairs(sp_max) do
+        if i ~= 'chaolyst' then
+  	    syn_calcs[i]()
+        end
       end
+      --for _, v in pairs(chaolyzable_sets) do
+  	  --  syn_calcs[v]()
+      --end
     else
       for i, _ in pairs(sp_max) do
   	    syn_calcs[i]()
@@ -1440,7 +1427,7 @@ function init()
   oversyn_cols = {}
   oversyn_vals = {}
   oversyn_needs = {}
-  oversyn_behav = {}
+  do_osyn = {}
   oversyn_level = {}
 
   oversyn_chains = {}
@@ -1513,7 +1500,6 @@ function init()
     for _, need in ipairs(oversyn_needs[osyn_name]) do
       min_source_count = math.min(min_source_count, syn_source_counts[need])
     end
-    print(strc({osyn_name, ' ', min_source_count}))
     oversyn_level[osyn_name] = min_source_count
   end
 
@@ -1545,13 +1531,15 @@ function init()
         calc_active_osyns(sup_syns, oversyn_forbidden, osyn_fills_temp, hyp_syn_active)
       end
     end
-    print("--------")
     for _, v in ipairs(sup_syn_active) do
       calc_osyn_level(v)
     end
     for _, v in ipairs(hyp_syn_active) do
       calc_osyn_level(v)
     end
+    --for i, _ in pairs(oversyn_vals) do
+    --  oversyn_level[i] = 10
+    --end
   end
 
 
@@ -1579,7 +1567,7 @@ function init()
       chain_props.res = name
       table.insert(oversyn_chains[needs[i]], chain_props)
     end
-    oversyn_behav[name] = behaviour
+    do_osyn[name] = behaviour
     oversyn_cols[name] = color
     oversyn_needs[name] = needs
     oversyn_vals[name] = base_val
@@ -1596,204 +1584,236 @@ function init()
     return oversyn_vals[name] * oversyn_level[name]
   end
 
-  function do_osyn(name, args)
-    
-  end
-
-  
-  def_oversyn('Delegate', 1, {'conjurer', 'sorcerer'}, 3, 'orangebuil', 
+  local next_osyn = 'Delegate'
+  def_oversyn(next_osyn, 1, {'conjurer', 'sorcerer'}, 3, 'orangebuil', 
   {'Spawning non-boss enemies: ' ,'% chance to turn into a random unit building'},
-  function(unit)
-    if random:bool(osyn_v('Delegate')) then
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if random:bool(osyn_v(next_osyn)) then
       unit.dead = true
       buildEffects[random_conjurer.character](random_conjurer, unit.x, unit.y)
     end
   end
   )
 
-  def_oversyn('Chronology', 1, {'sorcerer', 'enchanter', 'mage'}, 1, 'blue2', 
-  {'Mage and Sorcerer casts: ' ,'% chance to increase global aspd by 100% for 1 sec'},
-  function()
-    if random:bool(osyn_v('Chronology')) then
+  local next_osyn = 'Chronology'
+  def_oversyn(next_osyn, 1, {'sorcerer', 'enchanter', 'mage'}, 8, 'blue2', 
+  {'Every second: ' ,'% chance to increase global aspd by 100% for 1 sec'},
+  function() if oversyn_level[next_osyn] <= 0 then return end
+    if not main.current.player then return end
+    if random:bool(osyn_v(next_osyn)) then
       main.current.player.chronology = true 
       main.current.player:after(1, function() main.current.player.chronology = false end, 'nochronology')
     end
   end
   )
 
-  def_oversyn('Armorforge', 1, {'mage', 'warrior'}, 0.2, 'yellow', 
-  {'Mage and Warrior attack hits grant ','% armor, resets'},
-  function()
-     main.current.player.armorforge = main.current.player.armorforge or 1
-     main.current.player.armorforge = main.current.player.armorforge + osyn_v('Armorforge')*0.01
+  local next_osyn = 'Armorforge'
+  def_oversyn(next_osyn, 1, {'mage', 'warrior'}, 0.2, 'yellow', 
+  {'AoE attack hits grant ','armor, resets'},
+  function() if oversyn_level[next_osyn] <= 0 then return end
+    if not main.current.player then return end
+    main.current.player.armorforge = main.current.player.armorforge or 0
+    main.current.player.armorforge = main.current.player.armorforge + osyn_v(next_osyn)
   end
   )
 
-  def_oversyn('Cultivation', 1, {'warrior', 'healer'}, 5, 'greenheal', 
+  local next_osyn = 'Cultivation'
+  def_oversyn(next_osyn, 1, {'warrior', 'healer'}, 5, 'greenheal', 
   {'Passively regenerate/generate ','% health/armor every second, resets'},
-  function()
-      local cultivation_val = osyn_v('Cultivation')*0.01
+  function() if oversyn_level[next_osyn] <= 0 then return end
+    if not main.current.player then return end
+    main.current.player.t:every(1, function()
+      local cultivation_val = osyn_v(next_osyn)*0.01
       healLowest(random_unit, random_unit.max_hp*cultivation_val)
       main.current.player.cultivation = main.current.player.cultivation or 1
       main.current.player.cultivation = main.current.player.cultivation + cultivation_val
+    end, nil, nil, 'cultivate')
   end
   )
 
-  def_oversyn('Collector', 1, {'healer', 'mercenary'}, 10, 'yellow2', 
+  local next_osyn = 'Collector'
+  def_oversyn(next_osyn, 1, {'healer', 'mercenary'}, 10, 'yellow2', 
   {'Picking up health/dps/gold drop: ','% chance to copy'},
-  function(drop)
+  function(drop) if oversyn_level[next_osyn] <= 0 then return end
     if random:bool(osyn_v('Collector')) then
       if drop:is(Gold) then
+        trigger:after(0.01, function()
         Gold{group = main.current.main, x = drop.x, y = drop.y}
+        end)
       elseif drop:is(HealingOrb) then
+        trigger:after(0.01, function()
         HealingOrb{group = main.current.main, x = drop.x, y = drop.y}
+        end)
       elseif drop:is(DMGOrb) then
+        trigger:after(0.01, function()
         DMGOrb{group = main.current.main, x = drop.x, y = drop.y}
+        end)
       end
     end
   end
   )
 
-  def_oversyn('Focus', 1, {'mercenary', 'explorer', 'chaolyst'}, 20, 'fg', 
-  {'??? ','% ???'},
-  function(unit)
-    if random:bool(osyn_v('Focus')) then
+  local next_osyn = 'Focus'
+  def_oversyn(next_osyn, 1, {'mercenary', 'explorer', 'chaolyst'}, 20, 'fg', 
+  {'Does nothing with ','% chance?!'},
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if random:bool(osyn_v(next_osyn)) then
       --I don't know yet.
     end
   end
   )
 
-  def_oversyn('Catalyst', 1, {'chaolyst', 'forcer'}, 5, 'yellow', 
+  local next_osyn = 'Catalyst'
+  def_oversyn(next_osyn, 1, {'chaolyst', 'forcer'}, 5, 'yellow', 
   {'Damage against living enemies grows by ','% every second they live'},
-  function(unit)
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
     unit.catalyzed = 1
     unit.t:every(1, function()
-      unit.catalyzed = unit.catalyzed + osyn_v('Catalyst')*0.01
+      unit.catalyzed = unit.catalyzed + osyn_v(next_osyn)*0.01
     end, nil, nil, 'catalyzed')
   end
   )
 
-  def_oversyn('Suppression', 1, {'forcer', 'curser'}, 0.2, 'yellowforc', 
+  local next_osyn = 'Suppression'
+  def_oversyn(next_osyn, 1, {'forcer', 'curser'}, 0.2, 'yellowforc', 
   {'Curses stun for ',' seconds'},
-  function(unit)
-    stun(unit, osyn_v('Suppression'))
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    stun(unit, osyn_v(next_osyn))
   end
   )
 
-  def_oversyn('Entropy', 1, {'curser', 'voider'}, 10, 'purplecurs', 
-  {'All damage over time has ','% chance to apply a random equipped unit curse'},
-  function(unit)
-    if random:bool(osyn_v('Entropy')) then
+  local next_osyn = 'Entropy'
+  def_oversyn(next_osyn, 1, {'curser', 'voider'}, 10, 'purplecurs', 
+  {'Damage over time has ','% chance to apply a random equipped unit curse'},
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if random:bool(osyn_v(next_osyn)) then
       projEffects[random_curser.character](unit, random_curser)
     end
   end
   )
 
-  def_oversyn('Overwhelm', 1, {'voider', 'nuker'}, 1, 'red', 
+  local next_osyn = 'Overwhelm'
+  def_oversyn(next_osyn, 1, {'voider', 'nuker'}, 1, 'red', 
   {'Damage over time has ','% chance to cause 10x dmg random Nuker cast'},
-  function(unit)
-    if random:bool(osyn_v('Overwhelm')) then
-      random_nuker_attack(10, unit.x, unit.y)
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if random:bool(osyn_v(next_osyn)) then
+      random_nuker:attack(48, {x = unit.x, y = unit.y, overwhelm = 10})
     end
   end
   )
 
-  def_oversyn('Faraway', 1, {'nuker', 'ranger'}, 20, 'green', 
+  local next_osyn = 'Faraway'
+  def_oversyn(next_osyn, 1, {'nuker', 'ranger'}, 20, 'green', 
   {'All damage is ','% higher with vertical/horizontal distance'},
-  function(unit)
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
     local dist = unit:distance_to_object_dirty(random_unit)
-    unit.faraway_m = 1 + math.min(dist, 200) * 0.005 * osyn_v('Faraway')
+    unit.faraway_m = 1 + math.min(dist, 200) * 0.005 * osyn_v(next_osyn)
   end
   )
 
-  def_oversyn('Bulletzone', 1, {'ranger', 'rogue', 'psyker'}, 10, 'reddark', 
+  local next_osyn = 'Bulletzone'
+  def_oversyn(next_osyn, 1, {'ranger', 'rogue', 'psyker'}, 10, 'reddark', 
   {'A random psyker orb has ','% chance to duplicate a projectile on its cast'},
-  function(args)
-    if random:bool(osyn_v('Bulletzone')) then
+  function(args) if oversyn_level[next_osyn] <= 0 then return end
+    if random:bool(osyn_v(next_osyn)) then
       local got_orb = random:table(psyorb_pool)
-      local copyargs = {}
-      for i, v in pairs(args) do
-        copyargs[i] = v
+      if got_orb then
+        Projectile{group = main.current.main, x = got_orb.x, y = got_orb.y
+        , color = args.color, r = args.r,
+         v = args.v, dmg = args.dmg, homing = args.homing, character = args.character, parent = args.parent, bulletzoned = true}
       end
-      copyargs.x = got_orb.x
-      copyargs.y = got_orb.y
-      Projectile{copyargs}
     end
   end
   )
 
-  def_oversyn('Mindswarm', 1, {'psyker', 'swarmer'}, 10, 'fgpsyk', 
-  {'Critters have ','% chance to borrow a supercharged psyker orb on spawn'},
-  function(unit)
-    if random:bool(osyn_v('Mindswarm')) then
+  local next_osyn = 'Mindswarm'
+  def_oversyn(next_osyn, 1, {'psyker', 'swarmer'}, 10, 'fgpsyk', 
+  {'Critters have ','% chance to borrow a psyker orb on spawn'},
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if random:bool(osyn_v(next_osyn)) then
       local got_orb = random:table(psyorb_pool)
-      got_orb.borrowing_parent = unit
+      if got_orb then
+        got_orb.borrowing_parent = unit
+      end
     end
   end
   )
 
-  def_oversyn('Incubation', 1, {'swarmer', 'conjurer'}, 10, 'orange', 
+  local next_osyn = 'Incubation'
+  def_oversyn(next_osyn, 1, {'swarmer', 'conjurer'}, 10, 'orange', 
   {'Buildings have ','% chance to spawn a random critter every second'},
-  function(unit)
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
     unit.t:every(1, function()
-      if random:bool(osyn_v('Incubation')) then
-        spawn_random_critter(unit.x + 1, unit.y + 1)
+      if random:bool(osyn_v(next_osyn)) then
+        Critter{group = main.current.main,
+       x = unit.x, y = unit.y, color = character_colors[random_swarmer.character],
+        character = random_swarmer.character, r = random:float(0, 2*math.pi),
+         v = 10, dmg = random_swarmer.dmg, parent = random_swarmer}
       end
     end, nil, nil, 'incubating')
   end
   )
 
-  def_oversyn('Centralization', 2, {'Focus', 'Mindswarm'}, 20, 'fg', 
+  local next_osyn = 'Centralization'
+  def_oversyn(next_osyn, 2, {'Focus', 'Mindswarm'}, 20, 'fg', 
   {'Critters have ','% chance to encircle the snake like psyker orbs on spawn'},
-  function(unit)
-    if random:bool(osyn_v('Centralization')) then
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if random:bool(osyn_v(next_osyn)) then
       unit.centralized = true
     end
   end
   )
 
-  def_oversyn('Vampirism', 2, {'Cultivation', 'Suppression'}, 1, 'reddark', 
+  local next_osyn = 'Vampirism'
+  def_oversyn(next_osyn, 2, {'Cultivation', 'Suppression'}, 1, 'reddark', 
   {'Heal ','% of damage dealt to stunned or cursed enemies'},
-  function(unit, dmg_dealt)
+  function(unit, dmg_dealt) if oversyn_level[next_osyn] <= 0 then return end
     if unit.cursed or unit.stunned then
-      healLowest(random_unit, dmg_dealt * osyn_v('Vampirism'))
+      healLowest(random_unit, dmg_dealt * osyn_v(next_osyn)*0.01, true)
     end
   end
   )
 
-  def_oversyn('Defiance', 2, {'Armorforge', 'Catalyst'}, 6, 'yellow', 
+  local next_osyn = 'Defiance'
+  def_oversyn(next_osyn, 2, {'Armorforge', 'Catalyst'}, 6, 'yellow', 
   {'Gain ','% armor for each nearby to random unit non-critter enemy'},
-  function()
+  function() if oversyn_level[next_osyn] <= 0 then return end
+    if not main.current.player then return end
     main.current.player.t:every(0.34, function()
       local enemies = random_unit:get_objects_in_shape(Circle(random_unit.x, random_unit.y, 80), {Seeker})
-      main.current.player.defiance = #enemies * osyn_v('Defiance')*0.01 + 1
+      main.current.player.defiance = #enemies * osyn_v(next_osyn)*0.01 + 1
     end, nil, nil, 'defying')
   end
   )
 
-  def_oversyn('Devourer', 2, {'Collector', 'Entropy'}, 10, 'carmine', 
+  local next_osyn = 'Devourer'
+  def_oversyn(next_osyn, 2, {'Collector', 'Entropy'}, 10, 'carmine', 
   {'Enemies have ','% chance to spawn dmg boost orbs on death'},
-  function(unit)
-    if random:bool(osyn_v('Devourer')) then
-      DMGOrb{group = main.current.main, unit.x, unit.y}
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if random:bool(osyn_v(next_osyn)) then
+      trigger:after(0.01, function()
+        DMGOrb{group = main.current.main, unit.x, unit.y}
+      end)
     end
   end
   )
 
-  def_oversyn('Pestilence', 2, {'Overwhelm', 'Incubation'}, 10, 'purple', 
+  local next_osyn = 'Pestilence'
+  def_oversyn(next_osyn, 2, {'Overwhelm', 'Incubation'}, 10, 'purple', 
   {'Critters have ','% chance to spawn with a DoTArea around them'},
-  function(unit)
-    if random:bool(osyn_v('Pestilence')) then
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    if random:bool(osyn_v(next_osyn)) then
       unit:dot_attack(36, {duration = 9999, pestilent = true})
     end
   end
   )
   
-  def_oversyn('Sabotage', 2, {'Faraway', 'Delegate'}, 3, 'blue2', 
+  local next_osyn = 'Sabotage'
+  def_oversyn(next_osyn, 2, {'Faraway', 'Delegate'}, 3, 'blue2', 
   {'Enemies have ','% chance per second to combust into 8 projectiles'},
-  function(unit)
-    unit:every(1, function()
-      if random:bool(osyn_v('Sabotage')) then
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
+    unit.t:every(1, function()
+      if random:bool(osyn_v(next_osyn)) then
         unit.dead = true
         for i = 1, 8 do
           Projectile{group = main.current.main, x = unit.x, y = unit.y
@@ -1805,19 +1825,22 @@ function init()
   end
   )
 
-  def_oversyn('Obsidian', 2, {'Armorforge', 'Entropy'}, 6, 'purple', 
+  local next_osyn = 'Obsidian'
+  def_oversyn(next_osyn, 2, {'Armorforge', 'Entropy'}, 6, 'purple', 
   {'Snake hit: ','% chance to ignore damage and spawn a revenge DoT'},
-  function(unit, incoming_dmg)
-    if random:bool(osyn_v('Obsidian')) then
+  function(unit, incoming_dmg) if oversyn_level[next_osyn] <= 0 then return end
+    if random:bool(osyn_v(next_osyn)) then
       unit.ignore_damage_once = true
       unit:dot_attack(48, {duration = 2, revenge = incoming_dmg})
     end
   end
   )
   
-  def_oversyn('Titan', 2, {'Cultivation', 'Overwhelm'}, 20, 'yellow', 
+  local next_osyn = 'Titan'
+  def_oversyn(next_osyn, 2, {'Cultivation', 'Overwhelm'}, 20, 'yellow', 
   {'Deal ','% more damage at if no units are lost or damaged'},
-  function()
+  function() if oversyn_level[next_osyn] <= 0 then return end
+    if not main.current.player then return end
     main.current.player.t:every(0.22, function()
       if #all_units_global >= unit_count_max then
         for _, v in ipairs(all_units_global) do
@@ -1825,7 +1848,7 @@ function init()
             goto no_titan
           end
         end
-        main.current.player.titan_m = osyn_v('Titan')*0.01
+        main.current.player.titan_m = osyn_v(next_osyn)*0.01
       else
         goto no_titan
       end
@@ -1835,33 +1858,35 @@ function init()
   end
   )
   
-  def_oversyn('Telekinesis', 2, {'Collector', 'Faraway'}, 20, 'yellow2', 
+  local next_osyn = 'Telekinesis'
+  def_oversyn(next_osyn, 2, {'Collector', 'Faraway'}, 20, 'yellow2', 
   {'Drops: ','% chance/sec to rush towards you, 50% maxhp microstun dmg to enemies'},
-  function(drop)
+  function(drop) if oversyn_level[next_osyn] <= 0 then return end
     drop.t:every(1, function()
-      if random:bool(osyn_v('Telekinesis')) then
+      if random:bool(osyn_v(next_osyn)) then
         drop:telekinetic_rush()
       end
     end, nil, nil, 'telekinetic')
   end
   )
   
-  def_oversyn('Frenzy', 2, {'Catalyst', 'Incubation'}, 0.1, 'carmine', 
+  local next_osyn = 'Frenzy'
+  def_oversyn(next_osyn, 2, {'Catalyst', 'Incubation'}, 0.1, 'carmine', 
   {'Chaolyst/Forcer cast: ','% aspd and movement to critters/buildings, resets'},
-  function()
-    if random:bool(osyn_v('Frenzy')) then
-      main.current.player.frenzy = main.current.player.frenzy and main.current.player.frenzy or 1
-      main.current.player.frenzy = main.current.player.frenzy + osyn_v('Frenzy')
-      main.current.player.frenzy_inv = 1 / main.current.player.frenzy
-    end
+  function() if oversyn_level[next_osyn] <= 0 then return end
+    if not main.current.player then return end
+    main.current.player.frenzy = main.current.player.frenzy and main.current.player.frenzy or 1
+    main.current.player.frenzy = main.current.player.frenzy + osyn_v('Frenzy')*0.01
+    main.current.player.frenzy_inv = 1 / main.current.player.frenzy
   end
   )
   
-  def_oversyn('Horror', 2, {'Suppression', 'Delegate'}, 20, 'purplecurs', 
+  local next_osyn = 'Horror'
+  def_oversyn(next_osyn, 2, {'Suppression', 'Delegate'}, 20, 'purplecurs', 
   {'Enemies: ','% chance per sec to become feared: silent and running away'},
-  function(unit)
+  function(unit) if oversyn_level[next_osyn] <= 0 then return end
     unit.t:every(1, function()
-      if random:bool(osyn_v('Horror')) then
+      if random:bool(osyn_v(next_osyn)) then
         unit.feared = true
         unit.t:after(0.9, function() unit.feared = false end, 'unfear')
       end
@@ -2735,8 +2760,6 @@ function open_options(self)
         setSaveOpts()
         resetSaveLoadButtons()
       end}
-
-      print(state.save_num)
 
       self.save_button_1 = Button{group = self.ui, x = gw/2 + 40, y = gh - 200, force_update = true, button_text = strc({'Save ', state.save_num, ' to ', saveLoad_tars[1]}), fg_color = 'bg10', bg_color = 'bg',
       action = function(b)

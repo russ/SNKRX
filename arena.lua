@@ -271,7 +271,7 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
 
   chaolyzable_sets = {}
   local class_levels = get_class_levels(units)
-  for i, v in pairs(sp_max) do
+  for i, _ in pairs(sp_max) do
     self[i..'_level'] = class_levels[i]
     self.active_sets = 0
     if class_levels[i] >= 1 then
@@ -366,23 +366,23 @@ function Arena:update(dt)
       random_swarmer = nil
       random_curser = nil
       random_conjurer = nil
-      for _, unit in shuffled_units_global do
-        if chaolyzable_sets['nuker'] and not random_nuker then
+      for _, unit in ipairs(shuffled_units_global) do
+        if not random_nuker then
           if table.any(unit.classes, function(v) return v == 'nuker' end) then
             random_nuker = unit
           end
         end
-        if chaolyzable_sets['swarmer'] and not random_swarmer then
+        if not random_swarmer then
           if table.any(unit.classes, function(v) return v == 'swarmer' end) then
             random_swarmer = unit
           end
         end
-        if chaolyzable_sets['curser'] and not random_curser then
+        if not random_curser then
           if table.any(unit.classes, function(v) return v == 'curser' end) then
             random_curser = unit
           end
         end
-        if chaolyzable_sets['conjurer'] and not random_conjurer then
+        if not random_conjurer then
           if table.any(unit.classes, function(v) return v == 'conjurer' end) then
             random_conjurer = unit
           end
