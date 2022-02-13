@@ -1020,6 +1020,8 @@ function init()
   all_units_global = {}
   random_unit = nil
   critter_pool = {}
+  psyorb_pool = {}
+  nexusRandom = false
 
   stuns = {
     juggernaut = 1.5,
@@ -1560,10 +1562,8 @@ function init()
   {'Spawning non-boss enemies: ' ,'% chance to turn into a random unit building'},
   function(unit)
     if random:bool(osyn_v('Delegate')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      spawnRandomBuilding(unit.x, unit.y)
+      unit.dead = true
+      spawn_random_building(unit.x, unit.y)
     end
   end
   )
@@ -1580,7 +1580,7 @@ function init()
   )
 
   def_oversyn('Armorforge', 1, {'mage', 'warrior'}, 0.2, 'yellow', 
-  {'Mage and Warrior attack hits grant ',' armor, round resets'},
+  {'Mage and Warrior attack hits grant ',' armor, resets'},
   function()
      main.current.player.armorforge = main.current.player.armorforge or 0
      main.current.player.armorforge = main.current.player.armorforge + osyn_v('Armorforge')
@@ -1588,25 +1588,20 @@ function init()
   )
 
   def_oversyn('Cultivation', 1, {'warrior', 'healer'}, 5, 'greenheal', 
-  {'Passively regenerate/generate ','% health/armor value every second, round resets'},
+  {'Passively regenerate/generate ','% health/armor value every second, resets'},
   function()
-    if random:bool(osyn_v('Cultivation')) then
       local cultivation_val = osyn_v('Cultivation')
       healLowest(random_unit, random_unit.max_hp*cultivation_val)
       main.current.player.cultivation = main.current.player.cultivation or 0
-     main.current.player.cultivation = main.current.player.cultivation + cultivation_val
-    end
+      main.current.player.cultivation = main.current.player.cultivation + cultivation_val
   end
   )
 
   def_oversyn('Collector', 1, {'healer', 'mercenary'}, 10, 'yellow2', 
-  {'Picking up health/gold has ','% chance to give double'},
-  function(unit)
+  {'Picking up health/dps/gold drop: ','% chance to copy'},
+  function(drop)
     if random:bool(osyn_v('Collector')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+      drop:copy_drop()
     end
   end
   )
@@ -1615,10 +1610,7 @@ function init()
   {'??? ','% ???'},
   function(unit)
     if random:bool(osyn_v('Focus')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+      --I don't know yet.
     end
   end
   )
@@ -1626,24 +1618,17 @@ function init()
   def_oversyn('Catalyst', 1, {'chaolyst', 'forcer'}, 5, 'yellow', 
   {'Damage against living enemies grows by ','% every second they live'},
   function(unit)
-    if random:bool(osyn_v('Catalyst')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
-    end
+    unit.catalyzed = 1
+    unit.t:every(1, function()
+      unit.catalyzed = unit.catalyzed + osyn_v('Catalyst')*0.01
+    end, nil, nil, 'catalyzed')
   end
   )
 
   def_oversyn('Suppression', 1, {'forcer', 'curser'}, 0.2, 'yellowforc', 
   {'Curses stun for ',' seconds'},
   function(unit)
-    if random:bool(osyn_v('Suppression')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
-    end
+    stun(unit, osyn_v('Suppression'))
   end
   )
 
@@ -1651,46 +1636,33 @@ function init()
   {'All damage over time has ','% chance to apply a random equipped unit curse'},
   function(unit)
     if random:bool(osyn_v('Corruptor')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+      apply_random_curse(unit)
     end
   end
   )
 
   def_oversyn('Overwhelm', 1, {'voider', 'nuker'}, 1, 'red', 
-  {'Damage over time has ','% chance to cause 10x damage in an AoE explosion'},
+  {'Damage over time has ','% chance to cause 10x dmg random Nuker cast'},
   function(unit)
     if random:bool(osyn_v('Overwhelm')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+      random_nuker_attack(10, unit.x, unit.y)
     end
   end
   )
 
   def_oversyn('Faraway', 1, {'nuker', 'ranger'}, 20, 'green', 
-  {'All damage is ','% higher with high distance'},
+  {'All damage is ','% higher with vertical/horizontal distance'},
   function(unit)
-    if random:bool(osyn_v('Faraway')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
-    end
+    local dist = unit:distance_to_object_dirty(random_unit)
+    unit.faraway_m = 1 + math.min(dist, 200) * 0.005 * osyn_v('Faraway')
   end
   )
 
   def_oversyn('Bulletzone', 1, {'ranger', 'rogue', 'psyker'}, 10, 'reddark', 
   {'A random psyker orb has ','% chance to duplicate a projectile on its cast'},
-  function(unit)
+  function(projectile)
     if random:bool(osyn_v('Bulletzone')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+      random:table(psyorb_pool):copy_projectile(projectile)
     end
   end
   )
@@ -1699,23 +1671,21 @@ function init()
   {'Critters have ','% chance to borrow a supercharged psyker orb on spawn'},
   function(unit)
     if random:bool(osyn_v('Mindswarm')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+      local got_orb = random:table(psyorb_pool)
+      got_orb.borrowing_parent = unit
+      got_orb.borrowed = true
     end
   end
   )
 
   def_oversyn('Incubation', 1, {'swarmer', 'conjurer'}, 10, 'orange', 
-  {'Buildings have ','% chance to spawn a critter every second'},
+  {'Buildings have ','% chance to spawn a random critter every second'},
   function(unit)
-    if random:bool(osyn_v('Incubation')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
-    end
+    unit.t:every(1, function()
+      if random:bool(osyn_v('Incubation')) then
+        spawn_random_critter(unit.x + 1, unit.y + 1)
+      end
+    end, nil, nil, 'incubating')
   end
   )
 
@@ -1723,35 +1693,27 @@ function init()
   {'Critters have ','% chance to encircle the snake like psyker orbs on spawn'},
   function(unit)
     if random:bool(osyn_v('Centralization')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+      unit.centralized = true
     end
   end
   )
 
-  def_oversyn('Vampirism', 2, {'Cultivation', 'Suppression'}, 10, 'reddark', 
-  {'Heal ','% of damage dealt to cursed enemies'},
-  function(unit)
-    if random:bool(osyn_v('Vampirism')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+  def_oversyn('Vampirism', 2, {'Cultivation', 'Suppression'}, 1, 'reddark', 
+  {'Heal ','% of damage dealt to stunned or cursed enemies'},
+  function(unit, dmg_dealt)
+    if unit.cursed or unit.stunned then
+      healLowest(random_unit, dmg_dealt * osyn_v('Vampirism'))
     end
   end
   )
 
-  def_oversyn('Defiance', 2, {'Armorforge', 'Catalyst'}, 2, 'yellow', 
-  {'Gain ',' armor for each enemy alive'},
-  function(unit)
-    if random:bool(osyn_v('Defiance')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
-    end
+  def_oversyn('Defiance', 2, {'Armorforge', 'Catalyst'}, 6, 'yellow', 
+  {'Gain ',' armor for each nearby to random unit non-critter enemy'},
+  function()
+    main.current.player.t:every(0.34, function()
+      local enemies = random_unit:get_objects_in_shape(Circle(random_unit.x, random_unit.y, 80), {Seeker})
+      main.current.player.defiance = #enemies * osyn_v('Defiance')
+    end, nil, nil, 'defying')
   end
   )
 
@@ -1759,10 +1721,7 @@ function init()
   {'Enemies have ','% chance to spawn dps boost orbs on death'},
   function(unit)
     if random:bool(osyn_v('Devourer')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+      spawn_dps_boost_orb(unit.x, unit.y)
     end
   end
   )
@@ -1771,34 +1730,33 @@ function init()
   {'Critters have ','% chance to spawn with a DoTArea around them'},
   function(unit)
     if random:bool(osyn_v('Pestilence')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+      unit:dot_attack(36, {duration = 9999, pestilent = true})
     end
   end
   )
   
-  def_oversyn('Sabotage', 2, {'Faraway', 'Delegate'}, 10, 'blue2', 
-  {'Enemies have ','% chance per second to suddenly combust into 12 projectiles'},
+  def_oversyn('Sabotage', 2, {'Faraway', 'Delegate'}, 3, 'blue2', 
+  {'Enemies have ','% chance per second to combust into 8 projectiles'},
   function(unit)
-    if random:bool(osyn_v('Sabotage')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
-    end
+    unit:every(1, function()
+      if random:bool(osyn_v('Sabotage')) then
+        unit.dead = true
+        for i = 1, 8 do
+          Projectile{group = main.current.main, x = unit.x, y = unit.y
+          , color = character_colors[random_unit.character], r = (i-1 + (math.random()*2-1)*0.49)*math.pi*0.25,
+           v = 120, dmg = random_unit.dmg, homing = true, character = random_unit.character, parent = random_unit}
+        end
+      end
+    end, nil, nil, 'sabotaged')
   end
   )
 
-  def_oversyn('Obsidian', 2, {'Armorforge', 'Corruptor'}, 1, 'purple', 
-  {'Snake hit: ','% chance to ignore damage and instead transfer that to all DoTs'},
-  function(unit)
+  def_oversyn('Obsidian', 2, {'Armorforge', 'Corruptor'}, 6, 'purple', 
+  {'Snake hit: ','% chance to ignore damage and spawn a revenge DoT'},
+  function(unit, incoming_dmg)
     if random:bool(osyn_v('Obsidian')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+      unit.ignore_damage_once = true
+      unit:dot_attack(48, {duration = 2, revenge = incoming_dmg})
     end
   end
   )
@@ -1806,48 +1764,42 @@ function init()
   def_oversyn('Titan', 2, {'Cultivation', 'Overwhelm'}, 20, 'yellow', 
   {'Deal ','% more damage at maxhp if no units were lost'},
   function(unit)
-    if random:bool(osyn_v('Titan')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+    if unit.hp >= unit.max_hp and #all_units_global >= #units then
+      unit.titan_m = osyn_v('Titan')
     end
   end
   )
   
   def_oversyn('Telekinesis', 2, {'Collector', 'Faraway'}, 20, 'yellow2', 
   {'Drops: ','% chance/sec to rush towards you, 50% maxhp microstun dmg to enemies'},
-  function(unit)
-    if random:bool(osyn_v('Telekinesis')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
-    end
+  function(drop)
+    drop.t:every(1, function()
+      if random:bool(osyn_v('Telekinesis')) then
+        drop:telekinetic_rush(main.current.player)
+      end
+    end, nil, nil, 'telekinetic')
   end
   )
   
   def_oversyn('Frenzy', 2, {'Catalyst', 'Incubation'}, 0.1, 'carmine', 
-  {'Chaolyst/Forcer cast: ','% aspd and movement to critters/buildings, round reset'},
+  {'Chaolyst/Forcer cast: ','% aspd and movement to critters/buildings, resets'},
   function(unit)
     if random:bool(osyn_v('Frenzy')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
+      main.current.player.frenzy = main.current.player.frenzy and main.current.player.frenzy or 0
+      main.current.player.frenzy = main.current.player.frenzy + osyn_v('Frenzy')
     end
   end
   )
   
   def_oversyn('Horror', 2, {'Suppression', 'Delegate'}, 20, 'purplecurs', 
-  {'Enemies: ','% chance per second to become feared: silenced and running away'},
+  {'Enemies: ','% chance per sec to become feared: silent and running away'},
   function(unit)
-    if random:bool(osyn_v('Horror')) then
-      local borrowX = unit.x
-      local borrowY = unit.y
-      unit:die();
-      --work
-    end
+    unit.t:every(1, function()
+      if random:bool(osyn_v('Horror')) then
+        unit.feared = true
+        unit.t:after(0.9, function() unit.feared = false end, 'unfear')
+      end
+    end, nil, nil, 'horrified')
   end
   )
 
@@ -2110,7 +2062,7 @@ function init()
     ['warping_shots'] = 'projectiles ignore wall collisions and warp around the screen [yellow]1/2/3[fg] times',
     ['culling_strike'] = '[fg]instantly kill elites below [yellow]10/20/30%[fg] max HP',
     ['lightning_strike'] = '[yellow]5/10/15%[fg] chance for projectiles to create chain lightning, dealing [yellow]60/80/100%[fg] damage',
-    ['psycholeak'] = '[fg]position [yellow]1[fg] generates [yellow]1[fg] psyker orb every [yellow]10[fg] seconds',
+    ['psycholeak'] = '[fg]random unit generates [yellow]1[fg] psyker orb every [yellow]10[fg] seconds',
     ['divine_blessing'] = '[fg]generate [yellow]1[fg] healing orb every [yellow]8[fg] seconds',
     ['hardening'] = '[yellow]+150%[fg] defense to all allies for [yellow]3[fg] seconds after an ally dies',
   }

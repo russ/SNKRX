@@ -220,6 +220,10 @@ function Physics:distance_to_object(object)
   return math.distance(self.x, self.y, object.x, object.y)
 end
 
+function Physics:distance_to_object_dirty(object)
+  return math.max(math.abs(self.x - object.x), math.abs(self.y - object.y))
+end
+
 
 -- Returns the distance from this object to the mouse
 -- d = self:angle_to_mouse()

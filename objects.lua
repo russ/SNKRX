@@ -193,6 +193,13 @@ function Unit:init_unit()
   self.effect_bar = EffectBar{group = main.current.effects, parent = self}
 end
 
+function Unit:is_silent()
+  if self.silenced or self.stunned or self.feared then
+    return true
+  end
+  return false
+end
+
 function Unit:hitMomentum(other)
   vx0, vy0 = self:get_velocity_safe()
   vx1, vy1 = other:get_velocity_safe()

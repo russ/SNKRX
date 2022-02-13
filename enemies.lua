@@ -19,7 +19,7 @@ function Seeker:init(args)
     if self.boss == 'speed_booster' then
       self.color = green[0]:clone()
       self.t:every(8, function()
-        if self.silenced or self.stunned then return end
+        if self:is_silent() then return end
         local enemies = table.head(self:get_objects_in_shape(Circle(self.x, self.y, 128), main.current.enemies), 4)
         if #enemies > 0 then
           buff1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
@@ -34,7 +34,7 @@ function Seeker:init(args)
     elseif self.boss == 'forcer' then
       self.color = yellow[0]:clone()
       self.t:every(6, function()
-        if self.silenced or self.stunned then return end
+        if self:is_silent() then return end
         local enemies = main.current.main:get_objects_by_classes(main.current.enemies)
         local x, y = 0, 0
         if #enemies > 0 then
@@ -81,7 +81,7 @@ function Seeker:init(args)
     elseif self.boss == 'swarmer' then
       self.color = purple[0]:clone()
       self.t:every(4, function()
-        if self.silenced or self.stunned then return end
+        if self:is_silent() then return end
         local enemies = table.select(main.current.main:get_objects_by_classes(main.current.enemies), function(v) return v.id ~= self.id and v:is(Seeker) end)
         local enemy = random:table(enemies)
         if enemy then
@@ -97,7 +97,7 @@ function Seeker:init(args)
     elseif self.boss == 'exploder' then
       self.color = blue[0]:clone()
       self.t:every(4, function()
-        if self.silenced or self.stunned then return end
+        if self:is_silent() then return end
         local enemies = table.select(main.current.main:get_objects_by_classes(main.current.enemies), function(v) return v.id ~= self.id and v:is(Seeker) end)
         local enemy = random:table(enemies)
         if enemy then
@@ -112,7 +112,7 @@ function Seeker:init(args)
     elseif self.boss == 'randomizer' then
       self.t:every_immediate(0.07, function() self.color = _G[random:table{'green', 'purple', 'yellow', 'blue'}][0]:clone() end)
       self.t:every(6, function()
-        if self.silenced or self.stunned then return end
+        if self:is_silent() then return end
         local attack = random:table{'explode', 'swarm', 'force', 'speed_boost'}
         if attack == 'explode' then
           local enemies = self:get_objects_in_shape(Circle(self.x, self.y, 128), {Seeker})
@@ -182,11 +182,11 @@ function Seeker:init(args)
     self.last_headbutt_time = 0
     local n = math.remap(current_new_game_plus, 0, 5, 1, 0.5)
     self.t:every(function() return math.distance(self.x, self.y, main.current.player.x, main.current.player.y) < 76 and love.timer.getTime() - self.last_headbutt_time > 10*n end, function()
-      if self.silenced or self.stunned then return end
+      if self:is_silent() then return end
       if self.headbutt_charging or self.headbutting then return end
       self.headbutt_charging = true
       self.t:tween(2, self.color, {r = fg[0].r, b = fg[0].b, g = fg[0].g}, math.cubic_in_out, function()
-        if self.silenced or self.stunned then return end
+        if self:is_silent() then return end
         self.t:tween(0.25, self.color, {r = orange[0].r, b = orange[0].b, g = orange[0].g}, math.linear)
         self.headbutt_charging = false
         headbutt1:play{pitch = random:float(0.95, 1.05), volume = 0.2}
@@ -206,7 +206,7 @@ function Seeker:init(args)
     self.hp = self.max_hp
     local n = math.remap(current_new_game_plus, 0, 5, 1, 0.75)
     self.t:every({3*n, 5*n}, function()
-      if self.silenced or self.stunned then return end
+      if self:is_silent() then return end
       local enemy = self:get_closest_object_in_shape(Circle(self.x, self.y, 64), main.current.enemies)
       if enemy then
         wizard1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
@@ -221,7 +221,7 @@ function Seeker:init(args)
     self.t:after({2*n, 4*n}, function()
       self.shooting = true
       self.t:every({4, 6}, function()
-        if self.silenced or self.stunned then return end
+        if self:is_silent() then return end
         for i = 1, 3 do
           self.t:after(math.max(1 - self.level*0.01, 0.25)*0.15*(i-1), function()
             shoot1:play{pitch = random:float(0.95, 1.05), volume = 0.1}
@@ -357,9 +357,9 @@ end
 function Seeker:draw()
   graphics.push(self.x, self.y, self.r, self.hfx.hit.x, self.hfx.hit.x)
     if self.boss then
-      graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 4, 4, self.hfx.hit.f and fg[0] or (self.silenced and bg[10]) or self.color)
+      graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 4, 4, self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or self.color)
     else
-      graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 3, 3, self.hfx.hit.f and fg[0] or (self.silenced and bg[10]) or self.color)
+      graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 3, 3, self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or self.color)
     end
     if self.stunned then
       local instx, insty = math.random()-0.5, math.random()-0.5
@@ -642,7 +642,7 @@ function Seeker:hit(damage, projectile, dot, from_enemy, type)
     end
 
     if self.speed_booster then
-      if self.silenced or self.stunned then return end
+      if self:is_silent() then return end
       local enemies = self:get_objects_in_shape(self.area_sensor, main.current.enemies)
       if #enemies > 0 then
         buff1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
@@ -655,7 +655,7 @@ function Seeker:hit(damage, projectile, dot, from_enemy, type)
     end
 
     if self.exploder then
-      if self.silenced or self.stunned then return end
+      if self:is_silent() then return end
       mine1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       trigger:after(0.01, function()
         ExploderMine{group = main.current.main, x = self.x, y = self.y, color = blue[0], parent = self}
@@ -663,7 +663,7 @@ function Seeker:hit(damage, projectile, dot, from_enemy, type)
     end
 
     if self.spawner then
-      if self.silenced or self.stunned then return end
+      if self:is_silent() then return end
       critter1:play{pitch = random:float(0.95, 1.05), volume = 0.35}
       trigger:after(0.01, function()
         if not main.current.main.world then return end
@@ -819,6 +819,10 @@ end
 
 function Seeker:curse(curse, duration, arg1, arg2, arg3)
   buff1:play{pitch = random:float(0.65, 0.75), volume = 0.25}
+  self.cursed = true
+  if self.t:delayResetQ('uncurse', duration) then
+    self.t:after(duration, function() self.cursed = false end, 'uncurse')
+  end
   if curse == 'launcher' then
     self.t:after(duration, function()
       self.launcher_push = arg1
@@ -1086,6 +1090,10 @@ end
 
 
 function EnemyCritter:curse(curse, duration, arg1, arg2, arg3)
+  self.cursed = true
+  if self.t:delayResetQ('uncurse', duration) then
+    self.t:after(duration, function() self.cursed = false end, 'uncurse')
+  end
   if main.current.player.whispers_of_doom then
     if not self.doom then self.doom = 0 end
     self.doom = self.doom + 1

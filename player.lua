@@ -1223,7 +1223,8 @@ function Player:init(args)
       orbColor = getOrbEntry[2]
       orbDamage_m = math.random_range({0.5, 1.5})
     end
-    Projectile{group = main.current.main,
+    self.pool_ind = #psyorb_pool + 1
+    table.insert(psyorb_pool, Projectile{group = main.current.main,
     x = unit.x + 24 * orbRadius_m*math.cos(unit.r),
     y = unit.y + 24 * orbRadius_m*math.sin(unit.r),
      color = orbColor, v = 200,
@@ -1233,7 +1234,7 @@ function Player:init(args)
      orbInstability = orbInstability,
      orbEffect = orbEffect,
      orbDamage_m = orbDamage_m
-    }
+    })
   end
 
   if self.leader then
@@ -1242,7 +1243,7 @@ function Player:init(args)
 
     self.t:after(1, function()
 
-      local nexusRandom = false
+      nexusRandom = false
       local units = self:get_all_units()
       for _, unit in ipairs(units) do
         if unit.character == 'nexus' then
@@ -1282,8 +1283,7 @@ function Player:init(args)
 
   if self.leader and self.psycholeak then
     main.current.t:every(10, function()
-      local unit = main.current.player
-      Projectile{group = main.current.main, x = unit.x + 24*math.cos(unit.r), y = unit.y + 24*math.sin(unit.r), color = fgpsyk[0], v = 200, dmg = unit.dmg, character = 'psyker', parent = unit}
+      getRandomOrb(random_unit, nexusRandom)
     end)
   end
 
@@ -2109,6 +2109,7 @@ function Player:dot_attack(area, mods)
     if self.character == 'vulcanist' then
       t.dmg = t.dmg * 0.5
     end
+    if mods.revenge then t.dmg = t.dmg + mods.revenge end
   DotArea(table.merge(t, mods))
 
   dot1:play{pitch = random:float(0.9, 1.1), volume = 0.5}
@@ -2404,6 +2405,12 @@ function Projectile:die(x, y, r, n)
   elseif self.character == 'cannoneer' then
     Area{group = main.current.effects, x = self.x, y = self.y, r = self.r, w = self.parent.area_size_m*96, color = self.color, dmg = 2*self.parent.area_dmg_m*self.dmg, character = self.character, level = self.level, parent = self,
       void_rift = self.parent.void_rift, echo_barrage = self.parent.echo_barrage}
+  end
+  if self.character == 'psyker' then
+    table.remove(psyorb_pool, self.pool_ind)
+    for i, v in ipairs(psyorb_pool) do
+      v.pool_ind = i
+    end
   end
 end
 
@@ -2835,11 +2842,12 @@ function DotArea:init(args)
     self.dmg = self.dmg * self.parent.aspd_m
   elseif self.character == 'bane' then
     self.dmg = self.dmg * self.source_ref.aspd_m
-  elseif self.virulent then
+  elseif self.virulent or self.pestilent then
     self.dmg = self.dmg * self.parent.parent.aspd_m
   end
 
-  if self.character == 'plague_doctor' or self.virulent or self.character == 'pyromancer' or self.character == 'witch' or self.character == 'burning_field' then
+  if self.character == 'plague_doctor' or self.virulent or self.pestilent or
+   self.character == 'pyromancer' or self.character == 'witch' or self.character == 'burning_field' then
     self.t:every(0.2, function()
       local enemies = main.current.main:get_objects_in_shape(self.shape, main.current.enemies)
       if #enemies > 0 then self.spring:pull(0.05, 200, 10) end
@@ -2980,7 +2988,8 @@ function DotArea:update(dt)
   self.vr = self.vr + self.dvr*dt
 
   if self.parent then
-    if self.character == 'cryomancer' or self.character == 'pyromancer' or self.virulent then
+    if self.character == 'cryomancer' or self.character == 'pyromancer' or self.virulent or self.pestilent then
+      if self.parent and self.parent.dead then self.dead = true end
       self.x, self.y = self.parent.x, self.parent.y
       self.shape:move_to(self.x, self.y)
     end
@@ -4217,7 +4226,11 @@ function Critter:init(args)
   if #critter_pool >= 30 then
     critter_pool[1]:die()
     table.remove(critter_pool, 1)
+    for i, v in ipairs(critter_pool) do
+      v.pool_ind = i
+    end
   end
+  self.pool_ind = #critter_pool + 1
   table.insert(critter_pool, self)
   if tostring(self.x) == tostring(0/0) or tostring(self.y) == tostring(0/0) then self.dead = true; return end
   if #self.group:get_objects_by_class(Critter) > 100 then self.dead = true; return end

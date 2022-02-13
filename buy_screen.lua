@@ -35,6 +35,16 @@ function BuyScreen:on_exit()
   self.tutorial_button = nil
   self.restart_button = nil
   self.level_button = nil
+  if self.ssyn_text then
+    self.ssyn_text.dead = true
+    self.ssyn_text = nil
+  end
+  if self.hsyn_text then
+    self.hsyn_text.dead = true
+    self.hsyn_text = nil
+  end
+  self.osyn_text = nil
+  self.oversyns = nil
 end
 
 
@@ -68,6 +78,9 @@ function BuyScreen:on_enter(from, level, loop, units, passives, shop_level, shop
   self.shop_text = Text({{text = '[wavy_mid, fg]shop [fg]- gold: [yellow]' .. gold, font = pixul_font, alignment = 'center'}}, global_text_tags)
   self.party_text = Text({{text = '[wavy_mid, fg]party ' .. tostring(#units) .. '/' .. tostring(max_units), font = pixul_font, alignment = 'center'}}, global_text_tags)
   self.sets_text = Text({{text = '[wavy_mid, fg]classes', font = pixul_font, alignment = 'center'}}, global_text_tags)
+  self.osyn_textstate = 0
+  self.sets_text.x = 310
+  self.sets_text.y = 20
   self.items_text = Text({{text = '[wavy_mid, fg]items', font = pixul_font, alignment = 'center'}}, global_text_tags)
   self.ng_text = Text({{text = '[fg]NG+' .. current_new_game_plus, font = pixul_font, alignment = 'center'}}, global_text_tags)
   local get_elite_str = function(lvl)
@@ -175,6 +188,79 @@ function BuyScreen:on_enter(from, level, loop, units, passives, shop_level, shop
   system.save_run(self.level, self.loop, gold, self.units, self.passives, self.shop_level, self.shop_xp, run_passive_pool, locked_state, syn_pow)
 end
 
+function info_text_die(info_text_ref)
+  if info_text_ref then
+    info_text_ref:deactivate()
+    info_text_ref.dead = true
+    info_text_ref = nil
+  end
+end
+
+function BuyScreen:ssyn_text_die()
+  info_text_die(self.ssyn_text)
+end
+
+function BuyScreen:hsyn_text_die()
+  info_text_die(self.hsyn_text)
+end
+
+function BuyScreen:osyn_text_die()
+  self:ssyn_text_die()
+  self:hsyn_text_die()
+  self.osyn_textstate = 0
+end
+
+function BuyScreen:getOversynList(oversyn_t)
+  self.oversyns = {}
+  for _, v in ipairs(oversyn_t) do
+    if oversyn_level[v] > 0 then
+      table.insert(self.oversyns, { text = 
+      strc({'[',oversyn_cols[v],']',v}), font = pixul_font, alignment = 'center', height_multiplier = 1}
+      )
+      table.insert(self.oversyns, { text = 
+      strc({'[',oversyn_cols[v],']',oversyn_desc[v]()}), font = pixul_font, alignment = 'center', height_multiplier = 1}
+      )
+    end
+  end
+end
+
+function BuyScreen:dirtyOsynDisplay(dt)
+  local x, y = camera:get_mouse_position()
+  local halfwidth = self.sets_text.w * 0.5
+  local halfheight = self.sets_text.h * 0.5
+  if y > self.sets_text.y - halfheight and y <= self.sets_text.y + halfheight then
+    if x > self.sets_text.x - halfwidth and x <= self.sets_text.x then
+      if self.osyn_textstate ~= 1 then
+        self:hsyn_text_die()
+        self.ssyn_text = InfoText{group = main.current.ui, force_update = true}
+        self:getOversynList(sup_syns)
+        self.ssyn_text:activate(self.oversyns, gw/2, gh/2, nil, nil, 16, 2, nil, 2)
+        pop2:play{pitch = random:float(0.9, 1.0), volume = 0.5}
+        self.osyn_textstate = 1
+      end
+    elseif x > self.sets_text.x and x < self.sets_text.x + halfwidth then
+      if self.osyn_textstate ~= 2 then
+        self:ssyn_text_die()
+        self.hsyn_text = InfoText{group = main.current.ui, force_update = true}
+        self:getOversynList(hyp_syns)
+        self.hsyn_text:activate(self.oversyns, gw/2, gh/2, nil, nil, 16, 2, nil, 2)
+        pop2:play{pitch = random:float(1.0, 1.1), volume = 0.5}
+        self.osyn_textstate = 2
+      end
+    else
+      self:osyn_text_die()
+    end
+  else
+    self:osyn_text_die()
+  end
+  if self.ssyn_text then
+    self.ssyn_text:update(dt)
+  end
+  if self.hsyn_text then
+    self.hsyn_text:update(dt)
+  end
+end
+
 
 function BuyScreen:update(dt)
   if main_song_instance:isStopped() then
@@ -197,6 +283,8 @@ function BuyScreen:update(dt)
     if self.items_text then self.items_text:update(dt) end
     if self.ng_text then self.ng_text:update(dt) end
     if self.level_text then self.level_text:update(dt) end
+    --dirty supersynergy and hypersynergy display
+    self:dirtyOsynDisplay(dt)
   else
     self.ui:update(dt*slow_amount)
     self.tutorial:update(dt*slow_amount)
@@ -253,7 +341,7 @@ function BuyScreen:draw()
   end
 
   if self.shop_text then self.shop_text:draw(64, 20) end
-  if self.sets_text then self.sets_text:draw(310, 20) end
+  if self.sets_text then self.sets_text:draw(self.sets_text.x, self.sets_text.y) end
   if self.party_text then self.party_text:draw(440, 20) end
   if current_new_game_plus > 0 then self.ng_text:draw(265, gh - 40) end
 
@@ -1303,24 +1391,6 @@ function CharacterPart:on_mouse_enter()
   self.selected = true
   self.spring:pull(0.2, 200, 10)
   self.info_text = InfoText{group = main.current.ui, force_update = self.force_update}
-  --self.oversyns = {}
-  --for _, v in ipairs(sup_syns) do
-  --  table.insert(self.oversyns, { text = 
-  --  strc({'[',oversyn_cols[v],']',v}), font = pixul_font, alignment = 'center', height_multiplier = 1}
-  --)
-  --  table.insert(self.oversyns, { text = 
-  --  strc({'[',oversyn_cols[v],']',oversyn_desc[v]()}), font = pixul_font, alignment = 'center', height_multiplier = 1}
-  --)
-  --end
-  --for _, v in ipairs(hyp_syns) do
-  --  table.insert(self.oversyns, { text = 
-  --  strc({'[',oversyn_cols[v],']',v}), font = pixul_font, alignment = 'center', height_multiplier = 1}
-  --)
-  --  table.insert(self.oversyns,{  text = 
-  --  strc({'[',oversyn_cols[v],']',oversyn_desc[v]()}), font = pixul_font, alignment = 'center', height_multiplier = 1}
-  --)
-  --end
-  --self.info_text:activate(self.oversyns, nil, nil, nil, nil, 16, 2, nil, 256)
   self.info_text:activate({
     {text = '[' .. character_color_strings[self.character] .. ']' .. self.character:capitalize() .. '[fg] - [yellow]Lv.' .. self.level .. '[fg], tier [yellow]' .. character_tiers[self.character] .. '[fg] - sells for [yellow]' ..
       self:get_sale_price(), font = pixul_font, alignment = 'center', height_multiplier = 1.25},

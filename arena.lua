@@ -19,6 +19,7 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
   self.lock = lock
   reset_counters()
   critter_pool = {}
+  psyorb_pool = {}
 
   self.starting_units = table.copy(units)
 
