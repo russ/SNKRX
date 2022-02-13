@@ -208,11 +208,7 @@ function Unit:hitMomentum(other)
   return math.length(vx0, vy0)
 end
 
-function Unit:crashDamage(other)
-  local initDamage = self:hitMomentum(other)*momentum_dmg_m
-  if self.stunned then
-    initDamage = initDamage * (get_synp('forcer', main.current.player.forcer_level) + 1)
-  end
+function Unit:calcDmgAmplifiers()
   local all_dmg_amplifier = 1
   if self.bane_cursed then
     all_dmg_amplifier = all_dmg_amplifier * 1.1
@@ -226,6 +222,27 @@ function Unit:crashDamage(other)
   if self.warped then
     all_dmg_amplifier = all_dmg_amplifier * math.random_range({1, 1.2})
   end
+  if self.faraway_m then
+    all_dmg_amplifier = all_dmg_amplifier * self.faraway_m
+  end
+  if self.catalyzed then
+    all_dmg_amplifier = all_dmg_amplifier * self.catalyzed
+  end
+  if main.current.player.titan_m then
+    all_dmg_amplifier = all_dmg_amplifier * (1 + main.current.player.titan_m)
+  end
+  if main.current.player.dmgorb_m then
+    all_dmg_amplifier = all_dmg_amplifier * (1 + main.current.player.dmgorb_m)
+  end
+  return all_dmg_amplifier
+end
+
+function Unit:crashDamage(other)
+  local initDamage = self:hitMomentum(other)*momentum_dmg_m
+  if self.stunned then
+    initDamage = initDamage * (get_synp('forcer', main.current.player.forcer_level) + 1)
+  end
+  local all_dmg_amplifier = self:calcDmgAmplifiers()
   
   initDamage = initDamage * all_dmg_amplifier
   return initDamage > 1 and math.pow(initDamage, 1.22) or initDamage

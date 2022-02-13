@@ -2287,9 +2287,15 @@ function Projectile:update(dt)
 
   if self.character == 'psyker' then
     if self.parent.dead then self.dead = true; self.parent = nil; return end
-    self:set_position(self.parent.x + self.orbit_distance*math.cos(self.orbit_speed*main.current.t.time + self.orbit_offset)
+    local proxy_parent = self.parent
+    if self.borrowing_parent then
+      if self.borrowing_parent.dead then self.borrowing_parent = nil; else
+        proxy_parent = self.borrowing_parent
+      end
+    end
+    self:set_position(proxy_parent.x + self.orbit_distance*math.cos(self.orbit_speed*main.current.t.time + self.orbit_offset)
     + math.random()*self.orbInstability*10,
-      self.parent.y + self.orbit_distance*math.sin(self.orbit_speed*main.current.t.time + self.orbit_offset)
+    proxy_parent.y + self.orbit_distance*math.sin(self.orbit_speed*main.current.t.time + self.orbit_offset)
       + math.random()*self.orbInstability*10)
     local dx, dy = self.x - (self.previous_x or 0), self.y - (self.previous_y or 0)
     self.r = Vector(dx, dy):angle()
@@ -3105,7 +3111,13 @@ function ForceArea:draw()
   graphics.pop()
 end
 
-
+function applyBuildingFrenzy(building) --this needs to affect some kind of "Building" superclass instead of manually
+  if main.current.player.frenzy then
+    building.frenzy_m = main.current.player.frenzy_inv
+  else
+    building.frenzy_m = 1
+  end
+end
 
 Tree = Object:extend()
 Tree:implement(GameObject)
@@ -3160,7 +3172,7 @@ function Tree:init(args)
         end
       end)
     end
-  end)
+  end, nil, nil, 'makeorbs')
 
   --[[
   self.t:cooldown(3.33/(self.level == 3 and 2 or 1), function() return #self:get_objects_in_shape(self.heal_sensor, {Player}) > 0 end, function()
@@ -3255,6 +3267,8 @@ end
 function Tree:update(dt)
   self:update_game_object(dt)
   self.vr = self.vr + self.dvr*dt
+  applyBuildingFrenzy(self)
+  self.t:set_every_multiplier('makeorbs', self.frenzy_m)
 end
 
 
@@ -3361,7 +3375,7 @@ function Volcano:init(args)
   camera:shake(6, 1)
   earth1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
   fire1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
-  self.t:every(self.level == 3 and 0.5 or 1, function()
+  self.t:every(1.1, function()
     camera:shake(4, 0.5)
     _G[random:table{'earth1', 'earth2', 'earth3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.25}
     _G[random:table{'fire1', 'fire2', 'fire3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.25}
@@ -3370,7 +3384,7 @@ function Volcano:init(args)
       if self.parent.level >= 3 then
         self.parent:dot_attack(math.random_range({36,60}), {x = self.x, y = self.y, duration = random:float(1, 3), parent = self.parent, color = self.color})
       end
-  end, self.level == 3 and 8 or 4)
+  end, nil, nil, 'burst')
 
   self.t:after(4 * self.conjurer_buff_m, function()
     self.t:every_immediate(0.05, function() self.hidden = not self.hidden end, 7, function() self.dead = true end)
@@ -3381,6 +3395,8 @@ end
 function Volcano:update(dt)
   self:update_game_object(dt)
   if self.dvr then self.vr = self.vr + self.dvr*dt end
+  applyBuildingFrenzy(self)
+  self.t:set_every_multiplier('burst', self.frenzy_m)
 end
 
 
@@ -3485,7 +3501,9 @@ function Sentry:update(dt)
   self:update_game_object(dt)
   self.r = self.r + math.pi*dt
   self:set_angle(self.r)
-  self.t:set_every_multiplier('attack', self.parent.level == 3 and 0.75 or 1)
+  applyBuildingFrenzy(self)
+  self.t:set_every_multiplier('attack',
+  self.parent.level == 3 and 0.75 * self.frenzy_m or 1 * self.frenzy_m)
 end
 
 
@@ -3580,7 +3598,8 @@ end
 function Turret:update(dt)
   self:update_game_object(dt)
 
-  self.t:set_every_multiplier('shoot', 1/self.upgrade_aspd_m)
+  applyBuildingFrenzy(self)
+  self.t:set_every_multiplier('shoot', 1/self.upgrade_aspd_m * self.frenzy_m)
 
   local closest_enemy = self:get_closest_object_in_shape(self.attack_sensor, main.current.enemies)
   if closest_enemy then
@@ -3717,6 +3736,7 @@ end
 
 function Bomb:update(dt)
   self:update_game_object(dt)
+  applyBuildingFrenzy(self)
 end
 
 
@@ -3751,7 +3771,8 @@ function Bomb:explode()
       camera:shake(2, 0.5)
       local n = (self.parent.construct_instability == 1 and 1) or (self.parent.construct_instability == 2 and 1.5) or (self.parent.construct_instability == 3 and 2) or 1
       Area{group = main.current.effects, x = self.x, y = self.y, r = self.r + random:float(-math.pi/16, math.pi/16), w = self.parent.area_size_m*48*(self.level == 3 and 2 or 1), color = self.color,
-        dmg = n*self.parent.dmg*self.parent.area_dmg_m*(self.level == 3 and 2 or 1), parent = self.parent}
+        dmg = n*self.parent.dmg*self.parent.area_dmg_m*(self.level == 3 and 2 or 1) * (1.0/math.max(0.00001, self.frenzy_m))
+        , parent = self.parent}
       _G[random:table{'cannoneer1', 'cannoneer2'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       self.dead = true
     end
@@ -3944,7 +3965,8 @@ function Automaton:update(dt)
   end
   self.r = self:get_angle()
 
-  self.t:set_every_multiplier('shoot', self.parent.level == 3 and 0.75 or 1)
+  applyBuildingFrenzy(self)
+  self.t:set_every_multiplier('shoot', self.parent.level == 3 and 0.75 * self.frenzy_m or 1 * self.frenzy_m)
   self.attack_sensor:move_to(self.x, self.y)
 end
 
@@ -3981,6 +4003,10 @@ function Gold:init(args)
   self.magnet_sensor = Circle(self.x, self.y, 56)
 end
 
+function Gold:telekinetic_rush()
+  self.tele_rushing = true
+end
+
 
 function Gold:update(dt)
   self:update_game_object(dt)
@@ -3989,7 +4015,7 @@ function Gold:update(dt)
   if not self.weak_magnet_sensor then return end
 
   local players = self:get_objects_in_shape(random_unit.magnetism and self.magnet_sensor or self.weak_magnet_sensor, {Player})
-  if players and #players > 0 then
+  if (players or self.tele_rushing) and #players > 0 then
     local x, y = 0, 0
     for _, p in ipairs(players) do
       x = x + p.x
@@ -4061,11 +4087,97 @@ function Gold:on_trigger_enter(other, contact)
       --  end)
       --end
     end
+  elseif self.tele_rushing and (other:is(Seeker) or other:is(EnemyCritter)) then
+    if not other.teleimmune then
+      stun(other, 0.1)
+      other:hit(other.max_hp*0.5)
+      other.teleimmune = true
+      other.t:after(0.1, function() other.teleimmune = false end, 'unteim')
+    end
   end
 end
 
 
+DMGOrb = Object:extend()
+DMGOrb:implement(GameObject)
+DMGOrb:implement(Physics)
+function DMGOrb:init(args)
+  self:init_game_object(args)
+  if not self.group.world then self.dead = true; return end
+  if tostring(self.x) == tostring(0/0) or tostring(self.y) == tostring(0/0) then self.dead = true; return end
+  if #self.group:get_objects_by_class(DMGOrb) > 30 then self.dead = true; return end
+  self:set_as_rectangle(3, 3, 'dynamic', 'ghost')
+  self:set_restitution(0.5)
+  local r = random:float(0, 2*math.pi)
+  local f = random:float(2, 4)
+  self:apply_impulse(f*math.cos(r), f*math.sin(r))
+  self:apply_angular_impulse(random:table{random:float(-6*math.pi, -2*math.pi), random:float(2*math.pi, 6*math.pi)})
+  self:set_damping(2.5)
+  self:set_angular_damping(5)
+  self.color = carmine[0]
+  self.hfx:add('hit', 1)
+  self.cant_be_picked_up = true
+  self.t:after(0.5, function() self.cant_be_picked_up = false end)
+  gold1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+  self.weak_magnet_sensor = Circle(self.x, self.y, 16)
+  self.magnet_sensor = Circle(self.x, self.y, 56)
+end
 
+function DMGOrb:telekinetic_rush()
+  self.tele_rushing = true
+end
+
+
+function DMGOrb:update(dt)
+  self:update_game_object(dt)
+  self.r = self:get_angle()
+  if not self.magnet_sensor then return end
+  if not self.weak_magnet_sensor then return end
+
+  local players = self:get_objects_in_shape(random_unit.magnetism and self.magnet_sensor or self.weak_magnet_sensor, {Player})
+  if (players or self.tele_rushing) and #players > 0 then
+    local x, y = 0, 0
+    for _, p in ipairs(players) do
+      x = x + p.x
+      y = y + p.y
+    end
+    x = x/#players
+    y = y/#players
+    local r = self:angle_to_point(x, y)
+    self:apply_force(20*math.cos(r), 20*math.sin(r))
+  end
+  if self.magnet_sensor then self.magnet_sensor:move_to(self.x, self.y) end
+  if self.weak_magnet_sensor then self.weak_magnet_sensor:move_to(self.x, self.y) end
+end
+
+
+function DMGOrb:draw()
+  if not self.hfx.hit then return end
+  graphics.push(self.x, self.y, self.r, self.hfx.hit.x, self.hfx.hit.x)
+    graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 1, 1, self.hfx.hit.f and fg[0] or self.color)
+  graphics.pop()
+end
+
+
+function DMGOrb:on_trigger_enter(other, contact)
+  if self.cant_be_picked_up then return end
+
+  if other:is(Player) then
+    main.current.player.dmgorb_m = main.current.player.dmgorb_m
+    and main.current.player.dmgorb_m + 0.03 or 0.03 
+    self.dead = true
+    HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 4, color = fg[0], duration = 0.1}
+    for i = 1, 2 do HitParticle{group = main.current.effects, x = self.x, y = self.y, color = self.color} end
+    _G[random:table{'enemy_die1', 'enemy_die2'}]:play{pitch = random:float(0.9, 1.1), volume = 0.3}
+  elseif self.tele_rushing and (other:is(Seeker) or other:is(EnemyCritter)) then --this is unreachable for now because Telekinesis is incompatible with Devourer
+    if not other.teleimmune then
+      stun(other, 0.1)
+      other:hit(other.max_hp*0.5)
+      other.teleimmune = true
+      other.t:after(0.1, function() other.teleimmune = false end, 'unteim')
+    end
+  end
+end
 
 HealingOrb = Object:extend()
 HealingOrb:implement(GameObject)
@@ -4100,6 +4212,9 @@ function HealingOrb:init(args)
   end
 end
 
+function HealingOrb:telekinetic_rush()
+  self.tele_rushing = true
+end
 
 function HealingOrb:update(dt)
   self:update_game_object(dt)
@@ -4108,7 +4223,7 @@ function HealingOrb:update(dt)
   if not self.weak_magnet_sensor then return end
 
   local players = self:get_objects_in_shape(main.current.player.magnetism and self.magnet_sensor or self.weak_magnet_sensor, {Player})
-  if players and #players > 0 then
+  if (players or self.tele_rushing) and #players > 0 then
     local x, y = 0, 0
     for _, p in ipairs(players) do
       x = x + p.x
@@ -4211,6 +4326,14 @@ function HealingOrb:on_trigger_enter(other, contact)
         random_unit:barrage(random_unit.r, 5, nil, 3)
       end)
     end
+  
+  elseif self.tele_rushing and (other:is(Seeker) or other:is(EnemyCritter)) then
+    if not other.teleimmune then
+      stun(other, 0.1)
+      other:hit(other.max_hp*0.5)
+      other.teleimmune = true
+      other.t:after(0.1, function() other.teleimmune = false end, 'unteim')
+    end
   end
 end
 
@@ -4257,6 +4380,10 @@ function Critter:init(args)
 
   self.dmg = args.dmg or self.parent.dmg
   self.hp = get_synp('swarmer', main.current.swarmer_level) + 1
+  self.start_v = self.v
+  if self.centralized then
+    self.centrepoint = random_unit
+  end
 end
 
 function Critter:dot_attack(area, mods)
@@ -4273,7 +4400,23 @@ end
 
 function Critter:update(dt)
   self:update_game_object(dt)
+  
+  if self.centralized then
+    if self.centrepoint.dead then self.dead = true; self.centrepoint = nil; return end
+    self:set_position(self.centrepoint.x + 
+    80*math.cos(5*main.current.t.time + self.pool_ind / 15 * math.pi),
+      self.parent.y + 
+      80*math.sin(5*main.current.t.time + self.pool_ind / 15 * math.pi))
+    local dx, dy = self.x - (self.previous_x or 0), self.y - (self.previous_y or 0)
+    self.r = Vector(dx, dy):angle()
+    self:set_angle(self.r)
+    self.previous_x, self.previous_y = self.x, self.y
+    return
+  end
 
+  if main.current.player.frenzy then
+    self.v = self.start_v + self.start_v * main.current.player.frenzy
+  end
   if self.being_pushed then
     local v = math.length(self:get_velocity())
     if v < 50 then

@@ -25,6 +25,7 @@ function BuyScreen:on_exit()
   self.sets = nil
   self.cards = nil
   self.info_text = nil
+  unit_count_max = #self.units
   self.units = nil
   self.passives = nil
   self.player = nil

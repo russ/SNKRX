@@ -1022,6 +1022,7 @@ function init()
   critter_pool = {}
   psyorb_pool = {}
   nexusRandom = false
+  unit_count_max = 12
 
   stuns = {
     juggernaut = 1.5,
@@ -1601,7 +1602,13 @@ function init()
   {'Picking up health/dps/gold drop: ','% chance to copy'},
   function(drop)
     if random:bool(osyn_v('Collector')) then
-      drop:copy_drop()
+      if drop:is(Gold) then
+        Gold{group = main.current.main, x = drop.x, y = drop.y}
+      elseif drop:is(HealingOrb) then
+        HealingOrb{group = main.current.main, x = drop.x, y = drop.y}
+      elseif drop:is(DMGOrb) then
+        DMGOrb{group = main.current.main, x = drop.x, y = drop.y}
+      end
     end
   end
   )
@@ -1660,9 +1667,16 @@ function init()
 
   def_oversyn('Bulletzone', 1, {'ranger', 'rogue', 'psyker'}, 10, 'reddark', 
   {'A random psyker orb has ','% chance to duplicate a projectile on its cast'},
-  function(projectile)
+  function(args)
     if random:bool(osyn_v('Bulletzone')) then
-      random:table(psyorb_pool):copy_projectile(projectile)
+      local got_orb = random:table(psyorb_pool)
+      local copyargs = {}
+      for i, v in pairs(args) do
+        copyargs[i] = v
+      end
+      copyargs.x = got_orb.x
+      copyargs.y = got_orb.y
+      Projectile{copyargs}
     end
   end
   )
@@ -1673,7 +1687,6 @@ function init()
     if random:bool(osyn_v('Mindswarm')) then
       local got_orb = random:table(psyorb_pool)
       got_orb.borrowing_parent = unit
-      got_orb.borrowed = true
     end
   end
   )
@@ -1718,10 +1731,10 @@ function init()
   )
 
   def_oversyn('Devourer', 2, {'Collector', 'Corruptor'}, 10, 'carmine', 
-  {'Enemies have ','% chance to spawn dps boost orbs on death'},
+  {'Enemies have ','% chance to spawn dmg boost orbs on death'},
   function(unit)
     if random:bool(osyn_v('Devourer')) then
-      spawn_dps_boost_orb(unit.x, unit.y)
+      DMGOrb{group = main.current.main, unit.x, unit.y}
     end
   end
   )
@@ -1762,11 +1775,22 @@ function init()
   )
   
   def_oversyn('Titan', 2, {'Cultivation', 'Overwhelm'}, 20, 'yellow', 
-  {'Deal ','% more damage at maxhp if no units were lost'},
-  function(unit)
-    if unit.hp >= unit.max_hp and #all_units_global >= #units then
-      unit.titan_m = osyn_v('Titan')
-    end
+  {'Deal ','% more damage at if no units are lost or damaged'},
+  function()
+    main.current.player.t:every(0.22, function()
+      if #all_units_global >= unit_count_max then
+        for _, v in ipairs(all_units_global) do
+          if v.hp <= v.max_hp then
+            goto no_titan
+          end
+        end
+        main.current.player.titan_m = osyn_v('Titan')*0.01
+      else
+        goto no_titan
+      end
+      ::no_titan::
+      main.current.player.titan_m = 0
+    end, nil, nil, 'titan')
   end
   )
   
@@ -1775,7 +1799,7 @@ function init()
   function(drop)
     drop.t:every(1, function()
       if random:bool(osyn_v('Telekinesis')) then
-        drop:telekinetic_rush(main.current.player)
+        drop:telekinetic_rush()
       end
     end, nil, nil, 'telekinetic')
   end
@@ -1783,10 +1807,11 @@ function init()
   
   def_oversyn('Frenzy', 2, {'Catalyst', 'Incubation'}, 0.1, 'carmine', 
   {'Chaolyst/Forcer cast: ','% aspd and movement to critters/buildings, resets'},
-  function(unit)
+  function()
     if random:bool(osyn_v('Frenzy')) then
-      main.current.player.frenzy = main.current.player.frenzy and main.current.player.frenzy or 0
+      main.current.player.frenzy = main.current.player.frenzy and main.current.player.frenzy or 1
       main.current.player.frenzy = main.current.player.frenzy + osyn_v('Frenzy')
+      main.current.player.frenzy_inv = 1 / main.current.player.frenzy
     end
   end
   )

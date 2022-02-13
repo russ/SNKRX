@@ -325,24 +325,29 @@ function Seeker:update(dt)
       self:set_damping(10)
       self:rotate_towards_object(target, 0.5)
     elseif not self.headbutting then
-      if self.boss then
-        local enemies = main.current.main:get_objects_by_classes(main.current.enemies)
-        local x, y = 0, 0
-        if #enemies > 1 then
-          for _, enemy in ipairs(enemies) do
-            x = x + enemy.x
-            y = y + enemy.y
-          end
-          x = x/#enemies
-          y = y/#enemies
-        else
-          x, y = target.x, target.y
-        end
-        self:seek_point(x, y)
-        self:wander(10, 250, 3)
+      if self.feared then
+        self.wandering = false
+        self:seek_point(math.abs(self.x - target.x) * 50 + self.x, math.abs(self.y - target.y) * 50 + self.y)
       else
-        self:seek_point(target.x, target.y)
-        self:wander(50, 100, 20)
+        if self.boss then
+          local enemies = main.current.main:get_objects_by_classes(main.current.enemies)
+          local x, y = 0, 0
+          if #enemies > 1 then
+            for _, enemy in ipairs(enemies) do
+              x = x + enemy.x
+              y = y + enemy.y
+            end
+            x = x/#enemies
+            y = y/#enemies
+          else
+            x, y = target.x, target.y
+          end
+          self:seek_point(x, y)
+          self:wander(10, 250, 3)
+        else
+          self:seek_point(target.x, target.y)
+          self:wander(50, 100, 20)
+        end
       end
       self:steering_separate(16, main.current.enemies)
       self:rotate_towards_velocity(0.5)
@@ -520,19 +525,7 @@ function Seeker:hit(damage, projectile, dot, from_enemy, type)
     end
   end
   
-  local all_dmg_amplifier = 1
-  if self.bane_cursed then
-    all_dmg_amplifier = all_dmg_amplifier * 1.1
-  end
-  if self.spellbroken then
-    all_dmg_amplifier = all_dmg_amplifier * math.random_range({1.01, 1.31})
-  end
-  if self.psybroken then
-    all_dmg_amplifier = all_dmg_amplifier * math.random_range({1.01, 1.16})
-  end
-  if self.warped then
-    all_dmg_amplifier = all_dmg_amplifier * math.random_range({1, 1.2})
-  end
+  local all_dmg_amplifier = self:calcDmgAmplifiers()
 
   local actual_damage = math.max(self:calculate_damage(damage)*all_dmg_amplifier*(self.stun_dmg_m or 1)*crit, 0)
   if self.vulnerable then actual_damage = actual_damage*self.vulnerable end
@@ -988,8 +981,13 @@ function EnemyCritter:update(dt)
     end
   else
     local player = main.current.player
-    self:seek_point(player.x, player.y)
-    self:wander(50, 200, 50)
+    if self.feared then
+      self.wandering = false
+      self:seek_point(math.abs(self.x - player.x) * 50 + self.x, math.abs(self.y - player.y) * 50 + self.y)
+    else
+      self:seek_point(player.x, player.y)
+      self:wander(50, 200, 50)
+    end
     self:steering_separate(8, main.current.enemies)
     self:rotate_towards_velocity(1)
   end
@@ -1010,19 +1008,7 @@ function EnemyCritter:hit(damage, projectile, type)
   if projectile == self.invulnerable_to then return end
   self.hfx:use('hit', 0.25, 200, 10)
   
-  local all_dmg_amplifier = 1
-  if self.bane_cursed then
-    all_dmg_amplifier = all_dmg_amplifier * 1.1
-  end
-  if self.spellbroken then
-    all_dmg_amplifier = all_dmg_amplifier * math.random_range({1.01, 1.31})
-  end
-  if self.psybroken then
-    all_dmg_amplifier = all_dmg_amplifier * math.random_range({1.01, 1.16})
-  end
-  if self.warped then
-    all_dmg_amplifier = all_dmg_amplifier * math.random_range({1, 1.2})
-  end
+  local all_dmg_amplifier = self:calcDmgAmplifiers()
 
   self.hp = self.hp - math.max(damage * all_dmg_amplifier, 0)
   self:show_hp()
