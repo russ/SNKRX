@@ -1540,6 +1540,7 @@ function init()
     --for i, _ in pairs(oversyn_vals) do
     --  oversyn_level[i] = 10
     --end
+    --oversyn_level['Devourer'] = 10
   end
 
 
@@ -1792,7 +1793,7 @@ function init()
   function(unit) if oversyn_level[next_osyn] <= 0 then return end
     if random:bool(osyn_v(next_osyn)) then
       trigger:after(0.01, function()
-        DMGOrb{group = main.current.main, unit.x, unit.y}
+        DMGOrb{group = main.current.main, x = unit.x, y = unit.y}
       end)
     end
   end
