@@ -1021,6 +1021,10 @@ function init()
   random_unit = nil
   critter_pool = {}
   psyorb_pool = {}
+  random_conjurer = nil
+  random_swarmer = nil
+  random_nuker = nil
+  random_curser = nil
   nexusRandom = false
   unit_count_max = 12
 
@@ -1125,6 +1129,44 @@ function init()
     ['bane'] = function(target, source) 
       target:curse('bane', 6*(source.hex_duration_m or 1), source.level == 3, source)
     end,
+  }
+
+  buildEffects = 
+  {
+    ['vulcanist'] = function(self, x, y) 
+      Volcano{group = main.current.main, x = x, y = y, color = self.color, parent = self,
+       rs = 24, level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
+    ['bomber'] = function(self, x, y) 
+      Bomb{group = main.current.main, x = x, y = y, parent = self,
+       level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
+    ['artificer'] = function(self, x, y) 
+      Automaton{group = main.current.main, x = x, y = y, parent = self,
+       level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
+    ['carver'] = function(self, x, y) Tree{group = main.current.main, x = x, y = y,
+       color = self.color, parent = self, level = self.level} end,
+    ['sentry'] = function(self, x, y) 
+      Sentry{group = main.current.main, x = x, y = y, color = self.color,
+       parent = self, level = self.level} end,
+    ['engineer'] = function(self, x, y) 
+      Turret{group = main.current.main, x = x, y = y, parent = self, character = self.character} end
+  }
+  
+  swarmerEffects = 
+  {
+    ['host'] = function(self, x, y) 
+      Volcano{group = main.current.main, x = x, y = y, color = self.color, parent = self,
+       rs = 24, level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
+    ['beastmaster'] = function(self, x, y) 
+      Bomb{group = main.current.main, x = x, y = y, parent = self,
+       level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
+    ['corruptor'] = function(self, x, y) 
+      Automaton{group = main.current.main, x = x, y = y, parent = self,
+       level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
+    ['infestor'] = function(self, x, y) Tree{group = main.current.main, x = x, y = y,
+       color = self.color, parent = self, level = self.level} end,
+    ['plague_doctor'] = function(self, x, y) 
+      Sentry{group = main.current.main, x = x, y = y, color = self.color,
+       parent = self, level = self.level} end
   }
 
   momentum_dmg_base = 0.5
@@ -1564,7 +1606,7 @@ function init()
   function(unit)
     if random:bool(osyn_v('Delegate')) then
       unit.dead = true
-      spawn_random_building(unit.x, unit.y)
+      buildEffects[random_conjurer.character](random_conjurer, unit.x, unit.y)
     end
   end
   )
@@ -1573,27 +1615,26 @@ function init()
   {'Mage and Sorcerer casts: ' ,'% chance to increase global aspd by 100% for 1 sec'},
   function()
     if random:bool(osyn_v('Chronology')) then
-      for _, v in all_units_global do
-        main.current.player.chronology = true 
-        main.current.player:after(1, function() main.current.player.chronology = false end, 'nochronology') end 
+      main.current.player.chronology = true 
+      main.current.player:after(1, function() main.current.player.chronology = false end, 'nochronology')
     end
   end
   )
 
   def_oversyn('Armorforge', 1, {'mage', 'warrior'}, 0.2, 'yellow', 
-  {'Mage and Warrior attack hits grant ',' armor, resets'},
+  {'Mage and Warrior attack hits grant ','% armor, resets'},
   function()
-     main.current.player.armorforge = main.current.player.armorforge or 0
-     main.current.player.armorforge = main.current.player.armorforge + osyn_v('Armorforge')
+     main.current.player.armorforge = main.current.player.armorforge or 1
+     main.current.player.armorforge = main.current.player.armorforge + osyn_v('Armorforge')*0.01
   end
   )
 
   def_oversyn('Cultivation', 1, {'warrior', 'healer'}, 5, 'greenheal', 
-  {'Passively regenerate/generate ','% health/armor value every second, resets'},
+  {'Passively regenerate/generate ','% health/armor every second, resets'},
   function()
-      local cultivation_val = osyn_v('Cultivation')
+      local cultivation_val = osyn_v('Cultivation')*0.01
       healLowest(random_unit, random_unit.max_hp*cultivation_val)
-      main.current.player.cultivation = main.current.player.cultivation or 0
+      main.current.player.cultivation = main.current.player.cultivation or 1
       main.current.player.cultivation = main.current.player.cultivation + cultivation_val
   end
   )
@@ -1639,11 +1680,11 @@ function init()
   end
   )
 
-  def_oversyn('Corruptor', 1, {'curser', 'voider'}, 10, 'purplecurs', 
+  def_oversyn('Entropy', 1, {'curser', 'voider'}, 10, 'purplecurs', 
   {'All damage over time has ','% chance to apply a random equipped unit curse'},
   function(unit)
-    if random:bool(osyn_v('Corruptor')) then
-      apply_random_curse(unit)
+    if random:bool(osyn_v('Entropy')) then
+      projEffects[random_curser.character](unit, random_curser)
     end
   end
   )
@@ -1721,16 +1762,16 @@ function init()
   )
 
   def_oversyn('Defiance', 2, {'Armorforge', 'Catalyst'}, 6, 'yellow', 
-  {'Gain ',' armor for each nearby to random unit non-critter enemy'},
+  {'Gain ','% armor for each nearby to random unit non-critter enemy'},
   function()
     main.current.player.t:every(0.34, function()
       local enemies = random_unit:get_objects_in_shape(Circle(random_unit.x, random_unit.y, 80), {Seeker})
-      main.current.player.defiance = #enemies * osyn_v('Defiance')
+      main.current.player.defiance = #enemies * osyn_v('Defiance')*0.01 + 1
     end, nil, nil, 'defying')
   end
   )
 
-  def_oversyn('Devourer', 2, {'Collector', 'Corruptor'}, 10, 'carmine', 
+  def_oversyn('Devourer', 2, {'Collector', 'Entropy'}, 10, 'carmine', 
   {'Enemies have ','% chance to spawn dmg boost orbs on death'},
   function(unit)
     if random:bool(osyn_v('Devourer')) then
@@ -1764,7 +1805,7 @@ function init()
   end
   )
 
-  def_oversyn('Obsidian', 2, {'Armorforge', 'Corruptor'}, 6, 'purple', 
+  def_oversyn('Obsidian', 2, {'Armorforge', 'Entropy'}, 6, 'purple', 
   {'Snake hit: ','% chance to ignore damage and spawn a revenge DoT'},
   function(unit, incoming_dmg)
     if random:bool(osyn_v('Obsidian')) then

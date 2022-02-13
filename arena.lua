@@ -20,6 +20,10 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
   reset_counters()
   critter_pool = {}
   psyorb_pool = {}
+  random_conjurer = nil
+  random_swarmer = nil
+  random_nuker = nil
+  random_curser = nil
 
   self.starting_units = table.copy(units)
 
@@ -357,6 +361,34 @@ function Arena:update(dt)
     if not self.transitioning and not self.in_credits and not self.quitting then
       all_units_global = self.player:get_all_units()
       random_unit = table.random(all_units_global)
+      local shuffled_units_global = table.shuffle(all_units_global)
+      random_nuker = nil
+      random_swarmer = nil
+      random_curser = nil
+      random_conjurer = nil
+      for _, unit in shuffled_units_global do
+        if chaolyzable_sets['nuker'] and not random_nuker then
+          if table.any(unit.classes, function(v) return v == 'nuker' end) then
+            random_nuker = unit
+          end
+        end
+        if chaolyzable_sets['swarmer'] and not random_swarmer then
+          if table.any(unit.classes, function(v) return v == 'swarmer' end) then
+            random_swarmer = unit
+          end
+        end
+        if chaolyzable_sets['curser'] and not random_curser then
+          if table.any(unit.classes, function(v) return v == 'curser' end) then
+            random_curser = unit
+          end
+        end
+        if chaolyzable_sets['conjurer'] and not random_conjurer then
+          if table.any(unit.classes, function(v) return v == 'conjurer' end) then
+            random_conjurer = unit
+          end
+        end
+        if random_nuker and random_swarmer and random_curser and random_conjurer then break end
+      end
     end
     run_time = run_time + dt
   end
