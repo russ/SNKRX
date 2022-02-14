@@ -2338,7 +2338,7 @@ function Projectile:update(dt)
     end
   end
 
-  if self.homing then
+  if self.homing and self.closest_sensor then
     self.closest_sensor:move_to(self.x, self.y)
     local target = self:get_closest_object_in_shape(self.closest_sensor, main.current.enemies)
     if target then
