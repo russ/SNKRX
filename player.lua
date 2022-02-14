@@ -2953,7 +2953,9 @@ function DotArea:init(args)
       end
       for _, enemy in ipairs(enemies) do
         enemy:hit(self.dmg*0.2, self, true)
-        enemy:curse('bane', 1*(self.source_ref.hex_duration_m or 1), self.source_ref.level == 3, self.source_ref)
+        if self.source_ref then
+          enemy:curse('bane', 1*(self.source_ref.hex_duration_m or 1), self.source_ref.level == 3, self.source_ref)
+        end
       end
     end, nil, nil, 'dot')
   elseif self.void_rift then

@@ -705,7 +705,7 @@ function Seeker:hit(damage, projectile, dot, from_enemy, dmg_type)
       end)
     end
 
-    if self.jester_cursed then
+    if self.jester_cursed and self.jester_ref then
       trigger:after(0.01, function()
         if tostring(self.x) == tostring(0/0) or tostring(self.y) == tostring(0/0) then return end
         _G[random:table{'scout1', 'scout2'}]:play{pitch = random:float(0.95, 1.05), volume = 0.35}
@@ -720,7 +720,7 @@ function Seeker:hit(damage, projectile, dot, from_enemy, dmg_type)
       end)
     end
 
-    if self.bane_cursed then
+    if self.bane_cursed and self.bane_ref then
       trigger:after(0.01, function()
         DotArea{group = main.current.effects, x = self.x, y = self.y, rs = (self.bane_ref.level == 3 and 2 or 1)*self.bane_ref.area_size_m*54, color = purplecurs[0],
           dmg = self.bane_ref.area_dmg_m*self.bane_ref.dmg*(self.bane_ref.dot_dmg_m or 1),
@@ -728,7 +728,7 @@ function Seeker:hit(damage, projectile, dot, from_enemy, dmg_type)
       end)
     end
     
-    if self.frostbitten then
+    if self.frostbitten and self.lich_ref then
       trigger:after(0.01, function()
         self.attack_sensor = Circle(self.x, self.y, 128)
           local closest_enemy = self:get_closest_object_in_shape(self.attack_sensor, main.current.enemies)
