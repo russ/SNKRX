@@ -2313,14 +2313,16 @@ function Projectile:update(dt)
   if self.character == 'psyker' then
     if self.parent.dead then self.dead = true; self.parent = nil; return end
     local proxy_parent = self.parent
+    local borrow_m = 1
     if self.borrowing_parent then
       if self.borrowing_parent.dead then self.borrowing_parent = nil; else
         proxy_parent = self.borrowing_parent
+        borrow_m = 3
       end
     end
-    self:set_position(proxy_parent.x + self.orbit_distance*math.cos(self.orbit_speed*main.current.t.time + self.orbit_offset)
+    self:set_position(proxy_parent.x + self.orbit_distance*math.cos(self.orbit_speed*main.current.t.time*borrow_m + self.orbit_offset)
     + math.random()*self.orbInstability*10,
-    proxy_parent.y + self.orbit_distance*math.sin(self.orbit_speed*main.current.t.time + self.orbit_offset)
+    proxy_parent.y + self.orbit_distance*math.sin(self.orbit_speed*main.current.t.time*borrow_m + self.orbit_offset)
       + math.random()*self.orbInstability*10)
     local dx, dy = self.x - (self.previous_x or 0), self.y - (self.previous_y or 0)
     self.r = Vector(dx, dy):angle()
@@ -4562,7 +4564,9 @@ function Critter:on_trigger_enter(other, contact)
   if other:is(Seeker) then
     critter2:play{pitch = random:float(0.65, 0.85), volume = 0.1}
     self:hit(1)
-    other:hit(self.dmg, self, nil, nil, 'body')
+    local centrepoint_m = 1
+    if self.centrepoint then centrepoint_m = 3 end
+    other:hit(self.dmg * centrepoint_m, self, nil, nil, 'body')
     if self.parent.character == "corruptor" then
       other.corrosion = other.corrosion and (other.corrosion + math.random_range({10, 40})) 
       or (math.random_range({10, 40}))
