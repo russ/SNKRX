@@ -2874,7 +2874,7 @@ function DotArea:init(args)
 
   if self.character == 'pyromancer' or self.character == 'cryomancer' then
     self.dmg = self.dmg * self.parent.aspd_m
-  elseif self.character == 'bane' then
+  elseif self.character == 'bane' and self.source_ref then
     self.dmg = self.dmg * self.source_ref.aspd_m
   elseif self.virulent or self.pestilent then
     self.dmg = self.dmg * self.parent.parent.aspd_m
