@@ -1833,7 +1833,7 @@ function init()
   )
 
   local next_osyn = 'Obsidian'
-  def_oversyn(next_osyn, 2, {'Armorforge', 'Entropy'}, 6, 'purple', 
+  def_oversyn(next_osyn, 2, {'Armorforge', 'Entropy'}, 13, 'purple', 
   {'Snake hit: ','% chance to ignore damage and spawn a revenge DoT'},
   function(unit, incoming_dmg) if oversyn_level[next_osyn] <= 0 then return end
     if random:bool(osyn_v(next_osyn)) then
