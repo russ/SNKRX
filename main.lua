@@ -1504,6 +1504,7 @@ function init()
       min_source_count = math.min(min_source_count, syn_source_counts[need])
     end
     oversyn_level[osyn_name] = min_source_count
+    syn_source_counts[osyn_name] = min_source_count
   end
 
   function see_oversyns(in_units)
