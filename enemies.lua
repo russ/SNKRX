@@ -481,7 +481,7 @@ function Seeker:on_collision_enter(other, contact)
 end
 
 
-function Seeker:hit(damage, projectile, dot, from_enemy, type)
+function Seeker:hit(damage, projectile, dot, from_enemy, dmg_type)
   local pyrod = self.pyrod
   self.pyrod = false
   if self.dead then return end
@@ -544,8 +544,8 @@ function Seeker:hit(damage, projectile, dot, from_enemy, type)
 
   if projectile and projectile.parent and projectile.parent.character then
     damage_counters[projectile.parent.character] = damage_counters[projectile.parent.character] + actual_damage
-  elseif type then
-    damage_counters[type] = damage_counters[type] + actual_damage
+  elseif dmg_type then
+    damage_counters[dmg_type] = damage_counters[dmg_type] + actual_damage
   else
     damage_counters['other'] = damage_counters['other'] + actual_damage
   end
@@ -695,7 +695,7 @@ function Seeker:hit(damage, projectile, dot, from_enemy, type)
     if self.infested then
       critter1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       trigger:after(0.01, function()
-        if type(self.infested) and type(self.infested) == 'number' then
+        if type(self.infested) == 'number' then
           for i = 1, self.infested do
             Critter{group = main.current.main, x = self.x, y = self.y, color = orange[0], r = random:float(0, 2*math.pi), v = 10, dmg = self.infested_dmg, parent = self.infested_ref}
           end
@@ -1018,7 +1018,7 @@ function EnemyCritter:draw()
 end
 
 
-function EnemyCritter:hit(damage, projectile, type)
+function EnemyCritter:hit(damage, projectile, dmg_type)
   if self.dead then return end
   -- print(projectile == self.invulnerable_to)
   if projectile == self.invulnerable_to then return end
@@ -1026,9 +1026,16 @@ function EnemyCritter:hit(damage, projectile, type)
   
   do_osyn['Faraway'](self)
   local all_dmg_amplifier = self:calcDmgAmplifiers()
-
-  self.hp = self.hp - math.max(damage * all_dmg_amplifier, 0)
-  do_osyn['Vampirism'](self, damage * all_dmg_amplifier)
+  local actual_damage = math.max(damage * all_dmg_amplifier, 0)
+  self.hp = self.hp - actual_damage
+  if projectile and projectile.parent and projectile.parent.character then
+    damage_counters[projectile.parent.character] = damage_counters[projectile.parent.character] + actual_damage
+  elseif dmg_type then
+    damage_counters[dmg_type] = damage_counters[dmg_type] + actual_damage
+  else
+    damage_counters['other'] = damage_counters['other'] + actual_damage
+  end
+  do_osyn['Vampirism'](self, actual_damage)
   self:show_hp()
   if self.hp <= 0 then self:die() end
 end
