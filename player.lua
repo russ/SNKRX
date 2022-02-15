@@ -1320,10 +1320,14 @@ function Player:init(args)
   end
 end
 
-function getActiveSetsAndDps(ref, daspdmult, explorer_lvl_chk)
+function getActiveSetsAndDps(daspdmult, explorer_lvl_chk)
   local number_of_active_sets = main.current.active_sets or 1
   if explorer_lvl_chk then
-    number_of_active_sets = number_of_active_sets * get_synp('explorer', main.current.explorer_level)
+    if type(explorer_lvl_chk) == 'number' then
+      number_of_active_sets = number_of_active_sets * get_synp('explorer', 1)
+    else
+      number_of_active_sets = number_of_active_sets * get_synp('explorer', main.current.explorer_level)
+    end
   end
   return number_of_active_sets * daspdmult
 end
@@ -1352,7 +1356,7 @@ function Player:update(dt)
   end
 
   if self.character == 'vagrant' and self.level == 3 then
-    local addedDASPD = getActiveSetsAndDps(self, 0.15, false)
+    local addedDASPD = getActiveSetsAndDps(0.15, false)
     self.vagrant_dmg_m = 1 + addedDASPD
     self.vagrant_aspd_m = 1 + addedDASPD
   end
@@ -1392,7 +1396,13 @@ function Player:update(dt)
   self.enchanter_dmg_m = get_synp('enchanter', main.current.enchanter_level) + 1
 
   if table.any(self.classes, function(v) return v == 'explorer' end) then
-    local addedDASPD = getActiveSetsAndDps(self, 1, true)
+    local addedDASPD = getActiveSetsAndDps(1, true)
+    self.explorer_dmg_m = 1 + addedDASPD
+    self.explorer_aspd_m = 1 + addedDASPD
+  end
+
+  if oversyn_level['Focus'] > 0 then
+    local addedDASPD = getActiveSetsAndDps(do_osyn['Focus'](), 1)
     self.explorer_dmg_m = 1 + addedDASPD
     self.explorer_aspd_m = 1 + addedDASPD
   end
@@ -2130,7 +2140,7 @@ function Player:dot_attack(area, mods)
     if self.character == 'vulcanist' then
       t.dmg = t.dmg * 0.5
     end
-    if mods.revenge then t.dmg = t.dmg + mods.revenge end
+    if mods.revenge then t.dmg = t.dmg + mods.revenge; t.revenge = true end
   DotArea(table.merge(t, mods))
 
   dot1:play{pitch = random:float(0.9, 1.1), volume = 0.5}
@@ -2872,7 +2882,7 @@ function DotArea:init(args)
   self.shape = Circle(self.x, self.y, self.rs)
   self.closest_sensor = Circle(self.x, self.y, 128)
 
-  if self.character == 'pyromancer' or self.character == 'cryomancer' then
+  if self.character == 'pyromancer' or self.character == 'cryomancer' or self.revenge then
     self.dmg = self.dmg * self.parent.aspd_m
   elseif self.character == 'bane' and self.source_ref then
     self.dmg = self.dmg * self.source_ref.aspd_m
@@ -2881,7 +2891,8 @@ function DotArea:init(args)
   end
 
   if self.character == 'plague_doctor' or self.virulent or self.pestilent or
-   self.character == 'pyromancer' or self.character == 'witch' or self.character == 'burning_field' then
+   self.character == 'pyromancer' or self.character == 'witch' or self.character == 'burning_field'
+   or self.revenge then
     self.t:every(0.2, function()
       local enemies = main.current.main:get_objects_in_shape(self.shape, main.current.enemies)
       if #enemies > 0 then self.spring:pull(0.05, 200, 10) end

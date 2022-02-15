@@ -72,7 +72,7 @@ function BuyScreen:on_enter(from, level, loop, units, passives, shop_level, shop
   self.locked = locked_state and locked_state.locked
   LockButton{group = self.main, x = 205, y = 18, parent = self}
 
-  self:set_cards(self.shop_level, nil, true)
+  self:set_cards(self.shop_level, nil, true, from.name == 'arena')
   self:set_party_and_sets()
   self:set_items()
 
@@ -216,7 +216,7 @@ function BuyScreen:getOversynList(oversyn_t)
   for _, v in ipairs(oversyn_t) do
     if oversyn_level[v] > 0 then
       table.insert(self.oversyns, { text = 
-      strc({'[',oversyn_cols[v],']',v}), font = pixul_font, alignment = 'center', height_multiplier = 1}
+      strc({'[',oversyn_cols[v],']',v,' ',oversyn_level[v]}), font = pixul_font, alignment = 'center', height_multiplier = 1}
       )
       table.insert(self.oversyns, { text = 
       strc({'[',oversyn_cols[v],']',oversyn_desc[v]()}), font = pixul_font, alignment = 'center', height_multiplier = 1}
@@ -430,7 +430,7 @@ function BuyScreen:gain_gold(amount)
 end
 
 
-function BuyScreen:set_cards(shop_level, dont_spawn_effect, first_call)
+function BuyScreen:set_cards(shop_level, dont_spawn_effect, first_call, from_arena)
   if self.cards then for i = 1, 3 do if self.cards[i] then self.cards[i]:die(dont_spawn_effect) end end end
   self.cards = {}
   local all_units = {}
@@ -446,12 +446,30 @@ function BuyScreen:set_cards(shop_level, dont_spawn_effect, first_call)
     all_units = {unit_1, unit_2, unit_3}
   until not table.all(all_units, function(v) return table.any(non_attacking_characters, function(u) return v == u end) end)
   if first_call and locked_state then
-    if locked_state.cards[1] then self.cards[1] = ShopCard{group = self.main, x = 60, y = 75, w = 80, h = 90, unit = locked_state.cards[1], parent = self, i = 1} else
-      self.cards[1] = ShopCard{group = self.main, x = 60, y = 75, w = 80, h = 90, unit = unit_1, parent = self, i = 1} end
-    if locked_state.cards[2] then self.cards[2] = ShopCard{group = self.main, x = 140, y = 75, w = 80, h = 90, unit = locked_state.cards[2], parent = self, i = 2} else
-      self.cards[2] = ShopCard{group = self.main, x = 140, y = 75, w = 80, h = 90, unit = unit_2, parent = self, i = 2} end
-    if locked_state.cards[3] then self.cards[3] = ShopCard{group = self.main, x = 220, y = 75, w = 80, h = 90, unit = locked_state.cards[3], parent = self, i = 3} else
-      self.cards[3] = ShopCard{group = self.main, x = 220, y = 75, w = 80, h = 90, unit = unit_3, parent = self, i = 3} end
+    if from_arena then
+      if locked_state.cards[1] then 
+          self.cards[1] = ShopCard{group = self.main, x = 60, y = 75, w = 80, h = 90, unit = locked_state.cards[1], parent = self, i = 1}
+      else
+        self.cards[1] = ShopCard{group = self.main, x = 60, y = 75, w = 80, h = 90, unit = unit_1, parent = self, i = 1} end
+      if locked_state.cards[2] then 
+          self.cards[2] = ShopCard{group = self.main, x = 140, y = 75, w = 80, h = 90, unit = locked_state.cards[2], parent = self, i = 2}
+      else
+        self.cards[2] = ShopCard{group = self.main, x = 140, y = 75, w = 80, h = 90, unit = unit_2, parent = self, i = 2} end
+      if locked_state.cards[3] then 
+          self.cards[3] = ShopCard{group = self.main, x = 220, y = 75, w = 80, h = 90, unit = locked_state.cards[3], parent = self, i = 3}
+      else
+        self.cards[3] = ShopCard{group = self.main, x = 220, y = 75, w = 80, h = 90, unit = unit_3, parent = self, i = 3} end
+    else
+      if locked_state.cards[1] then
+        self.cards[1] = ShopCard{group = self.main, x = 60, y = 75, w = 80, h = 90, unit = locked_state.cards[1], parent = self, i = 1}
+      else self.cards[1] = nil end
+      if locked_state.cards[2] then
+        self.cards[2] = ShopCard{group = self.main, x = 140, y = 75, w = 80, h = 90, unit = locked_state.cards[2], parent = self, i = 2}
+      else self.cards[2] = nil end
+      if locked_state.cards[3] then
+        self.cards[3] = ShopCard{group = self.main, x = 220, y = 75, w = 80, h = 90, unit = locked_state.cards[3], parent = self, i = 3}
+      else self.cards[3] = nil end
+    end
   else
     self.cards[1] = ShopCard{group = self.main, x = 60, y = 75, w = 80, h = 90, unit = unit_1, parent = self, i = 1}
     self.cards[2] = ShopCard{group = self.main, x = 140, y = 75, w = 80, h = 90, unit = unit_2, parent = self, i = 2}
@@ -877,11 +895,8 @@ function LockButton:update(dt)
 
   if self.selected and input.m1.pressed then
     self.parent.locked = not self.parent.locked
-    if not self.parent.locked then locked_state = nil end
-    if self.parent.locked then
-      locked_state = {locked = true, cards = {self.parent.cards[1] and self.parent.cards[1].unit, self.parent.cards[2] and self.parent.cards[2].unit, self.parent.cards[3] and self.parent.cards[3].unit}}
-      system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
-    end
+    locked_state = {locked = self.parent.locked, cards = {self.parent.cards[1] and self.parent.cards[1].unit, self.parent.cards[2] and self.parent.cards[2].unit, self.parent.cards[3] and self.parent.cards[3].unit}}
+    system.save_run(self.parent.level, self.parent.loop, gold, self.parent.units, self.parent.passives, self.parent.shop_level, self.parent.shop_xp, run_passive_pool, locked_state, syn_pow)
     ui_switch2:play{pitch = random:float(0.95, 1.05), volume = 0.5}
     self.selected = true
     self.spring:pull(0.2, 200, 10)
@@ -1126,7 +1141,9 @@ function RerollButton:update(dt)
         self.t:after(2, function() self.info_text:deactivate(); self.info_text.dead = true; self.info_text = nil end, 'info_text')
       else
         ui_switch2:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+        self.parent.locked = false
         self.parent:set_cards(self.parent.shop_level, true)
+        locked_state = {locked = self.parent.locked, cards = {self.parent.cards[1] and self.parent.cards[1].unit, self.parent.cards[2] and self.parent.cards[2].unit, self.parent.cards[3] and self.parent.cards[3].unit}} 
         self.selected = true
         self.spring:pull(0.2, 200, 10)
         if self.parent.level > 1 then
@@ -2337,7 +2354,7 @@ function ClassIcon:on_mouse_enter()
     {text = class_descriptions[self.class](
       (l and (owned >= l and 4)) or 
       (k and (owned >= k and 3)) or 
-      (k and (owned >= j and 2)) or 
+      (j and (owned >= j and 2)) or 
       (owned >= i and 1) or 0),
        font = pixul_font, alignment = 'center'}, synboost and
      {text = (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) and 

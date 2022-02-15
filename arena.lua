@@ -361,12 +361,17 @@ function Arena:update(dt)
     if not self.transitioning and not self.in_credits and not self.quitting then
       all_units_global = self.player:get_all_units()
       random_unit = table.random(all_units_global)
-      local shuffled_units_global = table.shuffle(all_units_global)
+      local shuffled_inds = {}
+      for i, _ in ipairs(all_units_global) do
+        table.insert(shuffled_inds, i)
+      end
+      shuffled_inds = table.shuffle(shuffled_inds)
       random_nuker = nil
       random_swarmer = nil
       random_curser = nil
       random_conjurer = nil
-      for _, unit in ipairs(shuffled_units_global) do
+      for _, ind in ipairs(shuffled_inds) do
+        local unit = all_units_global[ind]
         if not random_nuker then
           if table.any(unit.classes, function(v) return v == 'nuker' end) then
             random_nuker = unit

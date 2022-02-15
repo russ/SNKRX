@@ -1,1 +1,1 @@
-"%~dp0\engine\love\love.exe" "%~dp0..\SNKRX" 
+"%~dp0\engine\love\love.exe" %~dp0

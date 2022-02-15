@@ -7,7 +7,6 @@
 Easy run: Download the whole repository as a zip, then run AcalamityModRun.bat in the head folder. This will run the Love2D version of the game without any problems if you are on Windows. You need to have Steam up for this.
 
 TODO:
-- Focus supersynergy should actually do something.
 - Body and Mouths lategame upgrades implementation.
 - Critter buffs.
 - Flat bonus passive items instead become % bonus.

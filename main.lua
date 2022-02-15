@@ -1607,14 +1607,14 @@ function init()
     if not main.current.player then return end
     if random:bool(osyn_v(next_osyn)) then
       main.current.player.chronology = true 
-      main.current.player:after(1, function() main.current.player.chronology = false end, 'nochronology')
+      main.current.player.t:after(1, function() main.current.player.chronology = false end, 'nochronology')
     end
   end
   )
 
   local next_osyn = 'Armorforge'
   def_oversyn(next_osyn, 1, {'mage', 'warrior'}, 0.2, 'yellow', 
-  {'AoE attack hits grant ','armor, resets'},
+  {'AoE attack hits grant ',' armor, resets'},
   function() if oversyn_level[next_osyn] <= 0 then return end
     if not main.current.player then return end
     main.current.player.armorforge = main.current.player.armorforge or 0
@@ -1659,12 +1659,10 @@ function init()
   )
 
   local next_osyn = 'Focus'
-  def_oversyn(next_osyn, 1, {'mercenary', 'explorer', 'chaolyst'}, 20, 'fg', 
-  {'Does nothing with ','% chance?!'},
-  function(unit) if oversyn_level[next_osyn] <= 0 then return end
-    if random:bool(osyn_v(next_osyn)) then
-      --I don't know yet.
-    end
+  def_oversyn(next_osyn, 1, {'mercenary', 'explorer', 'chaolyst'}, 4, 'fg', 
+  {'EVERY unit gets ','% of explorer level 1 set bonus, even if the set is inactive'},
+  function() if oversyn_level[next_osyn] <= 0 then return end
+    return osyn_v(next_osyn) * 0.01
   end
   )
 
@@ -1835,11 +1833,11 @@ function init()
 
   local next_osyn = 'Obsidian'
   def_oversyn(next_osyn, 2, {'Armorforge', 'Entropy'}, 13, 'purple', 
-  {'Snake hit: ','% chance to ignore damage and spawn a revenge DoT'},
+  {'Snake hit: ','% chance to ignore damage and spawn a 10x revenge DoT'},
   function(unit, incoming_dmg) if oversyn_level[next_osyn] <= 0 then return end
     if random:bool(osyn_v(next_osyn)) then
       unit.ignore_damage_once = true
-      unit:dot_attack(48, {duration = 2, revenge = incoming_dmg})
+      unit:dot_attack(64, {duration = 2, revenge = incoming_dmg*10})
     end
   end
   )
