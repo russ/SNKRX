@@ -1414,12 +1414,28 @@ function init()
     table.insert(lateup_fgcol, fgcol)
   end
 
+  function distribute_lateups(in_units, from_centre, initial)
+    osyn_fills_temp = {}
+    oversyn_forbidden = {}
+    syn_source_counts = {}
+    sup_syn_active = {}
+    for i, _ in pairs(oversyn_level) do
+      oversyn_level[i] = 0
+    end
+
   def_lateup('body', {},
-   function() end,
+   function(maxunits) end,
     body_img, greenheal[0], greenheal[-5])
   def_lateup('mouths', {},
    function() end,
     mouths_img, red[0], red[-5])
+
+  function reset_lateups()
+    for i = 1, #lateup_lvls do
+      lateup_lvls[i] = 0
+    end
+  end
+
 
   sup_syns = {}
   hyp_syns = {}
@@ -2656,6 +2672,11 @@ function setSaveOpts()
   curr_run_save_tar = run_tars[against_n]
 end
 
+function save_run_by_ref(buy_screen_ref)
+  system.save_run(buy_screen_ref.level, buy_screen_ref.loop, gold, buy_screen_ref.units,
+  buy_screen_ref.passives, buy_screen_ref.shop_level, buy_screen_ref.shop_xp,
+    run_passive_pool, locked_state, syn_pow, lateup_lvls)
+end
 
 function open_options(self)
   input:set_mouse_visible(true)

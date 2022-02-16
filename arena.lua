@@ -1042,7 +1042,7 @@ function Arena:transition()
     slow_amount = 1
     music_slow_amount = 1
     main:add(BuyScreen'buy_screen')
-    system.save_run(self.level+1, self.loop, gold, self.units, self.passives, self.shop_level, self.shop_xp, run_passive_pool, locked_state, syn_pow)
+    system.save_run(self.level+1, self.loop, gold, self.units, self.passives, self.shop_level, self.shop_xp, run_passive_pool, locked_state, syn_pow, lateup_lvls)
     main:go_to('buy_screen', self.level+1, self.loop, self.units, self.passives, self.shop_level, self.shop_xp)
     t.t:after(0.1, function()
       t.text:set_text({

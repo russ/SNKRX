@@ -121,6 +121,14 @@ function MainMenu:on_enter(from)
       else
         reset_syn_pow()
       end
+      if run.lateup_lvls then
+        reset_lateups()
+        for i, v in pairs(run.lateup_lvls) do
+          lateup_lvls[i] = v
+        end
+      else
+        reset_lateups()
+      end
       calc_syn_power(false)
       run_time = run.time or 0
       gold = run.gold or 3

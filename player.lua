@@ -1324,7 +1324,7 @@ function getActiveSetsAndDps(daspdmult, explorer_lvl_chk)
   local number_of_active_sets = main.current.active_sets or 1
   if explorer_lvl_chk then
     if type(explorer_lvl_chk) == 'number' then
-      number_of_active_sets = number_of_active_sets * get_synp('explorer', 1)
+      number_of_active_sets = number_of_active_sets * get_synp('explorer', explorer_lvl_chk)
     else
       number_of_active_sets = number_of_active_sets * get_synp('explorer', main.current.explorer_level)
     end
