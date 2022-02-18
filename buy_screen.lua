@@ -1020,10 +1020,10 @@ function LevelButton:draw()
     graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 4, 4, self.selected and fg[0] or bg[1])
     self.text:draw(self.x, self.y + 1)
     for i = 1, self.max_xp do
-      graphics.line(self.x + 0.9*self.shape.w + (i-1)*5, self.y - self.shape.h/3, self.x + 0.9*self.shape.w + (i-1)*5, self.y + self.shape.h/3, bg[1], 2)
+      graphics.line(self.x - 4 + 0.9*self.shape.w + (i-1)*5, self.y - self.shape.h/3, self.x - 4 + 0.9*self.shape.w + (i-1)*5, self.y + self.shape.h/3, bg[1], 2)
     end
     for i = 1, self.shop_xp do
-      graphics.line(self.x + 0.9*self.shape.w + (i-1)*5, self.y - self.shape.h/3, self.x + 0.9*self.shape.w + (i-1)*5, self.y + self.shape.h/3, fg[0], 2)
+      graphics.line(self.x - 4 + 0.9*self.shape.w + (i-1)*5, self.y - self.shape.h/3, self.x - 4 + 0.9*self.shape.w + (i-1)*5, self.y + self.shape.h/3, fg[0], 2)
     end
   graphics.pop()
 end
