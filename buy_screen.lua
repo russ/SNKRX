@@ -182,10 +182,9 @@ function BuyScreen:on_enter(from, level, loop, units, passives, shop_level, shop
     b.info_text.dead = true
     b.info_text = nil
   end}
-  x, y = math.index_to_coordinates(18, 4)
-  LateUpgradeButton{group = self.main, x = 296 + (x-1)*18, y = 45 + (y-1)*48, parent = self, type = 1}
-  x, y = math.index_to_coordinates(19, 4)
-  LateUpgradeButton{group = self.main, x = 296 + (x-1)*18, y = 45 + (y-1)*48, parent = self, type = 2}
+
+  LateUpgradeButton{group = self.main, x = 296 - 18*0.9, y = 16, parent = self, type = 1}
+  LateUpgradeButton{group = self.main, x = 296 + 18*2.5, y = 16, parent = self, type = 2}
 
   trigger:tween(1, main_song_instance, {volume = 0.2, pitch = 1}, math.linear)
 
@@ -1581,10 +1580,10 @@ LateUpgradeButton = Object:extend()
 LateUpgradeButton:implement(GameObject)
 function LateUpgradeButton:init(args)
   self:init_game_object(args)
-  self.shape = Rectangle(self.x, self.y + 11, 20, 40)
+  self.shape = Rectangle(self.x, self.y, 16, 26)
   self.interact_with_mouse = true
   self.type = args.type
-  self.lateup_txt =  Text({{text = lateup_descs[self.type], font = pixul_font, alignment = 'center'}}, global_text_tags)
+  --self.lateup_txt =  Text({{text = lateup_descs[self.type], font = pixul_font, alignment = 'center'}}, global_text_tags)
   self.t:every(0.5, function() self.flash = not self.flash end)
   self.spring:pull(0.2, 200, 10)
 end
@@ -1592,7 +1591,6 @@ end
 
 function LateUpgradeButton:update(dt)
   self:update_game_object(dt)
-  self.lateup_txt:update(dt)
   if self.selected and input.m1.pressed then
     if gold >= 0 and (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) then
       ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
@@ -1614,7 +1612,6 @@ end
 
 function LateUpgradeButton:draw()
   graphics.push(self.x, self.y, 0, self.sx*self.spring.x, self.sy*self.spring.x)
-  self.lateup_txt:draw(self.x, self.y - 20)
   graphics.rectangle(self.x, self.y, 16, 24, 4, 4, self.highlighted and fg[0] or lateup_bgcol[self.type])
   lateup_imgs[self.type]:draw(self.x, self.y, 0, 0.3, 0.3, 0, 0, self.highlighted and fg[-5] or lateup_fgcol[self.type])
   graphics.pop()
@@ -1627,7 +1624,7 @@ function LateUpgradeButton:on_mouse_enter()
   self.spring:pull(0.2, 200, 10)
   self.info_text = InfoText{group = main.current.ui, force_update = true}
   self.info_text:activate({
-    {text = self.lateup_txt, font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+    {text = lateup_descs[self.type], font = pixul_font, alignment = 'center', height_multiplier = 1.25},
   }, nil, nil, nil, nil, 16, 4, nil, 2)
   self.info_text.x, self.info_text.y = gw/2, gh/2 + gh/4 - 6
 end
@@ -1635,15 +1632,17 @@ end
 
 function LateUpgradeButton:on_mouse_exit()
   self.selected = false
-  self.info_text:deactivate()
-  self.info_text.dead = true
-  self.info_text = nil
+  if self.info_text then
+    self.info_text:deactivate()
+    self.info_text.dead = true
+    self.info_text = nil
+  end
 end
 
 
 function LateUpgradeButton:die()
   self.dead = true
-  if self.lateup_txt then
+  if self.info_text then
     self.info_text:deactivate()
     self.info_text.dead = true
     self.info_text = nil

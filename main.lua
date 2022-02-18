@@ -1417,7 +1417,7 @@ function init()
   end
 
 
-  def_lateup('body', {},
+  def_lateup('body', "I am a tank.",
   function(ind, unit_ref, max_count)
     lateup_power[1] = (lateup_lvls[1]*0.2 + 1)
     lateup_power[2] = 1 / (lateup_lvls[1]*0.1 + 1)
@@ -1426,7 +1426,7 @@ function init()
     unit_ref.lateup_mult = 1 + coeff * 0.2;
   end,
   body_img, greenheal[0], greenheal[-5])
-  def_lateup('mouths', {},
+  def_lateup('mouths', "I am a glass cannon.",
   function(ind, unit_ref, max_count)
     lateup_power[1] = lateup_power[1] / (lateup_lvls[2]*0.1 + 1)
     lateup_power[2] = lateup_power[2] * (lateup_lvls[2]*0.2 + 1)
