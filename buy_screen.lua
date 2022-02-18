@@ -182,6 +182,10 @@ function BuyScreen:on_enter(from, level, loop, units, passives, shop_level, shop
     b.info_text.dead = true
     b.info_text = nil
   end}
+  x, y = math.index_to_coordinates(18, 4)
+  LateUpgradeButton{group = self.main, x = 296 + (x-1)*18, y = 45 + (y-1)*48, parent = self, type = 1}
+  x, y = math.index_to_coordinates(19, 4)
+  LateUpgradeButton{group = self.main, x = 296 + (x-1)*18, y = 45 + (y-1)*48, parent = self, type = 2}
 
   trigger:tween(1, main_song_instance, {volume = 0.2, pitch = 1}, math.linear)
 
@@ -1577,9 +1581,11 @@ LateUpgradeButton = Object:extend()
 LateUpgradeButton:implement(GameObject)
 function LateUpgradeButton:init(args)
   self:init_game_object(args)
-  self.shape = Rectangle(self.x, self.y, self.w, self.h)
+  self.shape = Rectangle(self.x, self.y + 11, 20, 40)
   self.interact_with_mouse = true
+  self.type = args.type
   self.lateup_txt =  Text({{text = lateup_descs[self.type], font = pixul_font, alignment = 'center'}}, global_text_tags)
+  self.t:every(0.5, function() self.flash = not self.flash end)
   self.spring:pull(0.2, 200, 10)
 end
 

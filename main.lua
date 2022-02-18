@@ -1398,6 +1398,7 @@ function init()
 
   lateup_names = {}
   lateup_lvls = {}
+  lateup_power = {}
   lateup_descs = {}
   lateup_calcs = {}
   lateup_imgs = {}
@@ -1407,6 +1408,7 @@ function init()
   function def_lateup(name, desc, calc, img, bgcol, fgcol)
     table.insert(lateup_names, name)
     table.insert(lateup_lvls, 0)
+    table.insert(lateup_power, 1)
     table.insert(lateup_descs, desc)
     table.insert(lateup_calcs, calc)
     table.insert(lateup_imgs, img)
@@ -1414,21 +1416,30 @@ function init()
     table.insert(lateup_fgcol, fgcol)
   end
 
-  function distribute_lateups(in_units, from_centre, initial)
-    osyn_fills_temp = {}
-    oversyn_forbidden = {}
-    syn_source_counts = {}
-    sup_syn_active = {}
-    for i, _ in pairs(oversyn_level) do
-      oversyn_level[i] = 0
-    end
 
   def_lateup('body', {},
-   function(maxunits) end,
-    body_img, greenheal[0], greenheal[-5])
+  function(ind, unit_ref, max_count)
+    lateup_power[1] = (lateup_lvls[1]*0.2 + 1)
+    lateup_power[2] = 1 / (lateup_lvls[1]*0.1 + 1)
+    local coeff = 1 - math.abs((ind - 1) / max_count * 2 - 1)
+    coeff = coeff * 1.5 - 0.5;
+    unit_ref.lateup_mult = 1 + coeff * 0.2;
+  end,
+  body_img, greenheal[0], greenheal[-5])
   def_lateup('mouths', {},
-   function() end,
-    mouths_img, red[0], red[-5])
+  function(ind, unit_ref, max_count)
+    lateup_power[1] = lateup_power[1] / (lateup_lvls[2]*0.1 + 1)
+    lateup_power[2] = lateup_power[2] * (lateup_lvls[2]*0.2 + 1)
+    local coeff = math.abs((ind - 1) / max_count * 2 - 1)
+    coeff = coeff * 1.5 - 0.5
+    unit_ref.lateup_mult = 1 + coeff * 0.2
+  end,
+  mouths_img, red[0], red[-5])
+
+  function distribute_lateups(in_units, from_centre, initial)
+    --lateup_calcs[1]()
+    --lateup_calcs[2]()
+  end
 
   function reset_lateups()
     for i = 1, #lateup_lvls do
