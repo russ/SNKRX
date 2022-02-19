@@ -1400,51 +1400,85 @@ function init()
   lateup_lvls = {}
   lateup_power = {}
   lateup_descs = {}
-  lateup_calcs = {}
   lateup_imgs = {}
   lateup_bgcol = {}
   lateup_fgcol = {}
 
-  function def_lateup(name, desc, calc, img, bgcol, fgcol)
+  function def_lateup(name, desc, img, bgcol, fgcol)
     table.insert(lateup_names, name)
     table.insert(lateup_lvls, 0)
     table.insert(lateup_power, 1)
     table.insert(lateup_descs, desc)
-    table.insert(lateup_calcs, calc)
     table.insert(lateup_imgs, img)
     table.insert(lateup_bgcol, bgcol)
     table.insert(lateup_fgcol, fgcol)
   end
 
+  function lateup_c(q_blvl, q_mlvl)
+    if q_blvl then
+      return (1+0.2*q_blvl)/(1+0.1*q_mlvl), (1+0.2*q_mlvl)/(1+0.1*q_blvl)
+    end
+    return (1+0.2*lateup_lvls[1])/(1+0.1*lateup_lvls[2]), (1+0.2*lateup_lvls[2])/(1+0.1*lateup_lvls[1])
+  end
 
-  def_lateup('body', "I am a tank.",
-  function(ind, unit_ref, max_count)
-    lateup_power[1] = (lateup_lvls[1]*0.2 + 1)
-    lateup_power[2] = 1 / (lateup_lvls[1]*0.1 + 1)
-    local coeff = 1 - math.abs((ind - 1) / max_count * 2 - 1)
-    coeff = coeff * 1.5 - 0.5;
-    unit_ref.lateup_mult = 1 + coeff * 0.2;
-  end,
+  def_lateup('body', 
+  {
+    function(q_blvl, q_mlvl)
+      local q_b, q_m = lateup_c(q_blvl, q_mlvl)
+      return strc({"Armor is ",string.format("%.3f",q_b),"x base, Dmg is ",string.format("%.3f",q_m),"x base"})
+    end,
+    function(q_blvl, q_mlvl)
+      local q_b, q_m = lateup_c(q_blvl, q_mlvl)
+      return strc({"Centre units: ",string.format("%.3f",q_b),"x basestats, End units: ",string.format("%.3f",q_m),"x basestats"})
+    end,
+  },
   body_img, greenheal[0], greenheal[-5])
-  def_lateup('mouths', "I am a glass cannon.",
-  function(ind, unit_ref, max_count)
-    lateup_power[1] = lateup_power[1] / (lateup_lvls[2]*0.1 + 1)
-    lateup_power[2] = lateup_power[2] * (lateup_lvls[2]*0.2 + 1)
-    local coeff = math.abs((ind - 1) / max_count * 2 - 1)
-    coeff = coeff * 1.5 - 0.5
-    unit_ref.lateup_mult = 1 + coeff * 0.2
-  end,
+
+  def_lateup('mouths',
+  {
+    function(q_blvl, q_mlvl)
+      local q_b, q_m = lateup_c(q_blvl, q_mlvl) 
+      return strc({"Dmg is ",string.format("%.3f",q_m),"x base, Armor is ",string.format("%.3f",q_b),"x base"})
+    end,
+    function(q_blvl, q_mlvl)
+      local q_b, q_m = lateup_c(q_blvl, q_mlvl)
+      return strc({"End units: ",string.format("%.3f",q_m),"x basestats, Centre units: ",string.format("%.3f",q_b),"x basestats"})
+    end,
+  },
   mouths_img, red[0], red[-5])
 
-  function distribute_lateups(in_units, from_centre, initial)
-    --lateup_calcs[1]()
-    --lateup_calcs[2]()
+  function lateup_on_unit(unit_ref, unit_counter, adder)
+    local interp = unit_counter * adder
+    unit_ref.base_boost = math.lerp(interp, lateup_power[2], lateup_power[1])
+  end
+
+  function distribute_lateups(in_units)
+    lateup_power[1], lateup_power[2] = lateup_c()
+    local unit_count = #in_units
+    local halfn = unit_count / 2.0
+    local snfn = math.ceil(halfn) --snake front plus central unit if odd number of units
+    local snbn = math.floor(halfn) --snake back
+    for i, v in ipairs(in_units) do
+      if i <= snfn then
+        local snfngt1 = snfn > 1
+        lateup_on_unit(v, i-1, snfngt1 and 1/(snfn - 1) or 0)
+      else
+        local snbngt1 = snbn > 1
+        lateup_on_unit(v, snbn-(i - snfn), snbngt1 and 1/(snbn - 1) or 0)
+      end
+    end
+  end
+
+  function lateupgrade(type)
+    lateup_lvls[type] = lateup_lvls[type] + 1
+    distribute_lateups(all_units_global)
   end
 
   function reset_lateups()
     for i = 1, #lateup_lvls do
       lateup_lvls[i] = 0
     end
+    distribute_lateups({})
   end
 
 

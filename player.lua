@@ -1484,13 +1484,19 @@ function Player:update(dt)
   self.buff_def_a = (self.warrior_def_a or 0) + (main.current.player and main.current.player.def_boost_global_a or 0) + (main.current.player and (main.current.player.armorforge or 0) or 0)
   self.buff_aspd_m = (self.chronomancer_aspd_m or 1)*(self.vagrant_aspd_m or 1)*(self.outlaw_aspd_m or 1)*(self.fairy_aspd_m or 1)*(self.psyker_aspd_m or 1)*(self.chronomancy_aspd_m or 1)*(self.awakening_aspd_m or 1)*(self.berserking_aspd_m or 1)*(self.reinforce_aspd_m or 1)*(self.squire_aspd_m or 1)*(self.speed_3_aspd_m or 1)*(self.last_stand_aspd_m or 1)*(self.enchanted_aspd_m or 1)*(self.explorer_aspd_m or 1)*(self.magician_aspd_m or 1)*(self.sorcerer_aspd_m or 1)
   self.buff_aspd_m = self.buff_aspd_m*(main.current.player and (main.current.player.chronology and 2 or 1) or 1) + (self.warp_time and math.random_range({0, 1}) or 0)
-  self.buff_dmg_m = (self.squire_dmg_m or 1)*(self.vagrant_dmg_m or 1)*(self.enchanter_dmg_m or 1)*(self.swordsman_dmg_m or 1)*(self.flagellant_dmg_m or 1)*(self.psyker_dmg_m or 1)*(self.ballista_dmg_m or 1)*(self.awakening_dmg_m or 1)*(self.reinforce_dmg_m or 1)*(self.payback_dmg_m or 1)*(self.immolation_dmg_m or 1)*(self.damage_4_dmg_m or 1)*(self.offensive_stance_dmg_m or 1)*(self.last_stand_dmg_m or 1)*(self.dividends_dmg_m or 1)*(self.explorer_dmg_m or 1)
+  self.buff_dmg_m = (self.squire_dmg_m or 1)*(self.vagrant_dmg_m or 1)*(self.enchanter_dmg_m or 1)*(self.swordsman_dmg_m or 1)*(self.flagellant_dmg_m or 1)*(self.psyker_dmg_m or 1)*(self.ballista_dmg_m or 1)*(self.awakening_dmg_m or 1)*(self.reinforce_dmg_m or 1)*(self.payback_dmg_m or 1)*(self.immolation_dmg_m or 1)*(self.damage_4_dmg_m or 1)*(self.offensive_stance_dmg_m or 1)*(self.last_stand_dmg_m or 1)*(self.dividends_dmg_m or 1)*(self.explorer_dmg_m or 1) * lateup_power[1]
   self.buff_def_m = (self.squire_def_m or 1)*(self.ouroboros_def_m or 1)*(self.unwavering_stance_def_m or 1)*(self.reinforce_def_m or 1)*(self.defensive_stance_def_m or 1)*(self.last_stand_def_m or 1)*(self.unrelenting_stance_def_m or 1)*
-  (self.hardening_def_m or 1)*(main.current.player and ((main.current.player.cultivation or 1)*(main.current.player.defiance or 1)) or 1)
+  (self.hardening_def_m or 1)*(main.current.player and ((main.current.player.cultivation or 1)*(main.current.player.defiance or 1)) or 1) * lateup_power[1]
   self.buff_area_size_m = (self.nuker_area_size_m or 1)*(self.magnify_area_size_m or 1)*(self.unleash_area_size_m or 1)*(self.last_stand_area_size_m or 1)
   self.buff_area_dmg_m = (self.nuker_area_dmg_m or 1)*(self.amplify_area_dmg_m or 1)*(self.unleash_area_dmg_m or 1)*(self.last_stand_area_dmg_m or 1)*(self.explorer_dmg_m or 1)
   self.buff_mvspd_m = (self.wall_rider_mvspd_m or 1)*(self.centipede_mvspd_m or 1)*(self.squire_mvspd_m or 1)*(self.last_stand_mvspd_m or 1)*(self.haste_mvspd_m or 1)
   self.buff_hp_m = (self.flagellant_hp_m or 1)
+  if self.base_boost then
+    self.buff_aspd_m = self.buff_aspd_m * self.base_boost
+    self.buff_dmg_m = self.buff_dmg_m * self.base_boost
+    self.buff_def_m = self.buff_def_m * self.base_boost
+    self.buff_area_dmg_m = self.buff_area_dmg_m * self.base_boost
+  end
   self:calculate_stats()
 
   if self.attack_sensor then self.attack_sensor:move_to(self.x, self.y) end
@@ -4366,7 +4372,7 @@ function HealingOrb:on_trigger_enter(other, contact)
       end
     end
     if lowest_unit then
-      lowest_unit:heal(0.2*lowest_unit.max_hp*(lowest_unit.heal_effect_m or 1))
+      lowest_unit:heal(0.5*lowest_unit.max_hp*(lowest_unit.heal_effect_m or 1))
     end
 
     if main.current.player.haste then

@@ -360,6 +360,7 @@ function Arena:update(dt)
   if not self.paused and not self.died and not self.won then
     if not self.transitioning and not self.in_credits and not self.quitting then
       all_units_global = self.player:get_all_units()
+      distribute_lateups(all_units_global)
       random_unit = table.random(all_units_global)
       local shuffled_inds = {}
       for i, _ in ipairs(all_units_global) do
@@ -436,6 +437,7 @@ function Arena:update(dt)
         main:add(BuyScreen'buy_screen')
         locked_state = nil
         reset_syn_pow()
+        reset_lateups()
         system.save_run()
         main:go_to('buy_screen', 1, 0, {}, passives, 1, 0)
       end, text = Text({{text = '[wavy, ' .. tostring(state.dark_transitions and 'fg' or 'bg') .. ']restarting...', font = pixul_font, alignment = 'center'}}, global_text_tags)}
@@ -910,6 +912,7 @@ function Arena:die()
             'silencing_strike', 'culling_strike', 'lightning_strike', 'psycholeak', 'divine_blessing', 'hardening', 'kinetic_strike',
           }
           reset_syn_pow()
+          reset_lateups()
           max_units = math.clamp(7 + current_new_game_plus, 7, 12)
           main:add(BuyScreen'buy_screen')
           system.save_run()

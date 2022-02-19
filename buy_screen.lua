@@ -165,6 +165,7 @@ function BuyScreen:on_enter(from, level, loop, units, passives, shop_level, shop
         'silencing_strike', 'culling_strike', 'lightning_strike', 'psycholeak', 'divine_blessing', 'hardening', 'kinetic_strike',
       }
       reset_syn_pow()
+      reset_lateups()
       max_units = math.clamp(7 + current_new_game_plus, 7, 12)
       main:add(BuyScreen'buy_screen')
       system.save_run()
@@ -668,6 +669,7 @@ function RestartButton:update(dt)
         'silencing_strike', 'culling_strike', 'lightning_strike', 'psycholeak', 'divine_blessing', 'hardening', 'kinetic_strike',
       }
       reset_syn_pow()
+      reset_lateups()
       max_units = math.clamp(7 + current_new_game_plus, 7, 12)
       system.save_state()
       main:add(BuyScreen'buy_screen')
@@ -1592,13 +1594,12 @@ end
 function LateUpgradeButton:update(dt)
   self:update_game_object(dt)
   if self.selected and input.m1.pressed then
-    if gold >= 0 and (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) then
+    if gold >= 0 then
       ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
-      lateup_lvls[self.type] = lateup_lvls[self.type] + 1
-      gold = gold + 500
+      gold = gold + 200
       self.parent.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
-      lateup_calcs[self.type]()
+      lateupgrade(self.type)
       self:on_mouse_exit()
       self:on_mouse_enter()
       save_run_by_ref(self.parent)
@@ -1622,9 +1623,19 @@ function LateUpgradeButton:on_mouse_enter()
   self.selected = true
   ui_hover1:play{pitch = random:float(1.3, 1.5), volume = 0.5}
   self.spring:pull(0.2, 200, 10)
+  local newblvl = lateup_lvls[1]
+  local newmlvl = lateup_lvls[2]
+  if self.type == 1 then newblvl = newblvl + 1 else newmlvl = newmlvl + 1 end
   self.info_text = InfoText{group = main.current.ui, force_update = true}
   self.info_text:activate({
-    {text = lateup_descs[self.type], font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+    {text = strc({self.type==1 and "[greenheal]" or "[red]",self.type==1 and "Body " or "Mouths ",lateup_lvls[self.type]}), font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+    {text = "[fg]Current:", font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+    {text = "[yellow]"..lateup_descs[self.type][1](), font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+    {text = "[yellow]"..lateup_descs[self.type][2](), font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+    {text = "[fg]Next upgrade:", font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+    {text = "[fg]"..lateup_descs[self.type][1](newblvl, newmlvl), font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+    {text = "[fg]"..lateup_descs[self.type][2](newblvl, newmlvl), font = pixul_font, alignment = 'center', height_multiplier = 1.25},
+    {text = "[yellow]Click to buy for 200 gold", font = pixul_font, alignment = 'center', height_multiplier = 1.25},
   }, nil, nil, nil, nil, 16, 4, nil, 2)
   self.info_text.x, self.info_text.y = gw/2, gh/2 + gh/4 - 6
 end
@@ -2117,11 +2128,11 @@ function ClassIcon:update(dt)
   local synboost = true if self.parent.cost then synboost = false end
   if synboost then
     if self.selected and input.m1.pressed then
-      if gold >= 500 and (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) then
+      if gold >= 300 and (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) then
         ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
         _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
         syn_pow[self.class] = syn_pow[self.class] + 1
-        gold = gold - 500
+        gold = gold - 300
         self.parent.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
         syn_calcs[self.class]()
         self:on_mouse_exit()
@@ -2362,7 +2373,7 @@ function ClassIcon:on_mouse_enter()
       (owned >= i and 1) or 0),
        font = pixul_font, alignment = 'center'}, synboost and
      {text = (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) and 
-     '[yellow]Click to boost the synergy for 500 Gold, [fg]current level: [red]'..tostring(syn_pow[self.class])
+     '[yellow]Click to boost the synergy for 300 Gold, [fg]current level: [red]'..tostring(syn_pow[self.class])
      or '[red] Max synergy boost level for this set reached: '.. tostring(syn_pow[self.class]),
         font = pixul_font, alignment = 'center'} or 
         {text =  

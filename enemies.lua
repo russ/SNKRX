@@ -281,8 +281,8 @@ function Seeker:update(dt)
     end
   else self.speed_boosting_mvspd_m = 1 end
 
-  self.speed_boosting_mvspd_m = self.speed_boosting_mvspd_m + gold*0.0005
-  self.buff_def_a = self.buff_def_a + gold*0.00025
+  self.speed_boosting_mvspd_m = self.speed_boosting_mvspd_m + gold*0.00075
+  self.buff_def_a = self.buff_def_a + gold*0.000375
 
   self.slow_mvspd_m = 1
   for _, slow_m in pairs(self.slow_t_m) do

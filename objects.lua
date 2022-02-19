@@ -455,7 +455,9 @@ function Unit:calculate_stats(first_run)
 
   for _, class in ipairs(self.classes) do self.class_hp_m = self.class_hp_m*class_stat_multipliers[class].hp end
   self.max_hp = (self.base_hp + self.class_hp_a + self.buff_hp_a)*self.class_hp_m*self.buff_hp_m
+  self.base_max_hp = self.max_hp
   if first_run then self.hp = self.max_hp end
+  self.max_hp = self.max_hp * (self.base_boost and self.base_boost or 1)
 
   for _, class in ipairs(self.classes) do self.class_dmg_m = self.class_dmg_m*class_stat_multipliers[class].dmg end
   self.dmg = (self.base_dmg + self.class_dmg_a + self.buff_dmg_a)*self.class_dmg_m*self.buff_dmg_m
