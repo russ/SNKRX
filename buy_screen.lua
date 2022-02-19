@@ -1594,10 +1594,10 @@ end
 function LateUpgradeButton:update(dt)
   self:update_game_object(dt)
   if self.selected and input.m1.pressed then
-    if gold >= 0 then
+    if gold >= 200 then
       ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
-      gold = gold + 200
+      gold = gold - 200
       self.parent.shop_text:set_text{{text = '[wavy_mid, fg]shop [fg]- [fg, nudge_down]gold: [yellow, nudge_down]' .. gold, font = pixul_font, alignment = 'center'}}
       lateupgrade(self.type)
       self:on_mouse_exit()
