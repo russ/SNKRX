@@ -1605,6 +1605,7 @@ function init()
     --for i, _ in pairs(oversyn_vals) do
     --  oversyn_level[i] = 10
     --end
+    oversyn_level["Devourer"] = 10
   end
 
 
@@ -1855,7 +1856,7 @@ function init()
 
   local next_osyn = 'Devourer'
   def_oversyn(next_osyn, 2, {'Collector', 'Entropy'}, 10, 'carmine', 
-  {'Enemies have ','% chance to spawn dmg boost orbs on death'},
+  {'Enemies have ','% chance to spawn rushing dmg boost orbs on death'},
   function(unit) if oversyn_level[next_osyn] <= 0 then return end
     if random:bool(osyn_v(next_osyn)) then
       trigger:after(0.01, function()
@@ -1866,7 +1867,7 @@ function init()
   )
 
   local next_osyn = 'Pestilence'
-  def_oversyn(next_osyn, 2, {'Overwhelm', 'Incubation'}, 10, 'purple', 
+  def_oversyn(next_osyn, 2, {'Overwhelm', 'Incubation'}, 20, 'purple', 
   {'Critters have ','% chance to spawn with a DoTArea around them'},
   function(unit) if oversyn_level[next_osyn] <= 0 then return end
     if random:bool(osyn_v(next_osyn)) then
@@ -1904,7 +1905,7 @@ function init()
   )
   
   local next_osyn = 'Titan'
-  def_oversyn(next_osyn, 2, {'Cultivation', 'Overwhelm'}, 20, 'yellow', 
+  def_oversyn(next_osyn, 2, {'Cultivation', 'Overwhelm'}, 25, 'yellow', 
   {'Deal ','% more damage at if no units are lost or damaged'},
   function() if oversyn_level[next_osyn] <= 0 then return end
     if not main.current.player then return end
@@ -1926,7 +1927,7 @@ function init()
   )
   
   local next_osyn = 'Telekinesis'
-  def_oversyn(next_osyn, 2, {'Collector', 'Faraway'}, 20, 'yellow2', 
+  def_oversyn(next_osyn, 2, {'Collector', 'Faraway'}, 25, 'yellow2', 
   {'Drops: ','% chance/sec to rush towards you, 50% maxhp microstun dmg to enemies'},
   function(drop) if oversyn_level[next_osyn] <= 0 then return end
     drop.t:every(1, function()

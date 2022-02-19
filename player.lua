@@ -4071,14 +4071,19 @@ function Gold:update(dt)
   if not self.weak_magnet_sensor then return end
 
   local players = self:get_objects_in_shape(random_unit.magnetism and self.magnet_sensor or self.weak_magnet_sensor, {Player})
-  if (players or self.tele_rushing) and #players > 0 then
+  if (players and #players > 0) or self.tele_rushing then
     local x, y = 0, 0
-    for _, p in ipairs(players) do
-      x = x + p.x
-      y = y + p.y
+    if not self.tele_rushing then
+      for _, p in ipairs(players) do
+        x = x + p.x
+        y = y + p.y
+      end
+      x = x/#players
+      y = y/#players
+    elseif main.current.player then
+      x = main.current.player.x
+      y = main.current.player.y
     end
-    x = x/#players
-    y = y/#players
     local r = self:angle_to_point(x, y)
     self:apply_force(20*math.cos(r), 20*math.sin(r))
   end
@@ -4179,6 +4184,7 @@ function DMGOrb:init(args)
   self.weak_magnet_sensor = Circle(self.x, self.y, 16)
   self.magnet_sensor = Circle(self.x, self.y, 56)
   do_osyn['Telekinesis'](self) --technically unreachable due to Telekinesis and Devourer being incompatible
+  self.tele_rushing = true --but dmgorbs always automatically rush anyways
 end
 
 function DMGOrb:telekinetic_rush()
@@ -4193,14 +4199,19 @@ function DMGOrb:update(dt)
   if not self.weak_magnet_sensor then return end
 
   local players = self:get_objects_in_shape(random_unit.magnetism and self.magnet_sensor or self.weak_magnet_sensor, {Player})
-  if (players or self.tele_rushing) and #players > 0 then
+  if (players and #players > 0) or self.tele_rushing then
     local x, y = 0, 0
-    for _, p in ipairs(players) do
-      x = x + p.x
-      y = y + p.y
+    if not self.tele_rushing then
+      for _, p in ipairs(players) do
+        x = x + p.x
+        y = y + p.y
+      end
+      x = x/#players
+      y = y/#players
+    elseif main.current.player then
+      x = main.current.player.x
+      y = main.current.player.y
     end
-    x = x/#players
-    y = y/#players
     local r = self:angle_to_point(x, y)
     self:apply_force(20*math.cos(r), 20*math.sin(r))
   end
@@ -4233,7 +4244,11 @@ function DMGOrb:on_trigger_enter(other, contact)
   elseif self.tele_rushing and (other:is(Seeker) or other:is(EnemyCritter)) then --this is unreachable for now because Telekinesis is incompatible with Devourer
     if not other.teleimmune then
       stun(other, 0.1)
-      other:hit(other.max_hp*0.5)
+      if other.boss then
+        other:hit(other.max_hp*0.1)
+      else
+        other:hit(other.max_hp*0.5)
+      end
       other.teleimmune = true
       other.t:after(0.1, function() other.teleimmune = false end, 'unteim')
     end
@@ -4285,14 +4300,19 @@ function HealingOrb:update(dt)
   if not self.weak_magnet_sensor then return end
 
   local players = self:get_objects_in_shape(main.current.player.magnetism and self.magnet_sensor or self.weak_magnet_sensor, {Player})
-  if (players or self.tele_rushing) and #players > 0 then
+  if (players and #players > 0) or self.tele_rushing then
     local x, y = 0, 0
-    for _, p in ipairs(players) do
-      x = x + p.x
-      y = y + p.y
+    if not self.tele_rushing then
+      for _, p in ipairs(players) do
+        x = x + p.x
+        y = y + p.y
+      end
+      x = x/#players
+      y = y/#players
+    elseif main.current.player then
+      x = main.current.player.x
+      y = main.current.player.y
     end
-    x = x/#players
-    y = y/#players
     local r = self:angle_to_point(x, y)
     self:apply_force(20*math.cos(r), 20*math.sin(r))
   end
