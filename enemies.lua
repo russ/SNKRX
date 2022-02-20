@@ -870,15 +870,18 @@ function Seeker:curse(curse, duration, arg1, arg2, arg3)
     self.doom = self.doom + 1
     if self.doom == ((main.current.player.whispers_of_doom == 1 and 4) or (main.current.player.whispers_of_doom == 2 and 3) or (main.current.player.whispers_of_doom == 3 and 2)) then
       self.doom = 0
-      self:hit((main.current.player.whispers_of_doom == 1 and 100) or (main.current.player.whispers_of_doom == 2 and 150) or (main.current.player.whispers_of_doom == 3 and 200))
+      self:hit(random_unit.dmg * 0.01 * ((main.current.player.whispers_of_doom == 1 and 100) or
+       (main.current.player.whispers_of_doom == 2 and 150) or
+        (main.current.player.whispers_of_doom == 3 and 200)))
       buff1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
     end
   end
 
   if main.current.player.hextouch then
-    local p = main.current.player
+    local p = random_unit
     local dmg = (p.hextouch == 1 and 10) or (p.hextouch == 2 and 15) or (p.hextouch == 3 and 20)
+    dmg = dmg * 0.01 * random_unit.dmg
     self:apply_dot(dmg*(p.dot_dmg_m or 1)*(main.current.chronomancer_dot or 1), 3)
   end
 end

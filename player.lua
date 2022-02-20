@@ -1843,7 +1843,7 @@ function Player:hit(damage, from_undead)
       if self.annihilation and table.any(self.classes, function(v) return v == 'voider' end) then
         local enemies = self.group:get_objects_by_classes({Seeker, EnemyCritter})
         for _, enemy in ipairs(enemies) do
-          enemy:apply_dot(self.dmg*(self.dot_dmg_m or 1)*(main.current.chronomancer_dot or 1), 3)
+          enemy:apply_dot(self.dmg*(self.dot_dmg_m or 1)*(main.current.chronomancer_dot or 1), 30)
         end
       end
 
@@ -2712,6 +2712,10 @@ function Area:init(args)
     do_osyn['Armorforge']()
     local resonance_dmg = 0
     local resonance_m = (self.parent.resonance == 1 and 0.03) or (self.parent.resonance == 2 and 0.05) or (self.parent.resonance == 3 and 0.07) or 0
+    if self.parent and self.parent.character == "corruptor" then
+      enemy.corrosion = enemy.corrosion and (enemy.corrosion + math.random_range({10, 40})) 
+      or (math.random_range({10, 40}))
+    end
     if self.character == 'elementor' then
       if self.parent.resonance then resonance_dmg = 2*self.dmg*resonance_m*#enemies end
       enemy:hit(2*self.dmg + resonance_dmg, self)
@@ -4464,6 +4468,10 @@ function Critter:init(args)
 
   self.dmg = args.dmg or self.parent.dmg
   self.hp = get_synp('swarmer', main.current.swarmer_level) + 1
+  if main.current.player.hive then
+    self.dmg = self.dmg * (1 + main.current.player.hive * 0.01)
+    self.hp = math.ceil(self.hp * (1 + main.current.player.hive * 0.01))
+  end
   self.start_v = self.v
   do_osyn['Pestilence'](self)
   do_osyn['Centralization'](self)
@@ -4578,7 +4586,9 @@ function Critter:die(x, y, r, n)
   if main.current.player.baneling_burst then
     camera:shake(2, 0.5)
     Area{group = main.current.effects, x = self.x, y = self.y, r = self.r, w = self.parent.area_size_m*24, color = self.color,
-      dmg = (main.current.player.baneling_burst == 1 and 50) or (main.current.player.baneling_burst == 2 and 100) or (main.current.player.baneling_burst == 3 and 150) or 0, parent = self.parent}
+      dmg = self.dmg * 0.01 * ((main.current.player.baneling_burst == 1 and 50) or
+       (main.current.player.baneling_burst == 2 and 100) or
+        (main.current.player.baneling_burst == 3 and 150) or 0), parent = self.parent}
     _G[random:table{'cannoneer1', 'cannoneer2'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
   end
 end
@@ -4610,6 +4620,14 @@ function Critter:on_trigger_enter(other, contact)
     if self.parent.character == "corruptor" then
       other.corrosion = other.corrosion and (other.corrosion + math.random_range({10, 40})) 
       or (math.random_range({10, 40}))
+    end
+    if main.current.player.baneling_burst then
+      camera:shake(2, 0.5)
+      Area{group = main.current.effects, x = self.x, y = self.y, r = self.r, w = self.parent.area_size_m*24, color = self.color,
+        dmg = self.dmg * 0.01 * ((main.current.player.baneling_burst == 1 and 25) or
+         (main.current.player.baneling_burst == 2 and 50) or
+          (main.current.player.baneling_burst == 3 and 75) or 0), parent = self.parent}
+      _G[random:table{'cannoneer1', 'cannoneer2'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
     end
   end
 end
