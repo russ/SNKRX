@@ -1498,6 +1498,7 @@ function Player:update(dt)
     self.buff_area_dmg_m = self.buff_area_dmg_m * self.base_boost
   end
   self:calculate_stats()
+  if self.hp > self.max_hp then self.hp = self.max_hp end
 
   if self.attack_sensor then self.attack_sensor:move_to(self.x, self.y) end
   if self.wide_attack_sensor then self.wide_attack_sensor:move_to(self.x, self.y) end
@@ -1518,8 +1519,8 @@ function Player:update(dt)
         table.insert(self.mouse_control_v_buffer, 1, self.mouse_control_v)
         if #self.mouse_control_v_buffer > 64 then self.mouse_control_v_buffer[65] = nil end
       else
-        if input.move_left.down then self.r = self.r - 1.66*math.pi*dt end
-        if input.move_right.down then self.r = self.r + 1.66*math.pi*dt end
+        if input.move_right.down then self.r = self.r + 1.66*math.pi*dt elseif
+        input.move_left.down then self.r = self.r - 1.66*math.pi*dt end
       end
     end
 

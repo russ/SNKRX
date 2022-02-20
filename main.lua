@@ -1605,7 +1605,6 @@ function init()
     --for i, _ in pairs(oversyn_vals) do
     --  oversyn_level[i] = 10
     --end
-    oversyn_level["Devourer"] = 10
   end
 
 

@@ -27,6 +27,39 @@ function Input:update(dt)
     self[action].released = false
   end
 
+  if touchPressed == 1 then
+    self.m1.pressed = true
+    self.m1.down = true
+    self.move_left.down = true
+    touchPressed = 2
+  end
+  if touchPressed == 2 then
+    self.m1.down = true
+    self.move_left.down = true
+  end
+  if touchPressed == 3 then
+    self.m2.pressed = true
+    self.m1.down = true
+    self.m2.down = true
+    self.move_right.down = true
+    touchPressed = 4
+  end
+  if touchPressed == 4 then
+    self.m1.down = true
+    self.m2.down = true
+    self.move_right.down = true
+  end
+  if touchReleased == 1 then
+    self.m1.released = true
+    touchPressed = 0
+    touchReleased = 0
+  end
+  if touchReleased == 2 then
+    self.m2.released = true
+    touchPressed = 2
+    touchReleased = 0
+  end
+
   for _, action in ipairs(self.actions) do
     for _, key in ipairs(self[action].keys) do
       if table.contains(self.mouse_buttons, key) then
@@ -52,6 +85,44 @@ function Input:update(dt)
   self.mouse_state.wheel_down = false
 end
 
+local touches = {}
+firstTouch = false
+nextTouch = false
+touchPressed = 0
+touchReleased = 0
+
+touchcount = 0
+
+function love.touchpressed(id, x, y)
+  touches[id] = {x, y}
+  touchcount = touchcount + 1
+  if touchcount <= 2 then
+    if firstTouch then nextTouch = true else firstTouch = true end
+    if nextTouch then
+      touchPressed = 3
+    else
+      touchPressed = 1
+    end
+  end
+end
+
+function love.touchmoved(id, x, y)
+  touches[id][1] = x
+  touches[id][2] = y
+end
+
+function love.touchreleased(id)
+  touches[id] = nil
+  touchcount = touchcount - 1
+  if touchcount <= 1 then
+    if nextTouch then nextTouch = false else firstTouch = false end
+    if nextTouch then
+      touchReleased = 2
+    else
+      touchReleased = 1
+    end
+  end
+end
 
 function Input:set_mouse_grabbed(v)
   love.mouse.setGrabbed(v)

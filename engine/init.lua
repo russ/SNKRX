@@ -151,6 +151,7 @@ function engine_run(config)
     while accumulator >= fixed_dt do
       frame = frame + 1
       input:update(fixed_dt)
+
       trigger:update(fixed_dt)
       camera:update(fixed_dt)
       local mx, my = love.mouse.getPosition()

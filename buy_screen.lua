@@ -952,7 +952,7 @@ end
 function LevelButton:update(dt)
   self:update_game_object(dt)
 
-  if self.selected and input.m1.pressed then
+  if self.selected and input.m1.released then
     if self.parent.shop_level >= 5 then return end
     if gold < 5 then
       self.spring:pull(0.2, 200, 10)
@@ -1524,7 +1524,7 @@ function PassiveCard:update(dt)
   self:update_game_object(dt)
   self.passive_name:update(dt)
 
-  if ((self.selected and input.m1.pressed) or input[tostring(self.card_i)].pressed) and self.arena.choosing_passives then
+  if ((self.selected and input.m1.released) or input[tostring(self.card_i)].pressed) and self.arena.choosing_passives then
     self.arena.choosing_passives = false
     table.insert(self.arena.passives, {passive = self.passive, level = 1, xp = 0})
     self.arena:restore_passives_to_pool(self.card_i)
@@ -1593,7 +1593,7 @@ end
 
 function LateUpgradeButton:update(dt)
   self:update_game_object(dt)
-  if self.selected and input.m1.pressed then
+  if self.selected and input.m1.released then
     if gold >= 200 then
       ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
@@ -1677,7 +1677,7 @@ function ItemCard:update(dt)
 
   if self.parent:is(Arena) then return end
 
-  if self.selected and input.m1.pressed and not self.unlevellable then
+  if self.selected and input.m1.released and not self.unlevellable then
     if self.level >= 3 then return end
     if gold < 5 then
       self.spring:pull(0.2, 200, 10)
@@ -1856,7 +1856,7 @@ end
 function ShopCard:update(dt)
   self:update_game_object(dt)
 
-  if (self.selected and input.m1.pressed) or input[tostring(self.i)].pressed then
+  if (self.selected and input.m1.released) or input[tostring(self.i)].pressed then
     if self.parent:buy(self.unit, self.i) then
       ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
       _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
@@ -2127,7 +2127,7 @@ function ClassIcon:update(dt)
   self:update_game_object(dt)
   local synboost = true if self.parent.cost then synboost = false end
   if synboost then
-    if self.selected and input.m1.pressed then
+    if self.selected and input.m1.released then
       if gold >= 300 and (syn_pow[self.class] < sp_max[self.class] or sp_max[self.class] == 0) then
         ui_switch1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
         _G[random:table{'coins1', 'coins2', 'coins3'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
