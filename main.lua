@@ -1291,7 +1291,7 @@ function init()
   def_syn('explorer', 0, {0.15, 0.2}, 2, 2, 2, nil, {'+', true, 'aspd and dps to all explorers per active class'})
   def_syn('sorcerer', 0, {n = {4, 3, 2}, a = {0, 0, 0}}, nil, 2, 3, 
   function ()
-    local sorcerer_syn_m = 1/(1 + syn_pow['sorcerer'] * 0.5  * chaolyze_synp())
+    local sorcerer_syn_m = 1/((1 + syn_pow['sorcerer'] * 0.5)  * chaolyze_synp())
     for i = 1, #(syn_bas['sorcerer'].n) do
       local res_unlim = sorcerer_syn_m * syn_bas['sorcerer'].n[i]
       local res_lim = math.max(math.ceil(res_unlim),1)
@@ -1314,14 +1314,9 @@ function init()
 
   function calc_syn_power(recalculate_only_active)
     if recalculate_only_active then
-      for i, _ in pairs(sp_max) do
-        if i ~= 'chaolyst' then
-  	    syn_calcs[i]()
-        end
+      for _, v in ipairs(chaolyzable_sets) do
+  	    syn_calcs[v]()
       end
-      --for _, v in pairs(chaolyzable_sets) do
-  	  --  syn_calcs[v]()
-      --end
     else
       for i, _ in pairs(sp_max) do
   	    syn_calcs[i]()
