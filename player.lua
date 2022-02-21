@@ -4563,8 +4563,8 @@ function Critter:hit(damage)
   --if main.current.player.baneling_burst then
   --  self:die() --not anymore
   --else
-    if self.hp <= 0 then self:die() end
-  end
+  if self.hp <= 0 then self:die() end
+  --end
 end
 
 
