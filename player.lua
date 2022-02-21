@@ -4476,8 +4476,8 @@ function Critter:init(args)
   self.dmg = args.dmg or self.parent.dmg
   self.hp = get_synp('swarmer', main.current.swarmer_level) + 1
   if main.current.player.hive then
-    self.dmg = self.dmg * (1 + main.current.player.hive * 0.01)
-    self.hp = math.ceil(self.hp * (1 + main.current.player.hive * 0.01))
+    self.dmg = self.dmg * (1 + main.current.player.hive * 0.5)
+    self.hp = math.ceil(self.hp * (1 + main.current.player.hive * 0.5))
   end
   self.start_v = self.v
   do_osyn['Pestilence'](self)
