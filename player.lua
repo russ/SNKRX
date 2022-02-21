@@ -770,7 +770,7 @@ function Player:init(args)
     end, nil, nil, 'shoot')
 
   elseif self.character == 'highlander' then
-    self.attack_sensor = Circle(self.x, self.y, 36)
+    self.attack_sensor = Circle(self.x, self.y, 72)
     self.t:cooldown(4, function() local enemies = self:get_objects_in_shape(self.attack_sensor, main.current.enemies); return enemies and #enemies > 0 end, function()
       do_osyn['Frenzy']()
       if self.level == 3 then
@@ -2739,8 +2739,9 @@ function Area:init(args)
       enemy:hit(6*self.dmg + resonance_dmg, self)
       HitCircle{group = main.current.effects, x = enemy.x, y = enemy.y, rs = 6}
       local r = random:float(0, 2*math.pi)
-      local t = {group = main.current.main, x = enemy.x + 8*math.cos(r), y = enemy.y + 8*math.sin(r), v = 40, r = r, color = self.color, dmg = self.dmg,
-        homing = true, character = self.character, parent = self.parent}
+      local t = {group = main.current.main, x = self.parent.x + 8*math.cos(r),
+       y = self.parent.y + 8*math.sin(r), v = 300, r = r, color = self.color, dmg = self.dmg,
+        homing = true, character = self.character, level = self.parent.level, parent = self.parent}
       Projectile(table.merge(t, mods or {}))
     elseif self.character == 'miner' then
       local miner_dmg_m = 0.5
