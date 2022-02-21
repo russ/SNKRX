@@ -1044,7 +1044,7 @@ function init()
     ['sl_cl'] = 0.7, -- cryomancer level 3 - lich
     ['sl_li'] = 0.4, -- lich
     ['sl_el'] = 0.6, -- elementor level 3
-    ['sl_ff'] = 0.5, -- freezing field
+    ['sl_ff'] = 0.9, -- freezing field
     ['sl_cr'] = 0.2, -- cryomancer
   }
 
@@ -1794,10 +1794,14 @@ function init()
 
   local next_osyn = 'Mindswarm'
   def_oversyn(next_osyn, 1, {'psyker', 'swarmer'}, 20, 'fgpsyk', 
-  {'Critters have ','% chance to borrow a psyker orb on spawn'},
+  {'Critters have ','% chance to borrow 1 or 2 psyker orbs on spawn'},
   function(unit) if oversyn_level[next_osyn] <= 0 then return end
     if random:bool(osyn_v(next_osyn)) then
       local got_orb = random:table(psyorb_pool)
+      if got_orb then
+        got_orb.borrowing_parent = unit
+      end
+      got_orb = random:table(psyorb_pool)
       if got_orb then
         got_orb.borrowing_parent = unit
       end
@@ -2184,12 +2188,12 @@ function init()
     ['reinforce'] = '[yellow]+10/20/30%[fg] global damage, defense and aspd if you have one or more enchanters',
     ['payback'] = '[yellow]+2/5/8%[fg] damage to all allies whenever an enchanter is hit',
     ['enchanted'] = '[yellow]+33/66/99%[fg] attack speed to a random unit if you have two or more enchanters',
-    ['freezing_field'] = '[fg]creates an area that slows enemies by [yellow]50%[fg] for [yellow]2[fg] seconds on sorcerer spell repeat',
-    ['burning_field'] = '[fg]creates an area that deals [yellow]30[fg] dps for [yellow]2[fg] seconds on sorcerer spell repeat',
+    ['freezing_field'] = '[fg]creates an area that slows enemies by [yellow]90%[fg] for [yellow]2[fg] seconds on sorcerer spell repeat',
+    ['burning_field'] = '[fg]creates an area that deals [yellow]30[fg]% dps for [yellow]2[fg] seconds on sorcerer spell repeat',
     ['gravity_field'] = '[fg]creates an area that pulls enemies in for [yellow]1[fg] seconds on sorcerer spell repeat',
     ['magnetism'] = '[fg]gold coins and healing orbs are attracted to the snake from a longer range',
     ['insurance'] = "[fg]heroes have [yellow]4[fg] times the chance of mercenary's bonus to drop [yellow]2[fg] gold on death",
-    ['dividends'] = '[fg]mercenaries deal [yellow]+X%/20[fg], up to 1.5x dmg, where X is how much gold (max 1K) you have',
+    ['dividends'] = '[fg]mercenaries deal [yellow]+X%[fg], up to 1.5x dmg, where X is gold (max 1K)',
     ['berserking'] = '[fg]all warriors have up to [yellow]+50/75/100%[fg] attack speed based on missing HP',
     ['unwavering_stance'] = '[fg]all warriors gain [yellow]+4/8/12%[fg] defense every [yellow]5[fg] seconds',
     ['unrelenting_stance'] = '[yellow]+2/5/8%[fg] defense to all allies whenever a warrior is hit',
@@ -2255,7 +2259,7 @@ function init()
     ['heavy_impact'] = function(lvl) return '[fg]when enemies hit walls they take damage based on the knockback force' end,
     ['fracture'] = function(lvl) return '[fg]stunned enemies have halved defence' end,
     ['meat_shield'] = function(lvl) return '[fg]bigger critters always [yellow]block[fg] enemy projectiles' end,
-    ['hive'] = function(lvl) return '[fg]critters have ' .. ts(lvl, '+1', '2', '3') .. '% HP and dmg' end,
+    ['hive'] = function(lvl) return '[fg]critters have ' .. ts(lvl, '+50', '100', '150') .. '% HP and dmg' end,
     ['baneling_burst'] = function(lvl) return '[fg]critters deal ' .. ts(lvl, '25', '50', '75') .. '% AoE damage on hit and double that on death' end,
     ['blunt_arrow'] = function(lvl) return '[fg]ranger arrows have ' .. ts(lvl, '+10%', '20%', '30%') .. ' chance to knockback' end,
     ['explosive_arrow'] = function(lvl) return '[fg]ranger arrows have ' .. ts(lvl, '+10%', '20%', '30%') .. ' chance to deal ' .. ts(lvl, '10%', '20%', '30%') .. ' AoE damage' end,
@@ -2272,12 +2276,12 @@ function init()
     ['reinforce'] = function(lvl) return ts(lvl, '+10%', '20%', '30%') .. ' global damage, defense and aspd if you have one or more enchanters' end,
     ['payback'] = function(lvl) return ts(lvl, '+2%', '5%', '8%') .. ' damage to all allies whenever an enchanter is hit' end,
     ['enchanted'] = function(lvl) return ts(lvl, '+33%', '66%', '99%') .. ' attack speed to a random unit if you have two or more enchanters' end,
-    ['freezing_field'] = function(lvl) return '[fg]creates an area that slows enemies by [yellow]50%[fg] for [yellow]2[fg] seconds on sorcerer spell repeat' end,
-    ['burning_field'] = function(lvl) return '[fg]creates an area that deals [yellow]30[fg] dps for [yellow]2[fg] seconds on sorcerer spell repeat' end,
+    ['freezing_field'] = function(lvl) return '[fg]creates an area that slows enemies by [yellow]90%[fg] for [yellow]2[fg] seconds on sorcerer spell repeat' end,
+    ['burning_field'] = function(lvl) return '[fg]creates an area that deals [yellow]30[fg]% dps for [yellow]2[fg] seconds on sorcerer spell repeat' end,
     ['gravity_field'] = function(lvl) return '[fg]creates an area that pulls enemies in for [yellow]1[fg] seconds on sorcerer spell repeat' end,
     ['magnetism'] = function(lvl) return '[fg]gold coins and healing orbs are attracted to the snake from a longer range' end,
     ['insurance'] = function(lvl) return "[fg]heroes have [yellow]4[fg] times the chance of mercenary's bonus to drop [yellow]2[fg] gold on death" end,
-    ['dividends'] = function(lvl) return '[fg]mercenaries deal [yellow]+X%[fg] damage, where X is how much gold you have' end,
+    ['dividends'] = function(lvl) return '[fg]mercenaries deal [yellow]+X%[fg] dmg, up to 1.5x dmg, where X is gold (max 1K)' end,
     ['berserking'] = function(lvl) return '[fg]all warriors have up to ' .. ts(lvl, '+50%', '75%', '100%') .. ' attack speed based on missing HP' end,
     ['unwavering_stance'] = function(lvl) return '[fg]all warriors gain ' .. ts(lvl, '+4%', '8%', '12%') .. ' defense every [yellow]5[fg] seconds' end,
     ['unrelenting_stance'] = function(lvl) return ts(lvl, '+2%', '5%', '8%') .. ' defense to all allies whenever a warrior is hit' end,

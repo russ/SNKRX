@@ -1236,7 +1236,7 @@ function EnemyProjectile:on_trigger_enter(other, contact)
     other:hit(self.dmg)
 
   elseif other:is(Critter) then
-    if main.current.player.meat_shield then
+    if main.current.player.meat_shield or random:bool(10) then
       self:die(self.x, self.y, nil, random:int(2, 3))
       other:hit(1000)
     end

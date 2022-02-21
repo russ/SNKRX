@@ -1876,7 +1876,10 @@ function Player:sorcerer_repeat()
   if enemy then
     if self.burning_field then
       fire1:play{pitch = random:float(0.9, 1.1), volume = 0.5}
-      DotArea{group = main.current.effects, x = enemy.x, y = enemy.y, rs = self.area_size_m*24, color = red[0], dmg = 30*self.area_dmg_m*(self.dot_dmg_m or 1), duration = 2, character = 'burning_field'}
+      DotArea{group = main.current.effects, x = enemy.x, y = enemy.y,
+       rs = self.area_size_m*24, color = red[0], dmg = random_unit.dmg
+        * 0.3*self.area_dmg_m*(self.dot_dmg_m or 1),
+        duration = 2, character = 'burning_field'}
     end
   end
 
@@ -4446,7 +4449,11 @@ function Critter:init(args)
   if tostring(self.x) == tostring(0/0) or tostring(self.y) == tostring(0/0) then self.dead = true; return end
   if #self.group:get_objects_by_class(Critter) > 100 then self.dead = true; return end
   self:init_unit()
-  self:set_as_rectangle(11, 5, 'dynamic', 'player')
+  if main.current.player.meat_shield then
+    self:set_as_rectangle(18, 7, 'dynamic', 'player')
+  else
+    self:set_as_rectangle(11, 5, 'dynamic', 'player')
+  end
   self:set_restitution(0.5)
 
   self.classes = {'enemy_critter'}
@@ -4553,9 +4560,9 @@ function Critter:hit(damage)
   self.hfx:use('hit', 0.25, 200, 10)
   self.hp = self.hp - 1
   -- self:show_hp()
-  if main.current.player.baneling_burst then
-    self:die()
-  else
+  --if main.current.player.baneling_burst then
+  --  self:die() --not anymore
+  --else
     if self.hp <= 0 then self:die() end
   end
 end
@@ -4585,10 +4592,13 @@ function Critter:die(x, y, r, n)
 
   if main.current.player.baneling_burst then
     camera:shake(2, 0.5)
-    Area{group = main.current.effects, x = self.x, y = self.y, r = self.r, w = self.parent.area_size_m*24, color = self.color,
-      dmg = self.dmg * 0.01 * ((main.current.player.baneling_burst == 1 and 50) or
+    Area{group = main.current.effects, x = self.x, y = self.y, r = self.r, w = self.parent.area_size_m*24,
+     color = self.color, character = self.parent.character,
+      dmg = (self.parent.area_dmg_m or 1)*
+      self.dmg * 0.01 * ((main.current.player.baneling_burst == 1 and 50) or
        (main.current.player.baneling_burst == 2 and 100) or
-        (main.current.player.baneling_burst == 3 and 150) or 0), parent = self.parent}
+        (main.current.player.baneling_burst == 3 and 150) or 0), parent = self.parent,
+        level = self.parent.level, echo_barrage = self.parent.echo_barrage}
     _G[random:table{'cannoneer1', 'cannoneer2'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
   end
 end
@@ -4623,10 +4633,13 @@ function Critter:on_trigger_enter(other, contact)
     end
     if main.current.player.baneling_burst then
       camera:shake(2, 0.5)
-      Area{group = main.current.effects, x = self.x, y = self.y, r = self.r, w = self.parent.area_size_m*24, color = self.color,
-        dmg = self.dmg * 0.01 * ((main.current.player.baneling_burst == 1 and 25) or
+      Area{group = main.current.effects, x = self.x, y = self.y, r = self.r, w = self.parent.area_size_m*24,
+       color = self.color, character = self.parent.character,
+        dmg = (self.parent.area_dmg_m or 1)*
+        self.dmg * 0.01 * ((main.current.player.baneling_burst == 1 and 25) or
          (main.current.player.baneling_burst == 2 and 50) or
-          (main.current.player.baneling_burst == 3 and 75) or 0), parent = self.parent}
+          (main.current.player.baneling_burst == 3 and 75) or 0), parent = self.parent,
+          level = self.parent.level, echo_barrage = self.parent.echo_barrage}
       _G[random:table{'cannoneer1', 'cannoneer2'}]:play{pitch = random:float(0.95, 1.05), volume = 0.5}
     end
   end
