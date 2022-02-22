@@ -2449,6 +2449,7 @@ function init()
   end
 
   celite_probability = {}
+  current_elite_table = level_to_elite_spawn_types[1]
   function calc_current_elite_probability(inputlevel)
     elite_probability = {}
     elite_probability.base = math.pow(0.5, 50 / inputlevel)
@@ -2457,57 +2458,60 @@ function init()
     end
     elite_probability.base = current_elite_probability.base * 100
     elite_probability.reduction = math.pow(0.5, 10 / inputlevel)
+    current_elite_table = level_to_elite_spawn_types[(inputlevel-1) % 25 + 1]
   end
 
-  function get_elite_type_random(target_table, inputlevel)
+  function get_elite_type_random()
     local current_probability = elite_probability.base
-    local finaltypes = {}
-    for i, v in ipairs(target_table) do
+    local result = 0
+    local elite_type_count = 0
+    for _, v in ipairs(current_elite_table) do
       if math.bool(current_probability) then
-        table.insert(finaltypes, level_to_elite_spawn_types[(inputlevel-1) % 25 + 1])
+        result = result | 1 << v
         current_probability = current_probability * elite_probability.reduction
-        if #finaltypes >= 4 then break end
+        elite_type_count = elite_type_count + 1
+        if elite_type_count >= 4 then break end
       end
     end
   end
 
   binary_offset_to_elite_type = {
-    [0] = 'speed_booster',
-    [1] = 'shooter',
-    [2] = 'exploder',
-    [3] = 'tank',
-    [4] = 'spawner',
-    [5] = 'headbutter',
-    [6] = 'chaosborne',
-    [7] = 'undead'
+    [0] = function(self) self.speed_booster = true end,
+    [1] = function(self) self.exploder = true end,
+    [2] = function(self) self.shooter = true end,
+    [3] = function(self) self.headbutter = true end,
+    [4] = function(self) self.tank = true end,
+    [5] = function(self) self.spawner = true end,
+    [6] = function(self) self.chaosborne = true end,
+    [7] = function(self) self.undead = true end
   }
 
   level_to_elite_spawn_types = {
-    [1] = {'speed_booster'},
-    [2] = {'speed_booster', 'shooter'},
-    [3] = {'speed_booster'},
-    [4] = {'speed_booster', 'exploder', 'undead'},
-    [5] = {'speed_booster', 'exploder', 'shooter', 'chaosborne'},
-    [6] = {'speed_booster', 'chaosborne', 'tank', 'spawner'},
-    [7] = {'speed_booster', 'exploder', 'headbutter', 'chaosborne'},
-    [8] = {'speed_booster', 'exploder', 'headbutter', 'shooter', 'chaosborne', 'undead'},
-    [9] = {'shooter', 'undead', 'tank', 'spawner'},
-    [10] = {'exploder', 'headbutter', 'chaosborne'},
-    [11] = {'exploder', 'headbutter', 'tank', 'undead'},
-    [12] = {'exploder', 'chaosborne', 'undead'},
-    [13] = {'speed_booster', 'shooter', 'chaosborne'},
-    [14] = {'speed_booster', 'spawner', 'undead'},
-    [15] = {'shooter', 'chaosborne', 'undead', 'spawner'},
-    [16] = {'speed_booster', 'exploder', 'spawner', 'chaosborne'},
-    [17] = {'speed_booster', 'exploder', 'spawner', 'shooter', 'chaosborne', 'undead'},
-    [18] = {'spawner', 'chaosborne', 'undead', 'exploder'},
-    [19] = {'headbutter', 'tank', 'chaosborne', 'exploder'},
-    [20] = {'speed_booster', 'tank', 'spawner', 'chaosborne'},
-    [21] = {'headbutter', 'undead', 'tank', 'spawner'},
-    [22] = {'speed_booster', 'headbutter', 'tank', 'chaosborne'},
-    [23] = {'headbutter', 'tank', 'shooter', 'chaosborne', 'undead'},
-    [24] = {'tank', 'chaosborne', 'undead', 'exploder'},
-    [25] = {'speed_booster', 'exploder', 'headbutter', 'tank', 'shooter', 'spawner', 'chaosborne', 'undead'},
+    [1] = {0},
+    [2] = {0, 2},
+    [3] = {0},
+    [4] = {0, 1, 7},
+    [5] = {0, 1, 2, 6},
+    [6] = {0, 6, 4, 5},
+    [7] = {0, 1, 3, 6},
+    [8] = {0, 1, 3, 2, 6, 7},
+    [9] = {2, 7, 4, 5},
+    [10] = {1, 3, 6},
+    [11] = {1, 3, 4, 7},
+    [12] = {1, 6, 7},
+    [13] = {0, 2, 6},
+    [14] = {0, 5, 7},
+    [15] = {2, 6, 7, 5},
+    [16] = {0, 1, 5, 6},
+    [17] = {0, 1, 5, 2, 6, 7},
+    [18] = {5, 6, 7, 1},
+    [19] = {3, 4, 6, 1},
+    [20] = {0, 4, 5, 6},
+    [21] = {3, 7, 4, 5},
+    [22] = {0, 3, 4, 6},
+    [23] = {3, 4, 2, 6, 7},
+    [24] = {4, 6, 7, 1},
+    [25] = {0, 1, 3, 4, 2, 5, 6, 7},
   }
 
   for i = 26, 5000 do
