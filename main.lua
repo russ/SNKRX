@@ -2448,33 +2448,6 @@ function init()
     if k == 6 then k = 1 end
   end
 
-  celite_probability = {}
-  current_elite_table = level_to_elite_spawn_types[1]
-  function calc_current_elite_probability(inputlevel)
-    elite_probability = {}
-    elite_probability.base = math.pow(0.5, 50 / inputlevel)
-    if elite_probability.base < 0.95 and inputlevel > 1 then
-      elite_probability.base = current_elite_probability.base + 4
-    end
-    elite_probability.base = current_elite_probability.base * 100
-    elite_probability.reduction = math.pow(0.5, 10 / inputlevel)
-    current_elite_table = level_to_elite_spawn_types[(inputlevel-1) % 25 + 1]
-  end
-
-  function get_elite_type_random()
-    local current_probability = elite_probability.base
-    local result = 0
-    local elite_type_count = 0
-    for _, v in ipairs(current_elite_table) do
-      if math.bool(current_probability) then
-        result = result | 1 << v
-        current_probability = current_probability * elite_probability.reduction
-        elite_type_count = elite_type_count + 1
-        if elite_type_count >= 4 then break end
-      end
-    end
-  end
-
   binary_offset_to_elite_type = {
     [0] = function(self) self.speed_booster = true end,
     [1] = function(self) self.exploder = true end,
@@ -2514,12 +2487,32 @@ function init()
     [25] = {0, 1, 3, 4, 2, 5, 6, 7},
   }
 
-  for i = 26, 5000 do
-    local n = i % 25
-    if n == 0 then
-      n = 25
+  celite_probability = {}
+  current_elite_table = level_to_elite_spawn_types[1]
+  function calc_current_elite_probability(inputlevel)
+    elite_probability = {}
+    elite_probability.base = math.pow(0.5, 50 / inputlevel)
+    if elite_probability.base < 0.95 and inputlevel > 1 then
+      elite_probability.base = elite_probability.base + 4
     end
-    level_to_elite_spawn_types[i] = level_to_elite_spawn_types[n]
+    elite_probability.base = elite_probability.base * 100
+    elite_probability.reduction = math.pow(0.5, 10 / inputlevel)
+    current_elite_table = level_to_elite_spawn_types[math.round(math.fmod((inputlevel-1), 25)) + 1]
+  end
+
+  function get_elite_type_random()
+    local current_probability = elite_probability.base
+    local result = 0
+    local elite_type_count = 0
+    for _, v in ipairs(current_elite_table) do
+      if math.bool(current_probability) then
+        result = bit.bor(result, bit.lshift(1 , v))
+        current_probability = current_probability * elite_probability.reduction
+        elite_type_count = elite_type_count + 1
+        if elite_type_count >= 4 then break end
+      end
+    end
+    return result
   end
 
   level_to_shop_odds = {

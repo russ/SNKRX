@@ -1192,19 +1192,15 @@ function Arena:spawn_n_enemies(p, j, n, pass)
         local objects = self.main:get_objects_in_shape(check_circle, {Seeker, EnemyCritter, Critter, Player, Sentry, Automaton, Bomb, Volcano, Saboteur, Pet, Turret})
         if #objects > 0 then self.enemy_spawns_prevented = self.enemy_spawns_prevented + 1; return end
       end
-
-      if random:bool(table.reduce(level_to_elite_spawn_weights[self.level], function(memo, v) return memo + v end)) then
-        local elite_type = level_to_elite_spawn_types[self.level][random:weighted_pick(unpack(level_to_elite_spawn_weights[self.level]))]
-        Seeker{group = self.main, x = x, y = y, character = 'seeker', level = self.level,
-          speed_booster = elite_type == 'speed_booster',
-          exploder = elite_type == 'exploder',
-          shooter = elite_type == 'shooter',
-          headbutter = elite_type == 'headbutter',
-          tank = elite_type == 'tank',
-          spawner = elite_type == 'spawner'}
-      else
-        Seeker{group = self.main, x = x, y = y, character = 'seeker', level = self.level}
+      calc_current_elite_probability(self.level)
+      local elites_binary_map = get_elite_type_random()
+      local elite_type_t = {}
+      for i, elite_type_applier in ipairs(binary_offset_to_elite_type) do
+        if bit.band(elites_binary_map, bit.lshift(1, i)) > 0 then
+          elite_type_applier(elite_type_t)
+        end
       end
+      Seeker(table.merge({group = self.main, x = x, y = y, character = 'seeker', level = self.level}, elite_type_t))
     end}
   end, n, nil, 'spawn_enemies_' .. j)
 end
