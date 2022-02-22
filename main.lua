@@ -2378,7 +2378,7 @@ function init()
     level_to_gold_gained[i] = {level_to_gold_gained[n][1]*k, level_to_gold_gained[n][2]*k}
   end
 
-  level_to_elite_spawn_weights = {
+  level_to_elite_spawn_weights = { --not going to use this one, instead pure level-based probability
     [1] = {0},
     [2] = {4, 2},
     [3] = {10},
@@ -2448,32 +2448,66 @@ function init()
     if k == 6 then k = 1 end
   end
 
+  celite_probability = {}
+  function calc_current_elite_probability(inputlevel)
+    elite_probability = {}
+    elite_probability.base = math.pow(0.5, 50 / inputlevel)
+    if elite_probability.base < 0.95 and inputlevel > 1 then
+      elite_probability.base = current_elite_probability.base + 4
+    end
+    elite_probability.base = current_elite_probability.base * 100
+    elite_probability.reduction = math.pow(0.5, 10 / inputlevel)
+  end
+
+  function get_elite_type_random(target_table, inputlevel)
+    local current_probability = elite_probability.base
+    local finaltypes = {}
+    for i, v in ipairs(target_table) do
+      if math.bool(current_probability) then
+        table.insert(finaltypes, level_to_elite_spawn_types[(inputlevel-1) % 25 + 1])
+        current_probability = current_probability * elite_probability.reduction
+        if #finaltypes >= 4 then break end
+      end
+    end
+  end
+
+  binary_offset_to_elite_type = {
+    [0] = 'speed_booster',
+    [1] = 'shooter',
+    [2] = 'exploder',
+    [3] = 'tank',
+    [4] = 'spawner',
+    [5] = 'headbutter',
+    [6] = 'chaosborne',
+    [7] = 'undead'
+  }
+
   level_to_elite_spawn_types = {
     [1] = {'speed_booster'},
     [2] = {'speed_booster', 'shooter'},
     [3] = {'speed_booster'},
-    [4] = {'speed_booster', 'exploder'},
-    [5] = {'speed_booster', 'exploder', 'shooter'},
-    [6] = {'speed_booster'},
-    [7] = {'speed_booster', 'exploder', 'headbutter'},
-    [8] = {'speed_booster', 'exploder', 'headbutter', 'shooter'},
-    [9] = {'shooter'},
-    [10] = {'exploder', 'headbutter'},
-    [11] = {'exploder', 'headbutter', 'tank'},
-    [12] = {'exploder'},
-    [13] = {'speed_booster', 'shooter'},
-    [14] = {'speed_booster', 'spawner'},
-    [15] = {'shooter'},
-    [16] = {'speed_booster', 'exploder', 'spawner'},
-    [17] = {'speed_booster', 'exploder', 'spawner', 'shooter'},
-    [18] = {'spawner'},
-    [19] = {'headbutter', 'tank'},
-    [20] = {'speed_booster', 'tank', 'spawner'},
-    [21] = {'headbutter'},
-    [22] = {'speed_booster', 'headbutter', 'tank'},
-    [23] = {'headbutter', 'tank', 'shooter'},
-    [24] = {'tank'},
-    [25] = {'speed_booster', 'exploder', 'headbutter', 'tank', 'shooter', 'spawner'},
+    [4] = {'speed_booster', 'exploder', 'undead'},
+    [5] = {'speed_booster', 'exploder', 'shooter', 'chaosborne'},
+    [6] = {'speed_booster', 'chaosborne', 'tank', 'spawner'},
+    [7] = {'speed_booster', 'exploder', 'headbutter', 'chaosborne'},
+    [8] = {'speed_booster', 'exploder', 'headbutter', 'shooter', 'chaosborne', 'undead'},
+    [9] = {'shooter', 'undead', 'tank', 'spawner'},
+    [10] = {'exploder', 'headbutter', 'chaosborne'},
+    [11] = {'exploder', 'headbutter', 'tank', 'undead'},
+    [12] = {'exploder', 'chaosborne', 'undead'},
+    [13] = {'speed_booster', 'shooter', 'chaosborne'},
+    [14] = {'speed_booster', 'spawner', 'undead'},
+    [15] = {'shooter', 'chaosborne', 'undead', 'spawner'},
+    [16] = {'speed_booster', 'exploder', 'spawner', 'chaosborne'},
+    [17] = {'speed_booster', 'exploder', 'spawner', 'shooter', 'chaosborne', 'undead'},
+    [18] = {'spawner', 'chaosborne', 'undead', 'exploder'},
+    [19] = {'headbutter', 'tank', 'chaosborne', 'exploder'},
+    [20] = {'speed_booster', 'tank', 'spawner', 'chaosborne'},
+    [21] = {'headbutter', 'undead', 'tank', 'spawner'},
+    [22] = {'speed_booster', 'headbutter', 'tank', 'chaosborne'},
+    [23] = {'headbutter', 'tank', 'shooter', 'chaosborne', 'undead'},
+    [24] = {'tank', 'chaosborne', 'undead', 'exploder'},
+    [25] = {'speed_booster', 'exploder', 'headbutter', 'tank', 'shooter', 'spawner', 'chaosborne', 'undead'},
   }
 
   for i = 26, 5000 do
