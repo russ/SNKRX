@@ -1196,7 +1196,8 @@ function Arena:spawn_n_enemies(p, j, n, pass)
       local elites_binary_map = get_elite_type_random()
       local elite_type_t = {}
       local elite_colors = {}
-      for i, elite_type_applier in ipairs(binary_offset_to_elite_type) do
+      for i = 0, 7 do
+        local elite_type_applier = binary_offset_to_elite_type[i]
         if bit.band(elites_binary_map, bit.lshift(1, i)) > 0 then
           elite_type_applier[1](elite_type_t)
           table.insert(elite_colors, elite_type_applier[2])
