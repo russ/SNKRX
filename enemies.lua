@@ -173,10 +173,12 @@ function Seeker:init(args)
     self.color = green[0]:clone()
     self.area_sensor = Circle(self.x, self.y, 128)
     self.t:after({16, 24}, function() self:hit(10000) end)
-  elseif self.exploder then
+  end
+  if self.exploder then
     self.color = blue[0]:clone()
     self.t:after({16, 24}, function() self:hit(10000) end)
-  elseif self.headbutter then
+  end
+  if self.headbutter then
     self.color = orange[0]:clone()
     self.last_headbutt_time = 0
     local n = math.remap(current_new_game_plus, 0, 5, 1, 0.5)
@@ -198,7 +200,8 @@ function Seeker:init(args)
         end)
       end)
     end)
-  elseif self.tank then
+  end
+  if self.tank then
     self.color = yellow[0]:clone()
     self.buff_hp_m = 1.25 + (0.1*self.level) + (0.4*current_new_game_plus)
     self:calculate_stats()
@@ -214,7 +217,8 @@ function Seeker:init(args)
         enemy:push(random:float(30, 50), enemy:angle_to_object(main.current.player), true)
       end
     end)
-  elseif self.shooter then
+  end
+  if self.shooter then
     self.color = fg[0]:clone()
     local n = math.remap(current_new_game_plus, 0, 5, 1, 0.5)
     self.t:after({2*n, 4*n}, function()
@@ -233,7 +237,8 @@ function Seeker:init(args)
         end
       end, nil, nil, 'shooter')
     end)
-  elseif self.spawner then
+  end
+  if self.spawner then
     self.color = purple[0]:clone()
   end
 
@@ -361,13 +366,35 @@ function Seeker:update(dt)
   if self.area_sensor then self.area_sensor:move_to(self.x, self.y) end
 end
 
+elite_rects =
+{
+  {{0,0,1,1}},
+  {{-0.25,0,0.5,1},{0.25,0,0.5,1}},
+  {{-0.25,-0.25,0.5,0.5},{0.25,-0.25,0.5,0.5},{0, 0.25,1,0.5}},
+  {{-0.25,-0.25,0.5,0.5},{0.25,-0.25,0.5,0.5},{-0.25,0.25,0.5,0.5},{0.25,0.25,0.5,0.5}}
+}
+
+function Seeker:get_elite_rect(subposition, maximum)
+  local tar_table = elite_rects[maximum][subposition]
+  return self.x + self.shape.w * tar_table[1], self.y + self.shape.h * tar_table[2],
+  self.shape.w * tar_table[3], self.shape.h * tar_table[4]
+end
 
 function Seeker:draw()
   graphics.push(self.x, self.y, self.r, self.hfx.hit.x, self.hfx.hit.x)
     if self.boss then
       graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 4, 4, self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or self.color)
     else
-      graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 3, 3, self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or self.color)
+      if #self.colors > 0 then
+        for i, v in ipairs(self.colors) do
+          local x,y,w,h = self:get_elite_rect(i, #self.colors)
+          graphics.rectangle(x, y, w, h, 3, 3,
+           self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or v)
+        end
+      else
+        graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 3, 3,
+         self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or self.color)
+      end
     end
     if self.stunned then
       local instx, insty = math.random()-0.5, math.random()-0.5

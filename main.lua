@@ -2449,14 +2449,14 @@ function init()
   end
 
   binary_offset_to_elite_type = {
-    [0] = function(self) self.speed_booster = true end,
-    [1] = function(self) self.exploder = true end,
-    [2] = function(self) self.shooter = true end,
-    [3] = function(self) self.headbutter = true end,
-    [4] = function(self) self.tank = true end,
-    [5] = function(self) self.spawner = true end,
-    [6] = function(self) self.chaosborne = true end,
-    [7] = function(self) self.undead = true end
+    [0] = {function(self) self.speed_booster = true end, green[0]},
+    [1] = {function(self) self.exploder = true end, blue[0]},
+    [2] = {function(self) self.shooter = true end, fg[0]},
+    [3] = {function(self) self.headbutter = true end, orange[0]},
+    [4] = {function(self) self.tank = true end, yellow[0]},
+    [5] = {function(self) self.spawner = true end, purple[0]},
+    [6] = {function(self) self.chaosborne = true end, carmine[0]},
+    [7] = {function(self) self.undead = true end, blue2[0]}
   }
 
   level_to_elite_spawn_types = {
@@ -2487,13 +2487,13 @@ function init()
     [25] = {0, 1, 3, 4, 2, 5, 6, 7},
   }
 
-  celite_probability = {}
+  elite_probability = {}
   current_elite_table = level_to_elite_spawn_types[1]
   function calc_current_elite_probability(inputlevel)
     elite_probability = {}
     elite_probability.base = math.pow(0.5, 50 / inputlevel)
     if elite_probability.base < 0.95 and inputlevel > 1 then
-      elite_probability.base = elite_probability.base + 4
+      elite_probability.base = elite_probability.base + 0.04
     end
     elite_probability.base = elite_probability.base * 100
     elite_probability.reduction = math.pow(0.5, 10 / inputlevel)
@@ -2505,7 +2505,7 @@ function init()
     local result = 0
     local elite_type_count = 0
     for _, v in ipairs(current_elite_table) do
-      if math.bool(current_probability) then
+      if random:bool(current_probability) then
         result = bit.bor(result, bit.lshift(1 , v))
         current_probability = current_probability * elite_probability.reduction
         elite_type_count = elite_type_count + 1

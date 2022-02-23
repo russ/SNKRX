@@ -11,6 +11,7 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
   self.hfx:add('condition1', 1)
   self.hfx:add('condition2', 1)
   self.level = level or 1
+  calc_current_elite_probability(self.level)
   self.loop = loop or 0
   self.units = units
   self.passives = passives
@@ -1192,15 +1193,17 @@ function Arena:spawn_n_enemies(p, j, n, pass)
         local objects = self.main:get_objects_in_shape(check_circle, {Seeker, EnemyCritter, Critter, Player, Sentry, Automaton, Bomb, Volcano, Saboteur, Pet, Turret})
         if #objects > 0 then self.enemy_spawns_prevented = self.enemy_spawns_prevented + 1; return end
       end
-      calc_current_elite_probability(self.level)
       local elites_binary_map = get_elite_type_random()
       local elite_type_t = {}
+      local elite_colors = {}
       for i, elite_type_applier in ipairs(binary_offset_to_elite_type) do
         if bit.band(elites_binary_map, bit.lshift(1, i)) > 0 then
-          elite_type_applier(elite_type_t)
+          elite_type_applier[1](elite_type_t)
+          table.insert(elite_colors, elite_type_applier[2])
         end
       end
-      Seeker(table.merge({group = self.main, x = x, y = y, character = 'seeker', level = self.level}, elite_type_t))
+      Seeker(table.merge({group = self.main, x = x, y = y, colors = elite_colors,
+       character = 'seeker', level = self.level}, elite_type_t))
     end}
   end, n, nil, 'spawn_enemies_' .. j)
 end
