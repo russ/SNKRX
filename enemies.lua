@@ -6,6 +6,7 @@ function Seeker:init(args)
   self:init_game_object(args)
   self:init_unit()
   if self.boss then
+    self.colors = {}
     self:set_as_rectangle(18, 7, 'dynamic', 'enemy')
     self:set_restitution(0.5)
     self.classes = {'mini_boss'}
@@ -17,6 +18,7 @@ function Seeker:init(args)
 
     if self.boss == 'speed_booster' then
       self.color = green[0]:clone()
+      table.insert(self.colors, green[0])
       self.t:every(8, function()
         if self:is_silent() then return end
         local enemies = table.head(self:get_objects_in_shape(Circle(self.x, self.y, 128), main.current.enemies), 4)
@@ -30,8 +32,10 @@ function Seeker:init(args)
         end
       end, nil, nil, 'boss_attack')
 
-    elseif self.boss == 'forcer' then
+    end
+    if self.boss == 'forcer' then
       self.color = yellow[0]:clone()
+      table.insert(self.colors, yellow[0])
       self.t:every(6, function()
         if self:is_silent() then return end
         local enemies = main.current.main:get_objects_by_classes(main.current.enemies)
@@ -77,8 +81,10 @@ function Seeker:init(args)
         end)
       end, nil, nil, 'boss_attack')
 
-    elseif self.boss == 'swarmer' then
+    end
+    if self.boss == 'swarmer' then
       self.color = purple[0]:clone()
+      table.insert(self.colors, purple[0])
       self.t:every(4, function()
         if self:is_silent() then return end
         local enemies = table.select(main.current.main:get_objects_by_classes(main.current.enemies), function(v) return v.id ~= self.id and v:is(Seeker) end)
@@ -93,8 +99,10 @@ function Seeker:init(args)
         end
       end, nil, nil, 'boss_attack')
 
-    elseif self.boss == 'exploder' then
+    end
+    if self.boss == 'exploder' then
       self.color = blue[0]:clone()
+      table.insert(self.colors, blue[0])
       self.t:every(4, function()
         if self:is_silent() then return end
         local enemies = table.select(main.current.main:get_objects_by_classes(main.current.enemies), function(v) return v.id ~= self.id and v:is(Seeker) end)
@@ -108,7 +116,8 @@ function Seeker:init(args)
         end
       end, nil, nil, 'boss_attack')
 
-    elseif self.boss == 'randomizer' then
+    end
+    if self.boss == 'randomizer' then
       self.t:every_immediate(0.07, function() self.color = _G[random:table{'green', 'purple', 'yellow', 'blue'}][0]:clone() end)
       self.t:every(6, function()
         if self:is_silent() then return end
@@ -387,7 +396,7 @@ function Seeker:draw()
     else
       if #self.colors > 0 then
         for i, v in ipairs(self.colors) do
-          local x,y,w,h = self:get_elite_rect(i, #self.colors)
+          local y,x,h,w = self:get_elite_rect(i, #self.colors)
           graphics.rectangle(x, y, w, h, 3, 3,
            self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or v)
         end
