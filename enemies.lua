@@ -3,6 +3,7 @@ Seeker:implement(GameObject)
 Seeker:implement(Physics)
 Seeker:implement(Unit)
 function Seeker:init(args)
+
   self:init_game_object(args)
   self:init_unit()
   if self.boss then
@@ -16,7 +17,66 @@ function Seeker:init(args)
     local level = self.level % 25
     if level == 0 then self.level = 25*math.floor(self.level/25) end
 
-    if self.boss == 'speed_booster' then
+
+    if self.boss == 'randomizer' then
+      self.colors[1] = purple[0]
+      self.t:every_immediate(0.07, function() self.color = _G[random:table{'green', 'purple', 'yellow', 'blue'}][0]:clone() end)
+      self.t:every(6, function()
+        if self:is_silent() then return end
+        local attack = random:table{'explode', 'swarm', 'force', 'speed_boost'}
+        if attack == 'explode' then
+          self.colors[1] = blue[0]
+          local enemies = self:get_objects_in_shape(Circle(self.x, self.y, 128), {Seeker})
+          local enemy = random:table(enemies)
+          if enemy then
+            HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = blue[0], duration = 0.1}
+            LightningLine{group = main.current.effects, src = self, dst = enemy, color = blue[0]}
+            enemy:hit(10000)
+            shoot1:play{pitch = random:float(0.95, 1.05), volume = 0.4}
+            local n = 8 + current_new_game_plus*2
+            for i = 1, n do EnemyProjectile{group = main.current.main, x = enemy.x, y = enemy.y, color = blue[0], r = (i-1)*math.pi/(n/2), v = 125 + 5*enemy.level, dmg = (1 + 0.15*current_new_game_plus)*enemy.dmg} end
+          end
+        elseif attack == 'swarm' then
+          self.colors[1] = purple[0]
+          local enemies = self:get_objects_in_shape(Circle(self.x, self.y, 128), {Seeker})
+          local enemy = random:table(enemies)
+          if enemy then
+            HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = purple[0], duration = 0.1}
+            LightningLine{group = main.current.effects, src = self, dst = enemy, color = purple[0]}
+            enemy:hit(10000)
+            critter1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+            critter3:play{pitch = random:float(0.95, 1.05), volume = 0.6}
+            for i = 1, random:int(4, 6) do EnemyCritter{group = main.current.main, x = enemy.x, y = enemy.y, color = purple[0], r = random:float(0, 2*math.pi), v = 8 + 0.1*enemy.level, dmg = 2*enemy.dmg} end
+          end
+        elseif attack == 'force' then
+          self.colors[1] = yellow[0]
+          local enemies = self:get_objects_in_shape(Circle(self.x, self.y, 64), {Seeker})
+          if #enemies > 0 then
+            wizard1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+            HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = yellow[0], duration = 0.1}
+            for _, enemy in ipairs(enemies) do
+              LightningLine{group = main.current.effects, src = self, dst = enemy, color = yellow[0]}
+              enemy:push(random:float(40, 80), enemy:angle_to_object(main.current.player), true)
+            end
+          end
+
+        elseif attack == 'speed_boost' then
+          self.colors[1] = green[0]
+          local enemies = self:get_objects_in_shape(Circle(self.x, self.y, 128), {Seeker})
+          if #enemies > 0 then
+            buff1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+            HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = green[0], duration = 0.1}
+            for _, enemy in ipairs(enemies) do
+              LightningLine{group = main.current.effects, src = self, dst = enemy, color = green[0]}
+              enemy:speed_boost(3 + self.level*0.015 + current_new_game_plus*0.1)
+            end
+          end
+        end
+      end, nil, nil, 'boss_attack')
+    end
+
+
+    if self.boss == 'speed_booster' or self.boss_extra == 'speed_booster' then
       self.color = green[0]:clone()
       table.insert(self.colors, green[0])
       self.t:every(8, function()
@@ -33,7 +93,7 @@ function Seeker:init(args)
       end, nil, nil, 'boss_attack')
 
     end
-    if self.boss == 'forcer' then
+    if self.boss == 'forcer' or self.boss_extra == 'forcer' then
       self.color = yellow[0]:clone()
       table.insert(self.colors, yellow[0])
       self.t:every(6, function()
@@ -82,7 +142,7 @@ function Seeker:init(args)
       end, nil, nil, 'boss_attack')
 
     end
-    if self.boss == 'swarmer' then
+    if self.boss == 'swarmer' or self.boss_extra == 'swarmer' then
       self.color = purple[0]:clone()
       table.insert(self.colors, purple[0])
       self.t:every(4, function()
@@ -100,7 +160,7 @@ function Seeker:init(args)
       end, nil, nil, 'boss_attack')
 
     end
-    if self.boss == 'exploder' then
+    if self.boss == 'exploder' or self.boss_extra == 'exploder' then
       self.color = blue[0]:clone()
       table.insert(self.colors, blue[0])
       self.t:every(4, function()
@@ -117,57 +177,6 @@ function Seeker:init(args)
       end, nil, nil, 'boss_attack')
 
     end
-    if self.boss == 'randomizer' then
-      self.t:every_immediate(0.07, function() self.color = _G[random:table{'green', 'purple', 'yellow', 'blue'}][0]:clone() end)
-      self.t:every(6, function()
-        if self:is_silent() then return end
-        local attack = random:table{'explode', 'swarm', 'force', 'speed_boost'}
-        if attack == 'explode' then
-          local enemies = self:get_objects_in_shape(Circle(self.x, self.y, 128), {Seeker})
-          local enemy = random:table(enemies)
-          if enemy then
-            HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = blue[0], duration = 0.1}
-            LightningLine{group = main.current.effects, src = self, dst = enemy, color = blue[0]}
-            enemy:hit(10000)
-            shoot1:play{pitch = random:float(0.95, 1.05), volume = 0.4}
-            local n = 8 + current_new_game_plus*2
-            for i = 1, n do EnemyProjectile{group = main.current.main, x = enemy.x, y = enemy.y, color = blue[0], r = (i-1)*math.pi/(n/2), v = 125 + 5*enemy.level, dmg = (1 + 0.15*current_new_game_plus)*enemy.dmg} end
-          end
-        elseif attack == 'swarm' then
-          local enemies = self:get_objects_in_shape(Circle(self.x, self.y, 128), {Seeker})
-          local enemy = random:table(enemies)
-          if enemy then
-            HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = purple[0], duration = 0.1}
-            LightningLine{group = main.current.effects, src = self, dst = enemy, color = purple[0]}
-            enemy:hit(10000)
-            critter1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
-            critter3:play{pitch = random:float(0.95, 1.05), volume = 0.6}
-            for i = 1, random:int(4, 6) do EnemyCritter{group = main.current.main, x = enemy.x, y = enemy.y, color = purple[0], r = random:float(0, 2*math.pi), v = 8 + 0.1*enemy.level, dmg = 2*enemy.dmg} end
-          end
-        elseif attack == 'force' then
-          local enemies = self:get_objects_in_shape(Circle(self.x, self.y, 64), {Seeker})
-          if #enemies > 0 then
-            wizard1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
-            HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = yellow[0], duration = 0.1}
-            for _, enemy in ipairs(enemies) do
-              LightningLine{group = main.current.effects, src = self, dst = enemy, color = yellow[0]}
-              enemy:push(random:float(40, 80), enemy:angle_to_object(main.current.player), true)
-            end
-          end
-
-        elseif attack == 'speed_boost' then
-          local enemies = self:get_objects_in_shape(Circle(self.x, self.y, 128), {Seeker})
-          if #enemies > 0 then
-            buff1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
-            HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = green[0], duration = 0.1}
-            for _, enemy in ipairs(enemies) do
-              LightningLine{group = main.current.effects, src = self, dst = enemy, color = green[0]}
-              enemy:speed_boost(3 + self.level*0.015 + current_new_game_plus*0.1)
-            end
-          end
-        end
-      end, nil, nil, 'boss_attack')
-    end
 
   else
     self:set_as_rectangle(14, 6, 'dynamic', 'enemy')
@@ -176,6 +185,14 @@ function Seeker:init(args)
     self.classes = {'seeker'}
     self:calculate_stats(true)
     self:set_as_steerable(self.v, 2000, 4*math.pi, 4)
+    if not self.undead then
+      self.pool_ind = #living_seeker_pool + 1
+      table.insert(living_seeker_pool, self)
+    else
+      self.dmg = self.dmg * 0.5
+      self.max_hp = self.max_hp * 0.25
+      self.hp = self.max_hp
+    end
   end
 
   if self.speed_booster then
@@ -210,6 +227,23 @@ function Seeker:init(args)
       end)
     end)
   end
+
+  
+  if self.chaosborne then
+    self.t:every({0.5, 4}, function()
+      if self:is_silent() or self.dead or not self.area_sensor then return end
+      local enemies = self:get_objects_in_shape(self.area_sensor, main.current.enemies)
+      if #enemies > 0 then
+        buff1:play{pitch = random:float(0.8, 0.95), volume = 0.5}
+        HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = carmine[0], duration = 0.1}
+        for _, enemy in ipairs(enemies) do
+          LightningLine{group = main.current.effects, src = self, dst = enemy, color = carmine[0]}
+          enemy:chaosrage(1.5)
+        end
+      end
+    end, nil, nil, 'chaosborne')
+  end
+
   if self.tank then
     self.color = yellow[0]:clone()
     self.buff_hp_m = 1.25 + (0.1*self.level) + (0.4*current_new_game_plus)
@@ -247,6 +281,7 @@ function Seeker:init(args)
       end, nil, nil, 'shooter')
     end)
   end
+
   if self.spawner then
     self.color = purple[0]:clone()
   end
@@ -288,12 +323,16 @@ function Seeker:update(dt)
   if self.speed_boosting then
     local n = math.remap(love.timer.getTime() - self.speed_boosting, 0, (3 + 0.015*self.level + current_new_game_plus*0.1), 1, 0.5)
     self.speed_boosting_mvspd_m = (3 + 0.015*self.level + 0.1*current_new_game_plus)*n
-    if not self.speed_booster and not self.exploder and not self.headbutter and not self.tank and not self.shooter and not self.spawner then
+    if not self.speed_booster and not self.exploder and not self.headbutter and
+    not self.tank and not self.shooter and not self.spawner and
+    not self.undead and not self.chaosborne then
       self.color.r = math.remap(n, 1, 0.5, green[0].r, red[0].r)
       self.color.g = math.remap(n, 1, 0.5, green[0].g, red[0].g)
       self.color.b = math.remap(n, 1, 0.5, green[0].b, red[0].b)
+      self.colors[1] = self.color
     end
   else self.speed_boosting_mvspd_m = 1 end
+
 
   self.speed_boosting_mvspd_m = self.speed_boosting_mvspd_m + gold*0.00075
   self.buff_def_a = self.buff_def_a + gold*0.000375
@@ -312,6 +351,8 @@ function Seeker:update(dt)
     self.debuff_def_m = self.debuff_def_m + 0.5
   
   end
+
+  self.buff_dmg_m = self.chaosraging and random:float(0.9, 1.4) or 1
 
   self:calculate_stats()
 
@@ -359,14 +400,26 @@ function Seeker:update(dt)
           else
             x, y = target.x, target.y
           end
-          self:seek_point(x, y)
-          self:wander(10, 250, 3)
+          if not self.chaosraging then
+            self:seek_point(x, y)
+            self:wander(10, 250, 3)
+          else
+            self:wander(10, 250, 3)
+          end
         else
-          self:seek_point(target.x, target.y)
-          self:wander(50, 100, 20)
+          if not self.chaosraging then
+            self:seek_point(target.x, target.y)
+            self:wander(50, 100, 20)
+          else
+            self:wander(50, 100, 20)
+          end
         end
       end
-      self:steering_separate(16, main.current.enemies)
+      if not self.chaosraging then
+        self:steering_separate(16, main.current.enemies)
+      else
+        self:steering_separate(16, main.current.enemies)
+      end
       self:rotate_towards_velocity(0.5)
     end
   end
@@ -392,17 +445,19 @@ end
 function Seeker:draw()
   graphics.push(self.x, self.y, self.r, self.hfx.hit.x, self.hfx.hit.x)
     if self.boss then
-      graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 4, 4, self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or self.color)
+      for i, v in ipairs(self.colors) do
+        local y,x,h,w = self:get_elite_rect(i, #self.colors)
+        graphics.rectangle(x, y, w, h,
+         4, 4, self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or v)
+      end
     else
-      if #self.colors > 0 then
-        for i, v in ipairs(self.colors) do
-          local y,x,h,w = self:get_elite_rect(i, #self.colors)
-          graphics.rectangle(x, y, w, h, 3, 3,
-           self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or v)
-        end
-      else
-        graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 3, 3,
-         self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or self.color)
+      if self.color == red[0] then
+        if self.chaosraging then self.colors[1] = carmine[0] else self.colors[1] = red[0] end
+      end
+      for i, v in ipairs(self.colors) do
+        local y,x,h,w = self:get_elite_rect(i, #self.colors)
+        graphics.rectangle(x, y, w, h, 3, 3,
+         self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or v)
       end
     end
     if self.stunned then
@@ -518,6 +573,7 @@ end
 
 
 function Seeker:hit(damage, projectile, dot, from_enemy, dmg_type)
+  if self.undead and #living_seeker_pool > 0 then return end
   local pyrod = self.pyrod
   self.pyrod = false
   if self.dead then return end
@@ -642,6 +698,10 @@ function Seeker:hit(damage, projectile, dot, from_enemy, dmg_type)
 
   if self.hp <= 0 then
     self.dead = true
+    table.remove(living_seeker_pool, self.pool_ind)
+    for i, v in ipairs(living_seeker_pool) do
+      v.pool_ind = i
+    end
     do_osyn['Devourer'](self)
 
     if self.virulent then
@@ -691,6 +751,7 @@ function Seeker:hit(damage, projectile, dot, from_enemy, dmg_type)
         end
       end
     end
+
 
     if self.exploder then
       if self:is_silent() then return end
@@ -854,6 +915,10 @@ function Seeker:speed_boost(duration)
   self.t:after(duration, function() self.speed_boosting = false end, 'speed_boost')
 end
 
+function Seeker:chaosrage(duration)
+  self.chaosraging = true
+  self.t:after(duration, function() self.chaosraging = false end, 'chaosrage')
+end
 
 
 

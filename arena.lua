@@ -21,6 +21,7 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
   reset_counters()
   critter_pool = {}
   psyorb_pool = {}
+  living_seeker_pool = {}
   random_conjurer = nil
   random_swarmer = nil
   random_nuker = nil
@@ -129,7 +130,9 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
           spawn1:play{pitch = random:float(0.8, 1.2), volume = 0.15}
           SpawnMarker{group = self.effects, x = x, y = y}
           self.t:after(1.125, function()
-            self.boss = Seeker{group = self.main, x = x, y = y, character = 'seeker', level = self.level, boss = level_to_boss[self.level]}
+            local main_boss_type, extra_boss_type = getBossType(self.level)
+            self.boss = Seeker{group = self.main, x = x, y = y, character = 'seeker',
+            level = self.level, boss = main_boss_type, boss_extra = extra_boss_type}
           end)
         end}
         self.t:every(function()
@@ -1018,7 +1021,8 @@ function Arena:gain_gold()
       break
     end
   end
-  self.gold_gained = random:int(level_to_gold_gained[self.level][1], level_to_gold_gained[self.level][2])
+  local gold_range_start, gold_range_end = getGoldForLevel(self.level)
+  self.gold_gained = random:int(gold_range_start, gold_range_end)
   self.interest = math.min(math.floor(gold/5), 5) + math.min((merchant and math.floor(gold/10) or 0), 10)
   gold = gold + self.gold_gained + self.gold_picked_up + self.interest
 end
@@ -1203,6 +1207,7 @@ function Arena:spawn_n_enemies(p, j, n, pass)
           table.insert(elite_colors, elite_type_applier[2])
         end
       end
+      if #elite_colors == 0 then table.insert(elite_colors, red[0]) end
       Seeker(table.merge({group = self.main, x = x, y = y, colors = elite_colors,
        character = 'seeker', level = self.level}, elite_type_t))
     end}

@@ -1021,6 +1021,7 @@ function init()
   random_unit = nil
   critter_pool = {}
   psyorb_pool = {}
+  living_seeker_pool = {}
   random_conjurer = nil
   random_swarmer = nil
   random_nuker = nil
@@ -2368,84 +2369,33 @@ function init()
     [25] = {100, 100},
   }
 
-  local k = 1
-  for i = 26, 5000 do
-    local n = i % 25
-    if n == 0 then
-      n = 25
-      k = k + 1
-    end
-    level_to_gold_gained[i] = {level_to_gold_gained[n][1]*k, level_to_gold_gained[n][2]*k}
+  function getGoldForLevel(inputlevel)
+    local cycledlevel = cycle_level(inputlevel)
+    local levelmultiplier = math.ceil(inputlevel/25)
+    return level_to_gold_gained[cycledlevel][1]*levelmultiplier,
+    level_to_gold_gained[cycledlevel][2]*levelmultiplier
   end
 
-  level_to_elite_spawn_weights = { --not going to use this one, instead pure level-based probability
-    [1] = {0},
-    [2] = {4, 2},
-    [3] = {10},
-    [4] = {4, 4},
-    [5] = {4, 3, 2},
-    [6] = {12},
-    [7] = {5, 3, 2},
-    [8] = {6, 3, 3, 3},
-    [9] = {14},
-    [10] = {8, 4},
-    [11] = {8, 6, 2},
-    [12] = {16},
-    [13] = {8, 8},
-    [14] = {12, 6},
-    [15] = {18},
-    [16] = {10, 6, 4},
-    [17] = {6, 5, 4, 3},
-    [18] = {18},
-    [19] = {10, 6},
-    [20] = {8, 6, 2},
-    [21] = {22},
-    [22] = {10, 8, 4},
-    [23] = {20, 5, 5},
-    [24] = {30},
-    [25] = {5, 5, 5, 5, 5, 5},
-  }
-
-  local k = 1
-  local l = 0.2
-  for i = 26, 5000 do
-    local n = i % 25
-    if n == 0 then
-      n = 25
-      k = k + 1
-      l = l*2
-    end
-    local a, b, c, d, e, f = unpack(level_to_elite_spawn_weights[n])
-    a = (a or 0) + (a or 0)*l
-    b = (b or 0) + (b or 0)*l
-    c = (c or 0) + (c or 0)*l
-    d = (d or 0) + (d or 0)*l
-    e = (e or 0) + (e or 0)*l
-    f = (f or 0) + (f or 0)*l
-    level_to_elite_spawn_weights[i] = {a, b, c, d, e, f}
+  function cycle_level(inputlevel)
+    return math.round(math.fmod((inputlevel-1), 25)) + 1
   end
 
   level_to_boss = {
-    [6] = 'speed_booster',
-    [12] = 'exploder',
-    [18] = 'swarmer',
-    [24] = 'forcer',
-    [25] = 'randomizer',
+    [6] = {main = 'speed_booster', extra = {12, 18}},
+    [12] = {main = 'exploder', extra = {6, 24}},
+    [18] = {main = 'swarmer', extra = {6, 24}},
+    [24] = {main = 'forcer', extra = {12, 18}},
+    [25] = {main = 'randomizer', extra = {6, 12, 18, 24}},
   }
 
-  local bosses = {'speed_booster', 'exploder', 'swarmer', 'forcer', 'randomizer'}
-  level_to_boss[31] = 'speed_booster'
-  level_to_boss[37] = 'exploder'
-  level_to_boss[43] = 'swarmer'
-  level_to_boss[49] = 'forcer'
-  level_to_boss[50] = 'randomizer'
-  local i = 31
-  local k = 1
-  while i < 5000 do
-    level_to_boss[i] = bosses[k]
-    k = k + 1
-    if k == 5 then i = i + 1 else i = i + 6 end
-    if k == 6 then k = 1 end
+  function getBossType(inputlevel)
+    current_boss_table = level_to_boss[cycle_level(inputlevel)]
+    local maintype = current_boss_table.main
+    local extratype = nil
+    if random:bool(elite_probability.base) then
+      extratype = level_to_boss[table.random(current_boss_table.extra)].main
+    end
+    return maintype, extratype
   end
 
   binary_offset_to_elite_type = {
@@ -2497,7 +2447,7 @@ function init()
     end
     elite_probability.base = elite_probability.base * 100
     elite_probability.reduction = math.pow(0.5, 10 / inputlevel)
-    current_elite_table = level_to_elite_spawn_types[math.round(math.fmod((inputlevel-1), 25)) + 1]
+    current_elite_table = level_to_elite_spawn_types[cycle_level(inputlevel)]
   end
 
   function get_elite_type_random()
