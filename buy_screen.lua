@@ -85,7 +85,7 @@ function BuyScreen:on_enter(from, level, loop, units, passives, shop_level, shop
   self.items_text = Text({{text = '[wavy_mid, fg]items', font = pixul_font, alignment = 'center'}}, global_text_tags)
   self.ng_text = Text({{text = '[fg]NG+' .. current_new_game_plus, font = pixul_font, alignment = 'center'}}, global_text_tags)
   local get_elite_str = function(lvl)
-    if (lvl-(25*self.loop)) % 6 == 0 or lvl % 25 == 0 then return ' (elite)'
+    if cycle_level(self.level) % 6 == 0 or cycle_level(self.level) == 25 then return ' (elite)'
     elseif (lvl-(25*self.loop)) % 3 == 0 then return ' (hard)'
     else return '' end
   end

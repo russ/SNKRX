@@ -20,7 +20,11 @@ function Seeker:init(args)
 
     if self.boss == 'randomizer' then
       self.colors[1] = purple[0]
-      self.t:every_immediate(0.07, function() self.color = _G[random:table{'green', 'purple', 'yellow', 'blue'}][0]:clone() end)
+      self.t:every_immediate(0.07,
+      function()
+        self.color = _G[random:table{'green', 'purple', 'yellow', 'blue'}][0]:clone()
+        self.colors[1] = self.color
+      end)
       self.t:every(6, function()
         if self:is_silent() then return end
         local attack = random:table{'explode', 'swarm', 'force', 'speed_boost'}
@@ -46,7 +50,7 @@ function Seeker:init(args)
             enemy:hit(10000)
             critter1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
             critter3:play{pitch = random:float(0.95, 1.05), volume = 0.6}
-            for i = 1, random:int(4, 6) do EnemyCritter{group = main.current.main, x = enemy.x, y = enemy.y, color = purple[0], r = random:float(0, 2*math.pi), v = 8 + 0.1*enemy.level, dmg = 2*enemy.dmg} end
+            for i = 1, random:int(4, 6) do EnemyCritter{group = main.current.main, x = enemy.x, y = enemy.y, color = purplecurs[0], r = random:float(0, 2*math.pi), v = 8 + 0.1*enemy.level, dmg = 2*enemy.dmg} end
           end
         elseif attack == 'force' then
           self.colors[1] = yellow[0]
@@ -155,7 +159,7 @@ function Seeker:init(args)
           enemy:hit(10000)
           critter1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
           critter3:play{pitch = random:float(0.95, 1.05), volume = 0.6}
-          for i = 1, random:int(4, 6) do EnemyCritter{group = main.current.main, x = enemy.x, y = enemy.y, color = purple[0], r = random:float(0, 2*math.pi), v = 8 + 0.1*enemy.level, dmg = 2*enemy.dmg} end
+          for i = 1, random:int(4, 6) do EnemyCritter{group = main.current.main, x = enemy.x, y = enemy.y, color = purplecurs[0], r = random:float(0, 2*math.pi), v = 8 + 0.1*enemy.level, dmg = 2*enemy.dmg} end
         end
       end, nil, nil, 'boss_attack')
 
@@ -230,18 +234,19 @@ function Seeker:init(args)
 
   
   if self.chaosborne then
-    self.t:every({0.5, 4}, function()
-      if self:is_silent() or self.dead or not self.area_sensor then return end
-      local enemies = self:get_objects_in_shape(self.area_sensor, main.current.enemies)
+    self.chaos_area_sensor = Circle(self.x, self.y, 64)
+    self.t:every({0.5, 3.5}, function()
+      if self:is_silent() or self.dead or not self.chaos_area_sensor then return end
+      local enemies = self:get_objects_in_shape(self.chaos_area_sensor, main.current.enemies)
       if #enemies > 0 then
         buff1:play{pitch = random:float(0.8, 0.95), volume = 0.5}
         HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = carmine[0], duration = 0.1}
         for _, enemy in ipairs(enemies) do
           LightningLine{group = main.current.effects, src = self, dst = enemy, color = carmine[0]}
-          enemy:chaosrage(1.5)
+          enemy:chaosrage(random:float(0.4, 1.1))
         end
       end
-    end, nil, nil, 'chaosborne')
+    end)
   end
 
   if self.tank then
@@ -333,6 +338,8 @@ function Seeker:update(dt)
     end
   else self.speed_boosting_mvspd_m = 1 end
 
+  if self.chaosraging then self.speed_boosting_mvspd_m = 4 end
+
 
   self.speed_boosting_mvspd_m = self.speed_boosting_mvspd_m + gold*0.00075
   self.buff_def_a = self.buff_def_a + gold*0.000375
@@ -404,21 +411,21 @@ function Seeker:update(dt)
             self:seek_point(x, y)
             self:wander(10, 250, 3)
           else
-            self:wander(10, 250, 3)
+            self:wander(10, 1, 100)
           end
         else
           if not self.chaosraging then
             self:seek_point(target.x, target.y)
             self:wander(50, 100, 20)
           else
-            self:wander(50, 100, 20)
+            self:wander(50, 1, 100)
           end
         end
       end
       if not self.chaosraging then
         self:steering_separate(16, main.current.enemies)
       else
-        self:steering_separate(16, main.current.enemies)
+        self:steering_separate(64, main.current.enemies)
       end
       self:rotate_towards_velocity(0.5)
     end
@@ -426,6 +433,11 @@ function Seeker:update(dt)
   self.r = self:get_angle()
 
   if self.area_sensor then self.area_sensor:move_to(self.x, self.y) end
+  if self.chaos_area_sensor then self.chaos_area_sensor:move_to(self.x, self.y) end
+
+  if self.color == red[0] then
+    if self.chaosraging then self.colors[1] = carmine[0] else self.colors[1] = red[0] end
+  end
 end
 
 elite_rects =
@@ -438,24 +450,21 @@ elite_rects =
 
 function Seeker:get_elite_rect(subposition, maximum)
   local tar_table = elite_rects[maximum][subposition]
-  return self.x + self.shape.w * tar_table[1], self.y + self.shape.h * tar_table[2],
-  self.shape.w * tar_table[3], self.shape.h * tar_table[4]
+  return self.x + self.shape.w * tar_table[2], self.y + self.shape.h * tar_table[1],
+  self.shape.w * tar_table[4], self.shape.h * tar_table[3]
 end
 
 function Seeker:draw()
   graphics.push(self.x, self.y, self.r, self.hfx.hit.x, self.hfx.hit.x)
     if self.boss then
       for i, v in ipairs(self.colors) do
-        local y,x,h,w = self:get_elite_rect(i, #self.colors)
+        local x,y,w,h = self:get_elite_rect(i, #self.colors)
         graphics.rectangle(x, y, w, h,
          4, 4, self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or v)
       end
     else
-      if self.color == red[0] then
-        if self.chaosraging then self.colors[1] = carmine[0] else self.colors[1] = red[0] end
-      end
       for i, v in ipairs(self.colors) do
-        local y,x,h,w = self:get_elite_rect(i, #self.colors)
+        local x,y,w,h = self:get_elite_rect(i, #self.colors)
         graphics.rectangle(x, y, w, h, 3, 3,
          self.hfx.hit.f and fg[0] or (self:is_silent() and bg[10]) or v)
       end
@@ -1089,6 +1098,7 @@ function EnemyCritter:update(dt)
   self.buff_mvspd_m = (self.speed_boosting_mvspd_m or 1)*(self.slow_mvspd_m or 1)*
   (self.temporal_chains_mvspd_m or 1)*(1 + gold*0.0005)
   if not self.classes then return end
+  self.buff_dmg_m = self.chaosraging and random:float(0.9, 1.4) or 1
   self:calculate_stats()
 
   if self.being_pushed then
@@ -1105,13 +1115,22 @@ function EnemyCritter:update(dt)
       self.wandering = false
       self:seek_point(math.abs(self.x - player.x) * 50 + self.x, math.abs(self.y - player.y) * 50 + self.y)
     else
-      self:seek_point(player.x, player.y)
-      self:wander(50, 200, 50)
+      if not self.chaosraging then
+        self:seek_point(player.x, player.y)
+        self:wander(50, 200, 50)
+      else
+        self:wander(50, 1, 100)
+      end
     end
-    self:steering_separate(8, main.current.enemies)
+    if not self.chaosraging then
+      self:steering_separate(8, main.current.enemies)
+    else
+      self:steering_separate(64, main.current.enemies)
+    end
     self:rotate_towards_velocity(1)
   end
   self.r = self:get_angle()
+  if self.chaosraging then self.colors[1] = carmine[0] else self.colors[1] = purplecurs[0] end
 end
 
 
@@ -1203,6 +1222,10 @@ function EnemyCritter:speed_boost(duration)
   self.t:after(duration, function() self.speed_boosting = false end, 'speed_boost')
 end
 
+function EnemyCritter:chaosrage(duration)
+  self.chaosraging = true
+  self.t:after(duration, function() self.chaosraging = false end, 'chaosrage')
+end
 
 function EnemyCritter:curse(curse, duration, arg1, arg2, arg3)
   self.cursed = true

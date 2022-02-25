@@ -2390,12 +2390,16 @@ function init()
 
   function getBossType(inputlevel)
     current_boss_table = level_to_boss[cycle_level(inputlevel)]
-    local maintype = current_boss_table.main
-    local extratype = nil
-    if random:bool(elite_probability.base) then
-      extratype = level_to_boss[table.random(current_boss_table.extra)].main
+    if current_boss_table then
+      local maintype = current_boss_table.main
+      local extratype = nil
+      if random:bool(elite_probability.base*100) then
+        extratype = level_to_boss[table.random(current_boss_table.extra)].main
+      end
+      return maintype, extratype
+    else
+      return nil, nil
     end
-    return maintype, extratype
   end
 
   binary_offset_to_elite_type = {
@@ -2406,7 +2410,7 @@ function init()
     [4] = {function(self) self.tank = true end, yellow[0]},
     [5] = {function(self) self.spawner = true end, purple[0]},
     [6] = {function(self) self.chaosborne = true end, carmine[0]},
-    [7] = {function(self) self.undead = true end, blue2[0]}
+    [7] = {function(self) self.undead = true end, bg[0]}
   }
 
   level_to_elite_spawn_types = {

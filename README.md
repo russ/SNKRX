@@ -6,12 +6,24 @@
 
 Easy run: Download the whole repository as a zip, then run AcalamityModRun.bat in the head folder. This will run the Love2D version of the game without any problems if you are on Windows. You need to have Steam up for this.
 
-TODO:
-- Body and Mouths lategame upgrades implementation.
-- Critter buffs.
-- Flat bonus passive items instead become % bonus.
-- More randomized and interesting enemies.
-- Tiny fixes.
+Changes:
+Upgradeable class sets.
+Upgradeable "body"-"mouths" system.
+Supersynergies (synergies between classes).
+Hypersynergies (synergies between supersynergies).
+All previously dependent on the leader unit items now depend on random units.
+New Chaolyst class: focuses on boosting other class sets randomly, damage amplification and randomness.
+New Chaolyst class: focuses on boosting other class sets randomly, damage amplification and randomness.
+New unit: Warper - causes random effects to happen to enemies, at level 3 boosts attack speed randomly.
+New unit: Nexus - heals units randomly and at level 3 randomizes all orbs with effects
+COMBINABLE ENEMY TYPES: up to 4 in normal enemies, up to 2 in boss enemies
+New enemy type: Undead - much weaker but immortal until non-undead normal enemies are gone
+New enemy type: Chaosborne - makes other units behave unexpectedly.
+Reworked the way flat damage items work to scale with unit damage instead.
+Reworked some units massively or partially.
+Reworked the way some class sets work.
+Massively improved the critter items. Boosted the critters.
+New colors.
 
 [SNKRX](https://store.steampowered.com/app/915310/SNKRX/) is an arcade shooter roguelite where you control a snake of heroes that automatically attack nearby enemies.
 Combine different heroes to unlock class bonuses and create unique builds, and steer your unstoppable party as they ravage through endless waves of enemies.

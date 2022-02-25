@@ -114,7 +114,7 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
   if self.level == 1000 then
     self.level_1000_text = Text2{group = self.ui, x = gw/2, y = gh/2, lines = {{text = '[wavy_crazyyy, red]SNKRX', font = fat_font, alignment = 'center'}}}
   
-  elseif (self.level - (25*self.loop)) % 6 == 0 or self.level % 25 == 0 then
+  elseif level_to_boss[cycle_level(self.level)] then
     self.boss_level = true
     self.start_time = 3
     self.t:after(1, function()
@@ -131,8 +131,10 @@ function Arena:on_enter(from, level, loop, units, passives, shop_level, shop_xp,
           SpawnMarker{group = self.effects, x = x, y = y}
           self.t:after(1.125, function()
             local main_boss_type, extra_boss_type = getBossType(self.level)
-            self.boss = Seeker{group = self.main, x = x, y = y, character = 'seeker',
-            level = self.level, boss = main_boss_type, boss_extra = extra_boss_type}
+            if main_boss_type then
+              self.boss = Seeker{group = self.main, x = x, y = y, character = 'seeker',
+              level = self.level, boss = main_boss_type, boss_extra = extra_boss_type}
+            end
           end)
         end}
         self.t:every(function()

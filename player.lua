@@ -3790,7 +3790,7 @@ function Bomb:init(args)
   self.hfx:add('hit', 1)
   
   mine1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
-  self.color = orange[0]
+  self.color = orangebuil[0]
   self.dmg = 2*get_character_stat('bomber', self.level, 'dmg')
   self.t:after(8, function() self:explode() end)
   do_osyn['Incubation'](self)
