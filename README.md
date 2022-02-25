@@ -26,6 +26,7 @@ Reworked the way some class sets work.
 Some QOL improvements.
 Round DMG unit stats.
 Unit tier changes.
+Touch support?
 Math fixes.
 New colors.
 Chaos.
