@@ -338,7 +338,7 @@ function Seeker:update(dt)
     end
   else self.speed_boosting_mvspd_m = 1 end
 
-  if self.chaosraging then self.speed_boosting_mvspd_m = 4 end
+  if self.chaosraging then self.speed_boosting_mvspd_m = 2 end
 
 
   self.speed_boosting_mvspd_m = self.speed_boosting_mvspd_m + gold*0.00075
@@ -407,18 +407,28 @@ function Seeker:update(dt)
           else
             x, y = target.x, target.y
           end
+          local finalx, finaly = x, y
+          if self.chaosraging then
+            finalx = finalx + math.random(-200, 200)
+            finaly = finaly + math.random(-200, 200)
+          end
+          self:seek_point(finalx, finaly)
           if not self.chaosraging then
-            self:seek_point(x, y)
             self:wander(10, 250, 3)
           else
-            self:wander(10, 1, 100)
+            self:wander(10, 250, 400)
           end
         else
-          if not self.chaosraging then
-            self:seek_point(target.x, target.y)
+          local finalx, finaly = target.x, target.y
+          if self.chaosraging or self.chaosborne then
+            finalx = finalx + math.random(-200, 200)
+            finaly = finaly + math.random(-200, 200)
+          end
+          self:seek_point(finalx, finaly)
+          if not self.chaosraging and not self.chaosborne then
             self:wander(50, 100, 20)
           else
-            self:wander(50, 1, 100)
+            self:wander(5, 250, 400)
           end
         end
       end
@@ -1115,11 +1125,16 @@ function EnemyCritter:update(dt)
       self.wandering = false
       self:seek_point(math.abs(self.x - player.x) * 50 + self.x, math.abs(self.y - player.y) * 50 + self.y)
     else
+      local finalx, finaly = player.x, player.y
+      if self.chaosraging then
+        finalx = finalx + math.random(-200, 200)
+        finaly = finaly + math.random(-200, 200)
+      end
+      self:seek_point(finalx, finaly)
       if not self.chaosraging then
-        self:seek_point(player.x, player.y)
         self:wander(50, 200, 50)
       else
-        self:wander(50, 1, 100)
+        self:wander(5, 250, 400)
       end
     end
     if not self.chaosraging then
