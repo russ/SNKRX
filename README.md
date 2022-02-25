@@ -2,7 +2,7 @@
 
 
 
-# SNKRX (Acalamity Chaos mod v.0.6)
+# SNKRX (Acalamity Chaos mod v.1.0)
 
 Easy run: Download the whole repository as a zip, then run AcalamityModRun.bat in the head folder. This will run the Love2D version of the game without any problems if you are on Windows. You need to have Steam up for this.
 
