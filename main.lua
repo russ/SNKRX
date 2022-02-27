@@ -2392,10 +2392,7 @@ function init()
     current_boss_table = level_to_boss[cycle_level(inputlevel)]
     if current_boss_table then
       local maintype = current_boss_table.main
-      local extratype = nil
-      if random:bool(elite_probability.base*100) then
-        extratype = level_to_boss[table.random(current_boss_table.extra)].main
-      end
+      local extratype = level_to_boss[table.random(current_boss_table.extra)].main
       return maintype, extratype
     else
       return nil, nil

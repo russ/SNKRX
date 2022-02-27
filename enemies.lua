@@ -1145,7 +1145,7 @@ function EnemyCritter:update(dt)
     self:rotate_towards_velocity(1)
   end
   self.r = self:get_angle()
-  if self.chaosraging then self.colors[1] = carmine[0] else self.colors[1] = purplecurs[0] end
+  if self.chaosraging then self.color = carmine[0] else self.color = purplecurs[0] end
 end
 
 
