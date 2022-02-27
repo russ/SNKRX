@@ -1652,6 +1652,7 @@ function init()
     if not random_conjurer then return end
     if random:bool(osyn_v(next_osyn)) then
       unit.dead = true
+      unit:RemoveFromSeekerPool()
       buildEffects[random_conjurer.character](random_conjurer, unit.x, unit.y)
     end
   end
@@ -1882,6 +1883,7 @@ function init()
     unit.t:every(1, function()
       if random:bool(osyn_v(next_osyn)) then
         unit.dead = true
+        unit:RemoveFromSeekerPool()
         for i = 1, 8 do
           Projectile{group = main.current.main, x = unit.x, y = unit.y
           , color = character_colors[random_unit.character], r = (i-1 + (math.random()*2-1)*0.49)*math.pi*0.25,

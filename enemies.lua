@@ -590,6 +590,12 @@ function Seeker:on_collision_enter(other, contact)
   end
 end
 
+function Seeker:RemoveFromSeekerPool()
+  table.remove(living_seeker_pool, self.pool_ind)
+  for i, v in ipairs(living_seeker_pool) do
+    v.pool_ind = i
+  end
+end
 
 function Seeker:hit(damage, projectile, dot, from_enemy, dmg_type)
   if self.undead and #living_seeker_pool > 0 then return end
@@ -717,10 +723,7 @@ function Seeker:hit(damage, projectile, dot, from_enemy, dmg_type)
 
   if self.hp <= 0 then
     self.dead = true
-    table.remove(living_seeker_pool, self.pool_ind)
-    for i, v in ipairs(living_seeker_pool) do
-      v.pool_ind = i
-    end
+    self:RemoveFromSeekerPool()
     do_osyn['Devourer'](self)
 
     if self.virulent then
