@@ -1159,7 +1159,7 @@ function EnemyCritter:draw()
 end
 
 
-function EnemyCritter:hit(damage, projectile, dmg_type)
+function EnemyCritter:hit(damage, projectile, dmg_type, placeholder, dmg_type2)
   if self.dead then return end
   -- print(projectile == self.invulnerable_to)
   if projectile == self.invulnerable_to then return end
@@ -1171,11 +1171,21 @@ function EnemyCritter:hit(damage, projectile, dmg_type)
   self.hp = self.hp - actual_damage
   if projectile and projectile.parent and projectile.parent.character then
     damage_counters[projectile.parent.character] = damage_counters[projectile.parent.character] + actual_damage
+    goto valid_damage_source_found
   elseif dmg_type then
-    damage_counters[dmg_type] = damage_counters[dmg_type] + actual_damage
-  else
-    damage_counters['other'] = damage_counters['other'] + actual_damage
+    if damage_counters[dmg_type] then
+      damage_counters[dmg_type] = damage_counters[dmg_type] + actual_damage
+      goto valid_damage_source_found
+    end
   end
+  if dmg_type2 then
+    if damage_counters[dmg_type2] then
+      damage_counters[dmg_type2] = damage_counters[dmg_type2] + actual_damage
+      goto valid_damage_source_found
+    end
+  end
+  damage_counters['other'] = damage_counters['other'] + actual_damage
+  ::valid_damage_source_found::
   do_osyn['Vampirism'](self, actual_damage)
   self:show_hp()
   if self.hp <= 0 then self:die() end
@@ -1277,7 +1287,6 @@ function EnemyCritter:curse(curse, duration, arg1, arg2, arg3)
     self.bane_cursed = true
     self.bane_lvl3 = arg1
     self.bane_ref = arg2
-    self:amplify_incoming_dps(0.1)
     self.t:after(duration, function() self.bane_cursed = false end, 'bane_curse')
   elseif curse == 'infestor' then
     self.infested = arg1

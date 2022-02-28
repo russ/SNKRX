@@ -543,7 +543,12 @@ function Player:init(args)
 
   elseif self.character == 'pyromancer' then
     self.t:every(1, function()
-      self.dot_area = DotArea{group = main.current.effects, x = self.x, y = self.y, rs = self.area_size_m*48, color = self.color, dmg = self.area_dmg_m*self.dmg, character = self.character, level = self.level, duration = 1, parent = self}
+      print("--")
+      print(self.area_size_m)
+      self.dot_area = DotArea{group = main.current.effects,
+       x = self.x, y = self.y, rs = self.area_size_m*48,
+        color = self.color, dmg = self.area_dmg_m*self.dmg,
+         character = self.character, level = self.level, duration = 1, parent = self}
     end, nil, nil, 'pyroarea')
 
   elseif self.character == 'corruptor' then
@@ -1112,9 +1117,9 @@ function Player:init(args)
     self.t:every(1, function()
       self.unleash_area_dmg_m = self.unleash_area_dmg_m + 0.01
       self.unleash_area_size_m = self.unleash_area_size_m + 0.01
-      if self.dot_area then
-        self.dot_area:scale(self.unleash_area_size_m)
-      end
+      --if self.dot_area and not self.character == "pyromancer" and not self.cryomancer then
+      --  self.dot_area:scale(self.unleash_area_size_m)
+      --end
     end)
   end
 
