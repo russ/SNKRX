@@ -543,8 +543,6 @@ function Player:init(args)
 
   elseif self.character == 'pyromancer' then
     self.t:every(1, function()
-      print("--")
-      print(self.area_size_m)
       self.dot_area = DotArea{group = main.current.effects,
        x = self.x, y = self.y, rs = self.area_size_m*48,
         color = self.color, dmg = self.area_dmg_m*self.dmg,
