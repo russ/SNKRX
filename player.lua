@@ -466,27 +466,27 @@ function Player:init(args)
 
   elseif self.character == 'engineer' then
     self.t:after(2, function()
-      SpawnEffect{group = main.current.effects, x = self.x, y = self.y, color = orange[0], action = function(x, y)
+      SpawnEffect{group = main.current.effects, x = self.x, y = self.y, color = orangebuil[0], action = function(x, y)
         Turret{group = main.current.main, x = x, y = y, parent = self, character = self.character}
       end}
     end, 'st_spawn')
     self.t:every(4, function()
-      SpawnEffect{group = main.current.effects, x = self.x, y = self.y, color = orange[0], action = function(x, y)
+      SpawnEffect{group = main.current.effects, x = self.x, y = self.y, color = orangebuil[0], action = function(x, y)
         Turret{group = main.current.main, x = x, y = y, parent = self, character = self.character}
       end}
     end, nil, nil, 'spawn')
 
     if self.level == 3 then
       self.t:every(24, function()
-        SpawnEffect{group = main.current.effects, x = self.x - 16, y = self.y + 16, color = orange[0], action = function(x, y) Turret{group = main.current.main, x = x, y = y, parent = self, character = self.character} end}
-        SpawnEffect{group = main.current.effects, x = self.x + 16, y = self.y + 16, color = orange[0], action = function(x, y) Turret{group = main.current.main, x = x, y = y, parent = self, character = self.character} end}
+        SpawnEffect{group = main.current.effects, x = self.x - 16, y = self.y + 16, color = orangebuil[0], action = function(x, y) Turret{group = main.current.main, x = x, y = y, parent = self, character = self.character} end}
+        SpawnEffect{group = main.current.effects, x = self.x + 16, y = self.y + 16, color = orangebuil[0], action = function(x, y) Turret{group = main.current.main, x = x, y = y, parent = self, character = self.character} end}
 
         self.t:after(0.5, function()
           local turrets = main.current.main:get_objects_by_class(Turret)
           buff1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
           for _, turret in ipairs(turrets) do
-            HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = orange[0], duration = 0.1}
-            LightningLine{group = main.current.effects, src = self, dst = turret, color = orange[0]}
+            HitCircle{group = main.current.effects, x = self.x, y = self.y, rs = 6, color = orangebuil[0], duration = 0.1}
+            LightningLine{group = main.current.effects, src = self, dst = turret, color = orangebuil[0]}
             turret:upgrade()
           end
         end)

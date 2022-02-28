@@ -1138,18 +1138,25 @@ function init()
       Volcano{group = main.current.main, x = x, y = y, color = self.color, parent = self,
        rs = 24, level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
     ['bomber'] = function(self, x, y) 
-      Bomb{group = main.current.main, x = x, y = y, parent = self,
-       level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
+      SpawnEffect{group = main.current.effects, x = x, y = y, color = self.color, action = function(x, y)
+        Bomb{group = main.current.main, x = x, y = y, parent = self, level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1}
+      end} end,
     ['artificer'] = function(self, x, y) 
-      Automaton{group = main.current.main, x = x, y = y, parent = self,
-       level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end,
+      SpawnEffect{group = main.current.effects, x = x, y = y, color = self.color, action = function(x, y)
+        artificer1:play{pitch = random:float(0.95, 1.05), volume = 0.5}
+        local check_circle = Circle(x, y, 2)
+        local objects = main.current.main:get_objects_in_shape(check_circle, {Seeker, EnemyCritter, Critter, Volcano, Saboteur, Pet, Turret, Sentry, Bomb})
+        if #objects == 0 then Automaton{group = main.current.main, x = x, y = y, parent = self, level = self.level, conjurer_buff_m = self.conjurer_buff_m or 1} end
+      end} end,
     ['carver'] = function(self, x, y) Tree{group = main.current.main, x = x, y = y,
        color = self.color, parent = self, level = self.level} end,
     ['sentry'] = function(self, x, y) 
       Sentry{group = main.current.main, x = x, y = y, color = self.color,
        parent = self, level = self.level} end,
     ['engineer'] = function(self, x, y) 
-      Turret{group = main.current.main, x = x, y = y, parent = self, character = self.character} end
+      SpawnEffect{group = main.current.effects, x = x, y = y, color = orangebuil[0], action = function(x, y)
+        Turret{group = main.current.main, x = x, y = y, parent = self, character = self.character}
+      end} end
   }
 
   momentum_dmg_base = 0.5
