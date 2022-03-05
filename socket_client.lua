@@ -22,6 +22,10 @@ function socket_client:onmessage(message)
 
     jsonmessage = json.decode(message)
     if (exists(jsonmessage, {"identifier"})) then
+        -- print(main.current.player.hp)
+        -- main.current.player.hp = main.current.player.hp + 10
+        -- print(main.current.player.hp)
+
         -- if (gold) then
         --     print(gold)
         --     gold = gold + 1
