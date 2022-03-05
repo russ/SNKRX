@@ -170,6 +170,7 @@ function engine_run(config)
       love.graphics.clear(love.graphics.getBackgroundColor())
       draw()
       love.graphics.present()
+      socket_client:update()
     end
 
     if love.timer then love.timer.sleep(0.001) end
