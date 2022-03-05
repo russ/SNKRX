@@ -22,6 +22,11 @@ function socket_client:onmessage(message)
 
     jsonmessage = json.decode(message)
     if (exists(jsonmessage, {"identifier"})) then
+        -- if (gold) then
+        --     print(gold)
+        --     gold = gold + 1
+        --     print(gold)
+        -- end
         table.insert(messages, jsonmessage)
     end
 end
