@@ -8,14 +8,7 @@ require 'player'
 require 'enemies'
 require 'media'
 
-
 socket_client = require("websocket").new("192.168.7.224", "5000", "/cable?token=jwt")
-
-require 'socket_client'
-print(socket_client)
-
-
-
 
 function init()
   shared_init()
